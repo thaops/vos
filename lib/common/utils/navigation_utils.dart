@@ -1,0 +1,66 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:vos_flutter/common/utils/auth_utils.dart';
+import 'package:vos_flutter/common/utils/notification_utils.dart';
+import 'package:vos_flutter/router/app_router.dart';
+
+class NavigationUtils {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
+  static Future<void> navigateByNotificationType({
+    required NotificationType type,
+    required String id,
+  }) async {
+    int retryCount = 0;
+    const maxRetries = 3;
+
+    while (retryCount < maxRetries) {
+      final context = navigatorKey.currentContext;
+      if (context == null) {
+        print(
+          "❌ Navigator context is null! Retrying ($retryCount/$maxRetries)",
+        );
+        retryCount++;
+        await Future.delayed(Duration(milliseconds: 500));
+        continue;
+      }
+
+      final routeInfo = _getRouteInfo(type, id);
+      print("🚀 Navigating to: ${routeInfo.route} with id: $id");
+
+      try {
+        await AuthUtils.checkLoginAndNavigate(
+          onLoggedIn: () {
+            Future.delayed(Duration(milliseconds: 300), () {
+              Get.toNamed(
+                routeInfo.route,
+                arguments: routeInfo.arguments,
+                preventDuplicates: true,
+              );
+            });
+          },
+        );
+        return;
+      } catch (e) {
+        print("❌ Navigation error: $e");
+        return;
+      }
+    }
+    print("❌ Failed to navigate after $maxRetries retries");
+  }
+
+  static ({String route, Map<String, dynamic>? arguments}) _getRouteInfo(
+    NotificationType type,
+    String id,
+  ) {
+    switch (type) {
+      case NotificationType.leaveRequest:
+        return (route: AppRouter.main, arguments: {'leaveId': id});
+      case NotificationType.task: // Xử lý trường hợp thông báo nhiệm vụ
+        return (route: AppRouter.profile, arguments: {'taskId': id});
+      default: // Xử lý các loại thông báo khác hoặc không xác định
+        return (route: AppRouter.main, arguments: null);
+    }
+  }
+}
