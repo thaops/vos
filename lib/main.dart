@@ -30,7 +30,7 @@ import 'package:uuid/uuid.dart';
 
 Future<bool> _isIPad() async {
   if (kIsWeb) return false;
-  
+
   // macOS không phải iPad
   if (defaultTargetPlatform == TargetPlatform.macOS) {
     return false;
@@ -93,7 +93,11 @@ Future<void> _initializeServices() async {
   Get.put(NetworkController());
 
   try {
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     await generateUUID();
   } catch (e) {
     debugPrint('Lỗi khi khởi tạo ứng dụng: $e');
@@ -187,9 +191,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ),
           );
         }
-        
+
         final isIPad = snapshot.data ?? false;
-        
+
         // Cải thiện design size cho macOS
         Size designSize;
         if (defaultTargetPlatform == TargetPlatform.macOS) {
