@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vos_flutter/common/img/img.dart';
 
 class SplashScreenWidget extends StatefulWidget {
   final VoidCallback? onComplete;
@@ -61,36 +62,7 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget>
               child: Container(
                 width: 280.w,
                 height: 154.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF006884),
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF006884).withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.business, size: 60.sp, color: Colors.white),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'VOS',
-                      style: TextStyle(
-                        fontSize: 32.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      'Flutter App',
-                      style: TextStyle(fontSize: 16.sp, color: Colors.white70),
-                    ),
-                  ],
-                ),
+                child: Image.asset(Img.logo),
               ),
             );
           },

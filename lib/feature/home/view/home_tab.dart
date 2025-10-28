@@ -40,9 +40,9 @@ class HomeTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Section
-            _buildWelcomeSection(),
-            SizedBox(height: 20.h),
+            // // Welcome Section
+            // _buildWelcomeSection(),
+            // SizedBox(height: 20.h),
 
             // Stats Cards
             _buildStatsCards(),
