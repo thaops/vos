@@ -48,12 +48,8 @@ class LoginScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: isTablet ? 80.h : 40.h),
-                    child: _buildLogo(controller),
-                  ),
-                  SizedBox(height: isTablet ? 40.h : 20.h),
-
+                  _buildLogo(controller),
+                  SizedBox(height: isTablet ? 80.h : 40.h),
                   _buildLoginForm(controller, isTablet, isDesktop),
                   SizedBox(height: isTablet ? 60.h : 40.h),
                   _buildInstruction(context, isTablet),
@@ -359,43 +355,8 @@ class LoginScreen extends StatelessWidget {
           child: Container(
             width: logoWidth,
             height: logoHeight,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.business,
-                  size: isTablet ? 60.sp : 50.sp,
-                  color: Colors.white,
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'VOS',
-                  style: TextStyle(
-                    fontSize: isTablet ? 24.sp : 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  'Flutter App',
-                  style: TextStyle(
-                    fontSize: isTablet ? 14.sp : 12.sp,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
+
+            child: Image.asset(Img.logo),
           ),
           onTap: () {
             controller.tapCount++;

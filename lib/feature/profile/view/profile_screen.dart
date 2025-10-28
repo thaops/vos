@@ -93,6 +93,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildHeaderCard(UserProfileModel user) {
     return Container(
+      width: double.infinity,
       margin: EdgeInsets.all(16.w),
       padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
@@ -152,31 +153,6 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 12.h),
-
-          // Status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 8.w,
-                height: 8.w,
-                decoration: BoxDecoration(
-                  color: user.status == 'OK' ? Colors.green : Colors.orange,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                user.status,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -212,7 +188,7 @@ class ProfileScreen extends StatelessWidget {
           _buildInfoItem(
             icon: Icons.email_outlined,
             label: 'Email',
-            value: user.email.isNotEmpty ? user.email : 'Chưa cập nhật',
+            value: user.email.isNotEmpty ? user.email : 'dev@namphuongso.com',
             onTap: user.email.isNotEmpty
                 ? () => _launchEmail(user.email)
                 : null,
@@ -220,7 +196,7 @@ class ProfileScreen extends StatelessWidget {
           _buildInfoItem(
             icon: Icons.phone_outlined,
             label: 'Số điện thoại',
-            value: user.phone.isNotEmpty ? user.phone : 'Chưa cập nhật',
+            value: user.phone.isNotEmpty ? user.phone : '0909090909',
             onTap: user.phone.isNotEmpty
                 ? () => _launchPhone(user.phone)
                 : null,

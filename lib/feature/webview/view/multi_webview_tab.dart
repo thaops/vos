@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../controller/multi_webview_controller.dart';
+import '../../../common/widgets/add_url_dialog.dart';
 
 class MultiWebViewTab extends StatelessWidget {
   const MultiWebViewTab({super.key});
@@ -54,10 +55,15 @@ class MultiWebViewTab extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.add_rounded, color: Colors.white),
                     onPressed: () {
-                      if (controller.mainTabId != null) {
+                      // Lấy tab hiện tại đang active làm parent
+                      if (controller.tabs.isNotEmpty) {
+                        final currentTab =
+                            controller.tabs[controller.activeTabIndex.value];
                         controller.addChildTab(
-                          controller.mainTabId!,
-                          'https://project.viags.vn',
+                          currentTab.id,
+                          currentTab.currentUrl.value.isNotEmpty
+                              ? currentTab.currentUrl.value
+                              : currentTab.url,
                           'Tab mới',
                         );
                       }
@@ -222,14 +228,8 @@ class MultiWebViewTab extends StatelessWidget {
                       _buildHeaderButton(
                         icon: Icons.add_rounded,
                         onPressed: () {
-                          if (controller.mainTabId != null) {
-                            controller.addChildTab(
-                              controller.mainTabId!,
-                              'https://project.viags.vn',
-                              'Tab mới',
-                            );
-                          }
                           Navigator.pop(context);
+                          _showAddUrlDialog(context, controller);
                         },
                       ),
                       SizedBox(width: 12.w),
@@ -426,5 +426,24 @@ class MultiWebViewTab extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showAddUrlDialog(
+    BuildContext context,
+    MultiWebViewTabController controller,
+  ) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AddUrlDialog(),
+    ).then((result) {
+      if (result != null && result is Map<String, dynamic>) {
+        final String url = result['url'] as String;
+        final String title = result['title'] as String;
+
+        // Tạo tab cùng cấp với trang chủ (không phải child tab)
+        controller.addNewTab(url, title);
+      }
+    });
   }
 }
