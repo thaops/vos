@@ -213,12 +213,13 @@ class _AddUrlDialogState extends State<AddUrlDialog> {
                 ],
               ),
             ),
-            // Content
-            Padding(
-              padding: EdgeInsets.all(20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            // Content với SingleChildScrollView
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   // URL Input
                   Text(
                     'URL',
@@ -461,6 +462,7 @@ class _AddUrlDialogState extends State<AddUrlDialog> {
                 ],
               ),
             ),
+          ),
           ],
         ),
       ),
