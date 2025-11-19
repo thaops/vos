@@ -4,6 +4,7 @@ import 'package:vos_flutter/feature/public_app_shell/auth/login/view/login_scree
 // import 'package:vos_flutter/feature/public_app_shell/auth/login_with_microsoft/login_with_microsoft.dart'; // DELETED
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:vos_flutter/feature/profile/view/profile_screen.dart';
+import 'package:vos_flutter/feature/profile/view/link_viags_screen.dart';
 import 'package:vos_flutter/router/bottom_navigation_main.dart';
 
 class AppRouter {
@@ -17,6 +18,7 @@ class AppRouter {
   static const main = '/main';
   static const profile = '/profile';
   static const splash = '/splash';
+  static const linkViags = '/profile/link-viags';
 
   // Route con cho auth
   static const login = '/auth/login';
@@ -34,6 +36,11 @@ class AppRouter {
     GetPage(
       name: profile,
       page: () => ProfileScreen(),
+      binding: ProfileBinding(),
+    ),
+    GetPage(
+      name: linkViags,
+      page: () => const LinkViagsScreen(),
       binding: ProfileBinding(),
     ),
   ];

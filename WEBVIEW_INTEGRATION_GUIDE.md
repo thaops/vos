@@ -157,3 +157,9 @@ Nếu gặp vấn đề:
 
 **Cập nhật lần cuối:** $(date)
 **Phiên bản:** 1.0.0
+Platform  Firebase App Id
+web       1:119692400826:web:3e6a398b8ba23ac1a24a83
+android   1:119692400826:android:d3e9897866b28138a24a83
+ios       1:119692400826:ios:2b98cef5df373e91a24a83
+macos     1:119692400826:ios:2b98cef5df373e91a24a83
+windows   1:119692400826:web:10ac891158e858d0a24a83

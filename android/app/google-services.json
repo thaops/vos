@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "119692400826",
+    "project_id": "viags-vos",
+    "storage_bucket": "viags-vos.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:119692400826:android:d3e9897866b28138a24a83",
+        "android_client_info": {
+          "package_name": "vn.viags.vos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "119692400826-n08nbj7nus0g39ivs2d524dijc91tpsl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBswIS-A1Ci6ig0yN2oW4xo6oPSZ3aUtuI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "119692400826-n08nbj7nus0g39ivs2d524dijc91tpsl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

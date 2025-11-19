@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vos_flutter/common/Services/services.dart';
 import 'package:vos_flutter/common/services/ota_update_service.dart';
 import 'package:vos_flutter/router/app_router.dart';
+import 'package:vos_flutter/feature/public_app_shell/auth/login/models/google_user_model.dart';
+import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
 
 class SplashController extends GetxController {
   final OTAUpdateService _otaService = OTAUpdateService();
@@ -102,20 +106,29 @@ class SplashController extends GetxController {
   }
 
   /// Kiểm tra authentication và navigate
+  /// Ưu tiên check Google auth trước (nhanh hơn), sau đó mới check token cũ
   Future<void> _checkAuthenticationAndNavigate() async {
     try {
       loadingText.value = 'Đang kiểm tra đăng nhập...';
 
+      // Ưu tiên 1: Check Google Auth (nhanh hơn, không cần delay)
+      final hasGoogleAuth = await _checkGoogleAuth();
+      if (hasGoogleAuth) {
+        // Đã có Google auth hợp lệ → vào main ngay
+        loadingText.value = 'Chào mừng trở lại!';
+        await _navigateToMain();
+        return;
+      }
+
+      // Ưu tiên 2: Check token cũ (fallback)
       final service = await Services.create();
       final token = await service.getAccessToken();
 
       if (token.isNotEmpty) {
         loadingText.value = 'Chào mừng trở lại!';
-        await Future.delayed(const Duration(milliseconds: 500));
         await _navigateToMain();
       } else {
-        loadingText.value = 'Chuyển đến trang đăng nhập...';
-        await Future.delayed(const Duration(milliseconds: 500));
+        // Không có auth nào → vào login
         await _navigateToLogin();
       }
     } catch (e) {
@@ -123,6 +136,68 @@ class SplashController extends GetxController {
         print('❌ Error checking authentication: $e');
       }
       await _navigateToLogin();
+    }
+  }
+
+  /// Check Google Auth - trả về true nếu có session hợp lệ
+  Future<bool> _checkGoogleAuth() async {
+    try {
+      final box = Hive.box('google_user_box');
+      final userData = box.get('current_user');
+
+      if (userData == null) {
+        return false; // Không có Google user
+      }
+
+      final googleUser = GoogleUserModel.fromJson(
+        Map<String, dynamic>.from(userData),
+      );
+
+      // Check Firebase Auth session
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null || currentUser.uid != googleUser.uid) {
+        // Session không hợp lệ → clear
+        await box.delete('current_user');
+        if (currentUser != null) {
+          await FirebaseAuth.instance.signOut();
+        }
+        return false;
+      }
+
+      // Session hợp lệ → refresh token và update Hive
+      try {
+        final idToken = await currentUser.getIdToken(true);
+        final updatedUser = GoogleUserModel.fromFirebaseUser(
+          uid: currentUser.uid,
+          displayName: currentUser.displayName,
+          email: currentUser.email,
+          photoURL: currentUser.photoURL,
+          idToken: idToken,
+        );
+        await box.put('current_user', updatedUser.toJson());
+
+        // Refresh ProfileController nếu có
+        try {
+          if (Get.isRegistered<ProfileController>()) {
+            final profileController = Get.find<ProfileController>();
+            profileController.refreshGoogleUser();
+          }
+        } catch (e) {
+          // ProfileController chưa được tạo, không sao
+        }
+
+        return true; // Có Google auth hợp lệ
+      } catch (e) {
+        // Token expired → clear
+        await box.delete('current_user');
+        await FirebaseAuth.instance.signOut();
+        return false;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error checking Google auth: $e');
+      }
+      return false;
     }
   }
 

@@ -54,3 +54,7 @@ class NetworkController extends GetxController {
     }
   }
 }
+
+
+
+

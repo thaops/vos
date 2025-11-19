@@ -1,145 +1,196 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:vos_flutter/controllers/base/base_controller.dart';
 import 'package:vos_flutter/router/app_router.dart';
-import 'package:vos_flutter/feature/public_app_shell/auth/login/models/login_request.dart';
-import 'package:vos_flutter/feature/public_app_shell/auth/login/models/login_response.dart';
-import 'package:vos_flutter/feature/public_app_shell/auth/login/services/auth_service.dart';
+import 'package:vos_flutter/core/configs/theme/app_colors.dart';
+import 'package:vos_flutter/feature/public_app_shell/auth/login/models/google_user_model.dart';
+import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class LoginController extends GetxController {
+class LoginController extends BaseController {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final GetStorage _storage = GetStorage();
-  final AuthService _authService = AuthService();
-
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
   RxInt tapCount = 0.obs;
 
-  // Reactive variables for modern login
-  final RxBool isLoading = false.obs;
-  final RxBool rememberMe = false.obs;
-  final RxBool showPassword = false.obs;
+  // Single instance of GoogleSignIn to prevent concurrent operations
+  late final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
+
+  // Flag to prevent concurrent sign-in calls
+  bool _isSigningIn = false;
+
+  /// Kiểm tra xem user có phải nhân viên không
+  bool get isEmployee => _storage.read<bool>('is_employee') ?? false;
+
+  /// Lưu trạng thái nhân viên
+  void setEmployeeStatus(bool isEmployee) {
+    _storage.write('is_employee', isEmployee);
+  }
 
   @override
   void onInit() {
     super.onInit();
-    _setDefaultCredentials();
-    _loadSavedCredentials();
+    // Chỉ check Google auth nếu đang ở login screen
+    // Nếu đã vào từ splash với Google auth thì không cần check lại
+    // (tránh delay và flash login screen)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Delay nhỏ để đảm bảo navigation đã hoàn tất
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (Get.currentRoute == AppRouter.login) {
+          checkGoogleAuthState();
+        }
+      });
+    });
   }
 
-  void _setDefaultCredentials() {
-    // Set cứng username và password mặc định
-    usernameController.text = 'NamPhuong';
-    passwordController.text = 'NamPhuong@1234';
-  }
+  /// Check if user already has valid Google token and auto login
+  Future<void> checkGoogleAuthState() async {
+    try {
+      final box = Hive.box('google_user_box');
+      final userData = box.get('current_user');
 
-  void _loadSavedCredentials() {
-    if (_storage.read('remember_me') == true) {
-      rememberMe.value = true;
-      usernameController.text = _storage.read('saved_username') ?? 'NamPhuong';
-      passwordController.text =
-          _storage.read('saved_password') ?? 'NamPhuong@1234';
+      if (userData != null) {
+        final googleUser = GoogleUserModel.fromJson(
+          Map<String, dynamic>.from(userData),
+        );
+
+        // Check if Firebase Auth still has valid session
+        final currentUser = _auth.currentUser;
+        if (currentUser != null && currentUser.uid == googleUser.uid) {
+          // User is still logged in, try to refresh token and navigate
+          try {
+            final idToken = await currentUser.getIdToken(true);
+            // Token refreshed successfully, update Hive and navigate
+            final updatedUser = GoogleUserModel.fromFirebaseUser(
+              uid: currentUser.uid,
+              displayName: currentUser.displayName,
+              email: currentUser.email,
+              photoURL: currentUser.photoURL,
+              idToken: idToken,
+            );
+            await box.put('current_user', updatedUser.toJson());
+
+            // Kiểm tra nếu chưa có trạng thái nhân viên thì hiển thị dialog
+            final storage = GetStorage();
+            if (!storage.hasData('is_employee')) {
+              await _showEmployeeDialog();
+            }
+
+            Get.offAllNamed(AppRouter.main);
+          } catch (e) {
+            // Token expired or invalid, clear and stay on login
+            await box.delete('current_user');
+            await _auth.signOut();
+          }
+        } else {
+          // No current user or UID mismatch, clear and stay on login
+          await box.delete('current_user');
+          if (currentUser != null) {
+            await _auth.signOut();
+          }
+        }
+      }
+    } catch (e) {
+      // Error reading from Hive, clear and stay on login
+      try {
+        final box = Hive.box('google_user_box');
+        await box.delete('current_user');
+      } catch (_) {
+        // Ignore cleanup errors
+      }
     }
   }
 
-  void togglePasswordVisibility() {
-    showPassword.value = !showPassword.value;
-  }
-
-  void toggleRememberMe() {
-    rememberMe.value = !rememberMe.value;
-  }
-
-  Future<void> loginFramework(BuildContext context) async {
-    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      Get.snackbar(
-        'Lỗi',
-        'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade800,
-        icon: const Icon(Icons.error_outline, color: Colors.red),
-      );
+  Future<void> signInWithGoogle() async {
+    // Prevent concurrent calls
+    if (_isSigningIn || isLoading) {
       return;
     }
 
     try {
-      isLoading.value = true;
+      _isSigningIn = true;
+      setStatus(ControllerStatus.loading);
 
-      // Create login request
-      final loginRequest = LoginRequest(
-        userCode: usernameController.text.trim(),
-        password: passwordController.text,
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // User canceled the sign-in
+        setStatus(ControllerStatus.initial);
+        _isSigningIn = false;
+        return;
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
 
-      // Call API
-      final response = await _authService.login(loginRequest);
+      // Sign in to Firebase with the Google credential
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
 
-      if (response.isSuccess && response.data != null) {
-        // Save credentials if remember me is checked
-        if (rememberMe.value) {
-          await _storage.write('remember_me', true);
-          await _storage.write('saved_username', usernameController.text);
-          await _storage.write('saved_password', passwordController.text);
-        } else {
-          await _storage.remove('remember_me');
-          await _storage.remove('saved_username');
-          await _storage.remove('saved_password');
+      final user = userCredential.user;
+
+      if (user != null) {
+        // Get Firebase token
+        final idToken = await user.getIdToken();
+
+        // Create GoogleUserModel
+        final googleUser = GoogleUserModel.fromFirebaseUser(
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          idToken: idToken,
+        );
+
+        // Save to Hive as JSON
+        final box = Hive.box('google_user_box');
+        await box.put('current_user', googleUser.toJson());
+
+        setStatus(ControllerStatus.success);
+
+        // Refresh ProfileController if it exists
+        try {
+          if (Get.isRegistered<ProfileController>()) {
+            final profileController = Get.find<ProfileController>();
+            profileController.refreshGoogleUser();
+          }
+        } catch (e) {
+          print('ProfileController not registered yet: $e');
         }
 
-        // Save login state and user data
-        await _storage.write('is_logged_in', true);
-        await _storage.write('user_id', response.data!.userId);
-        await _storage.write('user_code', response.data!.userCode);
-        await _storage.write('user_name', response.data!.userName);
-        await _storage.write('user_token', response.data!.token);
-        await _storage.write('company_id', response.data!.companyId);
-        await _storage.write('company_name', response.data!.companyNameVN);
-        await _storage.write('token_expired', response.data!.tokenExpired);
-
-        // Save complete user profile data
-        await _storage.write('user_profile_data', response.data!.toJson());
-
-        Get.snackbar(
-          'Thành công',
-          'Đăng nhập thành công! Chào mừng ${response.data!.userName}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.shade100,
-          colorText: Colors.green.shade800,
-          icon: const Icon(Icons.check_circle, color: Colors.green),
-        );
+        // Hiển thị dialog hỏi "Bạn có phải nhân viên không?"
+        // Chỉ hiển thị nếu chưa có giá trị lưu trữ
+        if (!_storage.hasData('is_employee')) {
+          await _showEmployeeDialog();
+        }
 
         // Navigate to main screen
         Get.offAllNamed(AppRouter.main);
-      } else {
-        Get.snackbar(
-          'Lỗi',
-          response.message.isNotEmpty ? response.message : 'Đăng nhập thất bại',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade800,
-          icon: const Icon(Icons.error_outline, color: Colors.red),
-        );
       }
     } catch (e) {
-      Get.snackbar(
-        'Lỗi',
-        e.toString().replaceFirst('Exception: ', ''),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade800,
-        icon: const Icon(Icons.error_outline, color: Colors.red),
-      );
+      setStatus(ControllerStatus.error, error: e.toString());
     } finally {
-      isLoading.value = false;
+      _isSigningIn = false;
     }
   }
 
   void showConfigDialog() {
     if (tapCount.value >= 5) {
       tapCount.value = 0;
-      // TODO: Implement config dialog
       Get.snackbar(
         'Config',
         'Config dialog feature coming soon',
@@ -148,10 +199,58 @@ class LoginController extends GetxController {
     }
   }
 
-  @override
-  void onClose() {
-    usernameController.dispose();
-    passwordController.dispose();
-    super.onClose();
+  /// Hiển thị dialog hỏi "Bạn có phải nhân viên không?"
+  Future<void> _showEmployeeDialog() async {
+    return Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false, // Không cho phép đóng bằng back button
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Text(
+            'Xác nhận',
+            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w600),
+          ),
+          content: Text(
+            'Bạn có phải nhân viên không?',
+            style: TextStyle(fontSize: 16.sp),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setEmployeeStatus(false);
+                Get.back();
+              },
+              child: Text(
+                'Không',
+                style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setEmployeeStatus(true);
+                Get.back();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                'Có',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 }

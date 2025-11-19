@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/img/img.dart';
-import 'package:vos_flutter/common/widgets/text_widget.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/public_app_shell/auth/login/controller/login_controller.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -50,7 +49,7 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   _buildLogo(controller),
                   SizedBox(height: isTablet ? 80.h : 40.h),
-                  _buildLoginForm(controller, isTablet, isDesktop),
+                  _buildLoginCard(controller, isTablet, isDesktop),
                   SizedBox(height: isTablet ? 60.h : 40.h),
                   _buildInstruction(context, isTablet),
                 ],
@@ -62,7 +61,7 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoginForm(
+  Widget _buildLoginCard(
     LoginController controller,
     bool isTablet,
     bool isDesktop,
@@ -111,7 +110,7 @@ class LoginScreen extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Đăng nhập để tiếp tục',
+            'Đăng nhập bằng tài khoản Google của bạn',
             style: TextStyle(
               fontSize: isTablet ? 16.sp : 14.sp,
               color: Colors.grey[600],
@@ -120,227 +119,87 @@ class LoginScreen extends StatelessWidget {
           ),
           SizedBox(height: 32.h),
 
-          // Username Field
-          _buildTextField(
-            controller: controller.usernameController,
-            label: 'Tên đăng nhập',
-            hint: 'Nhập tên đăng nhập của bạn',
-            icon: Icons.person_outline,
-            isTablet: isTablet,
-          ),
-          SizedBox(height: 20.h),
-
-          // Password Field
-          _buildTextField(
-            controller: controller.passwordController,
-            label: 'Mật khẩu',
-            hint: 'Nhập mật khẩu của bạn',
-            icon: Icons.lock_outline,
-            isPassword: true,
-            isTablet: isTablet,
-          ),
-          SizedBox(height: 16.h),
-
-          // Forgot Password
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {
-                // TODO: Implement forgot password
-                Get.snackbar(
-                  'Thông báo',
-                  'Tính năng quên mật khẩu đang được phát triển',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              },
-              child: Text(
-                'Quên mật khẩu?',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: isTablet ? 14.sp : 13.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 24.h),
-
-          // Login Button
-          _buildLoginButton(controller, isTablet),
-          SizedBox(height: 20.h),
-
-          // Remember Me
-          Row(
-            children: [
-              Obx(
-                () => Checkbox(
-                  value: controller.rememberMe.value,
-                  onChanged: (value) =>
-                      controller.rememberMe.value = value ?? false,
-                  activeColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                ),
-              ),
-              Text(
-                'Ghi nhớ đăng nhập',
-                style: TextStyle(
-                  fontSize: isTablet ? 14.sp : 13.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
+          // Google Sign In Button
+          _buildGoogleSignInButton(controller, isTablet),
         ],
       ),
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    bool isPassword = false,
-    required bool isTablet,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isTablet ? 14.sp : 13.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
-        ),
-        SizedBox(height: 8.h),
-        TextFormField(
-          controller: controller,
-          obscureText: isPassword,
-          style: TextStyle(
-            fontSize: isTablet ? 16.sp : 15.sp,
-            color: Colors.grey[800],
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              color: Colors.grey[400],
-              fontSize: isTablet ? 15.sp : 14.sp,
-            ),
-            prefixIcon: Icon(
-              icon,
-              color: AppColors.primary,
-              size: isTablet ? 22.sp : 20.sp,
-            ),
-            suffixIcon: isPassword
-                ? IconButton(
-                    icon: Icon(
-                      Icons.visibility_outlined,
-                      color: Colors.grey[400],
-                      size: isTablet ? 20.sp : 18.sp,
-                    ),
-                    onPressed: () {
-                      // TODO: Implement password visibility toggle
-                    },
-                  )
-                : null,
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.red[300]!),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.red, width: 2),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: isTablet ? 16.h : 14.h,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoginButton(LoginController controller, bool isTablet) {
-    return Obx(
-      () => Container(
+  Widget _buildGoogleSignInButton(LoginController controller, bool isTablet) {
+    return Obx(() {
+      final isLoading = controller.isLoading;
+      return Container(
         height: isTablet ? 56.h : 50.h,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: Colors.grey[300]!, width: 1),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.3),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 8,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: ElevatedButton(
-          onPressed: controller.isLoading.value
-              ? null
-              : () {
-                  controller.usernameController.text = 'NamPhuong';
-                  controller.passwordController.text = 'NamPhuong@1234';
-                  controller.loginFramework(Get.context!);
-                },
+        child: ElevatedButton.icon(
+          onPressed: isLoading ? null : () => controller.signInWithGoogle(),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.grey[800],
             shadowColor: Colors.transparent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.r),
             ),
+            elevation: 0,
           ),
-          child: controller.isLoading.value
+          icon: isLoading
               ? SizedBox(
                   width: isTablet ? 24.w : 20.w,
                   height: isTablet ? 24.h : 20.h,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                 )
-              : Text(
-                  'Đăng nhập',
-                  style: TextStyle(
-                    fontSize: isTablet ? 16.sp : 15.sp,
-                    fontWeight: FontWeight.w600,
+              : Container(
+                  width: isTablet ? 24.w : 20.w,
+                  height: isTablet ? 24.h : 20.h,
+                  decoration: BoxDecoration(
                     color: Colors.white,
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'G',
+                      style: TextStyle(
+                        fontSize: isTablet ? 18.sp : 16.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[600],
+                      ),
+                    ),
                   ),
                 ),
+          label: Text(
+            isLoading ? 'Đang đăng nhập...' : 'Đăng nhập bằng Google',
+            style: TextStyle(
+              fontSize: isTablet ? 16.sp : 15.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildInstruction(BuildContext context, bool isTablet) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isTablet ? 20.w : 16.w),
-      child: Column(children: [
-        ],
-      ),
+      child: Column(children: []),
     );
   }
 
@@ -355,7 +214,6 @@ class LoginScreen extends StatelessWidget {
           child: Container(
             width: logoWidth,
             height: logoHeight,
-
             child: Image.asset(Img.logo),
           ),
           onTap: () {

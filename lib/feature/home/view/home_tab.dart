@@ -3,12 +3,34 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
+import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // QUAN TRỌNG: Check logout state TRƯỚC KHI build bất kỳ widget nào
+    // Điều này ngăn rebuild khi đang logout
+    try {
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        if (profileController.isLoggingOut) {
+          // Đang logout → return empty widget để tránh rebuild
+          return Scaffold(
+            backgroundColor: const Color(0xFFF8F9FA),
+            body: const SizedBox.shrink(),
+          );
+        }
+      }
+    } catch (e) {
+      // Controller không tồn tại → có thể đang logout
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: const SizedBox.shrink(),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -191,6 +213,63 @@ class HomeTab extends StatelessWidget {
   }
 
   Widget _buildChartsSection() {
+    // Check if user is logged in - don't render charts during logout
+    // Dùng Obx để reactive với Rx variables
+    // QUAN TRỌNG: IndexedStack không dispose widget khi ẩn, nên HomeTab vẫn còn trong tree
+    // Khi logout, Obx() có thể trigger rebuild chart đang dispose → lỗi
+    // Giải pháp: Wrap trong Builder để check context mounted trước khi rebuild
+    return Builder(
+      builder: (context) {
+        return Obx(() {
+          // Check context mounted trước khi access controller
+          if (!context.mounted) {
+            return const SizedBox.shrink();
+          }
+
+          try {
+            final profileController = Get.find<ProfileController>();
+
+            // QUAN TRỌNG: Nếu đang trong quá trình logout, KHÔNG rebuild
+            // Điều này ngăn mutate disposed RenderObject
+            if (profileController.isLoggingOut) {
+              return const SizedBox.shrink();
+            }
+
+            final isLoggedIn =
+                profileController.userProfile.value != null ||
+                profileController.googleUser.value != null;
+
+            // KHÔNG render chart widget khi user = null
+            // Điều này tránh chart bị tạo ra và dispose trong IndexedStack
+            if (!isLoggedIn) {
+              return const SizedBox.shrink(); // KHÔNG tạo widget chart
+            }
+
+            // Chỉ render chart khi user đã login và context còn mounted
+            if (!context.mounted) {
+              return const SizedBox.shrink();
+            }
+
+            return _buildChartsContent();
+          } catch (e) {
+            // Controller không tồn tại hoặc đã bị dispose
+            return const SizedBox.shrink();
+          }
+        });
+      },
+    );
+  }
+
+  // Widget riêng cho charts để dễ dispose
+  // Dùng key để force dispose khi user logout
+  Widget _buildChartsContent() {
+    // Tạo key dựa trên user để force dispose khi user thay đổi
+    final profileController = Get.find<ProfileController>();
+    final userKey =
+        profileController.userProfile.value?.userCode ??
+        profileController.googleUser.value?.uid ??
+        'no_user';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -204,8 +283,9 @@ class HomeTab extends StatelessWidget {
         ),
         SizedBox(height: 16.h),
 
-        // Line Chart
+        // Line Chart - dùng key để force dispose khi user logout
         Container(
+          key: ValueKey('line_chart_$userKey'),
           height: 200.h,
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
@@ -220,6 +300,10 @@ class HomeTab extends StatelessWidget {
             ],
           ),
           child: SfCartesianChart(
+            // Tắt HOÀN TOÀN animation để tránh crash khi logout (MIUI ANR)
+            enableAxisAnimation: false,
+            enableMultiSelection: false,
+            plotAreaBackgroundColor: Colors.transparent,
             title: ChartTitle(
               text: 'Tiến độ công việc theo tuần',
               textStyle: TextStyle(
@@ -239,6 +323,8 @@ class HomeTab extends StatelessWidget {
                 color: const Color(0xFF4CAF50),
                 width: 3,
                 markerSettings: const MarkerSettings(isVisible: true),
+                // Tắt HOÀN TOÀN animation để tránh crash (MIUI ANR)
+                animationDuration: 0,
               ),
               LineSeries<ChartData, String>(
                 name: 'Tổng số',
@@ -248,6 +334,8 @@ class HomeTab extends StatelessWidget {
                 color: const Color(0xFF2196F3),
                 width: 3,
                 markerSettings: const MarkerSettings(isVisible: true),
+                // Tắt HOÀN TOÀN animation để tránh crash (MIUI ANR)
+                animationDuration: 0,
               ),
             ],
           ),
@@ -255,8 +343,9 @@ class HomeTab extends StatelessWidget {
 
         SizedBox(height: 16.h),
 
-        // Pie Chart
+        // Pie Chart - dùng key để force dispose khi user logout
         Container(
+          key: ValueKey('pie_chart_$userKey'),
           height: 200.h,
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
@@ -271,6 +360,7 @@ class HomeTab extends StatelessWidget {
             ],
           ),
           child: SfCircularChart(
+            // Tắt animation để tránh crash khi logout
             title: ChartTitle(
               text: 'Phân bố công việc',
               textStyle: TextStyle(
@@ -286,6 +376,8 @@ class HomeTab extends StatelessWidget {
                 yValueMapper: (ChartData data, _) => data.y,
                 dataLabelSettings: const DataLabelSettings(isVisible: true),
                 enableTooltip: true,
+                // Tắt animation để tránh crash
+                animationDuration: 0,
               ),
             ],
           ),

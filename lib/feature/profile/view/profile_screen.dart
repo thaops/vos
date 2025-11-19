@@ -6,23 +6,83 @@ import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
 import 'package:vos_flutter/feature/profile/models/user_profile_model.dart';
 import 'package:vos_flutter/router/app_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:vos_flutter/feature/public_app_shell/auth/login/models/google_user_model.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Reload isEmployee khi screen được init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.isRegistered<ProfileController>()) {
+        Get.find<ProfileController>().reloadEmployeeStatus();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload isEmployee mỗi khi screen được hiển thị (khi switch tab)
+    if (Get.isRegistered<ProfileController>()) {
+      Get.find<ProfileController>().reloadEmployeeStatus();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.put(ProfileController());
+    // Tạo controller nếu chưa tồn tại (khi được dùng trong MainScreen)
+    // Hoặc tìm controller đã tồn tại (khi được navigate từ route có binding)
+    final controller = Get.isRegistered<ProfileController>()
+        ? Get.find<ProfileController>()
+        : Get.put(ProfileController());
+
+    // QUAN TRỌNG: Reload isEmployee và isViagsLinked từ storage TRƯỚC KHI Obx() build
+    // Đảm bảo giá trị được sync với storage (đặc biệt khi chọn "Không" trong login screen)
+    controller.reloadEmployeeStatus();
+    controller.reloadViagsStatus();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: _buildAppBar(),
-      body: Obx(() {
-        if (controller.userProfile.value == null) {
-          return _buildLoadingState();
-        }
-        return _buildProfileContent(controller);
-      }),
+      body: Builder(
+        builder: (context) {
+          return Obx(() {
+            // Check context mounted trước khi rebuild
+            if (!context.mounted) {
+              return const SizedBox.shrink();
+            }
+
+            try {
+              final hasGoogleUser = controller.googleUser.value != null;
+              final hasUserProfile = controller.userProfile.value != null;
+
+              if (!hasGoogleUser && !hasUserProfile) {
+                return _buildNotLoggedInState(controller);
+              }
+
+              // Ưu tiên hiển thị Google user nếu có
+              if (hasGoogleUser) {
+                return _buildGoogleUserContent(controller);
+              }
+
+              // Nếu không có Google user nhưng có userProfile thì hiển thị userProfile
+              return _buildProfileContent(controller);
+            } catch (e) {
+              // Controller đã bị dispose hoặc không tồn tại
+              return const SizedBox.shrink();
+            }
+          });
+        },
+      ),
     );
   }
 
@@ -54,24 +114,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'Đang tải thông tin...',
-            style: TextStyle(color: Colors.grey[600], fontSize: 16.sp),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildProfileContent(ProfileController controller) {
     final user = controller.userProfile.value!;
 
@@ -80,7 +122,7 @@ class ProfileScreen extends StatelessWidget {
         children: [
           _buildHeaderCard(user),
           SizedBox(height: 24.h),
-          _buildPersonalInfo(user),
+          _buildPersonalInfo(user, controller),
           SizedBox(height: 24.h),
           _buildCompanyInfo(user),
           SizedBox(height: 24.h),
@@ -158,7 +200,300 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPersonalInfo(UserProfileModel user) {
+  Widget _buildGoogleUserHeader(
+    GoogleUserModel user,
+    ProfileController controller,
+  ) {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(24.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Avatar with photo
+          Container(
+            width: 80.w,
+            height: 80.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.2),
+                width: 2,
+              ),
+            ),
+            child: user.photoURL != null && user.photoURL!.isNotEmpty
+                ? ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: user.photoURL!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: AppColors.primary.withOpacity(0.1),
+                        child: Icon(
+                          Icons.person,
+                          size: 40.sp,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.primary.withOpacity(0.1),
+                        child: Icon(
+                          Icons.person,
+                          size: 40.sp,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(
+                    color: AppColors.primary.withOpacity(0.1),
+                    child: Icon(
+                      Icons.person,
+                      size: 40.sp,
+                      color: AppColors.primary,
+                    ),
+                  ),
+          ),
+          SizedBox(height: 16.h),
+
+          // Name
+          Text(
+            user.displayName ?? 'Người dùng Google',
+            style: TextStyle(
+              fontSize: 22.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.h),
+
+          // Email - ưu tiên viagsEmail nếu đã liên kết
+          Obx(() {
+            String email;
+            if (controller.isViagsLinked.value &&
+                controller.viagsEmail.value.isNotEmpty) {
+              // Đã liên kết VIAGS → dùng email từ VIAGS
+              email = controller.viagsEmail.value;
+            } else if (user.email != null && user.email!.isNotEmpty) {
+              // Chưa liên kết → dùng email từ Google user
+              email = user.email!;
+            } else {
+              return const SizedBox.shrink();
+            }
+
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Text(
+                email,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.primary,
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoogleUserContent(ProfileController controller) {
+    final googleUser = controller.googleUser.value!;
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildGoogleUserHeader(googleUser, controller),
+          SizedBox(height: 24.h),
+          _buildGoogleUserInfo(googleUser, controller),
+          SizedBox(height: 24.h),
+          _buildActionSection(controller),
+          SizedBox(height: 32.h),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoogleUserInfo(
+    GoogleUserModel user,
+    ProfileController controller,
+  ) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Thông tin tài khoản Google',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
+          SizedBox(height: 20.h),
+          // Email - ưu tiên viagsEmail nếu đã liên kết
+          Obx(() {
+            String email;
+            if (controller.isViagsLinked.value &&
+                controller.viagsEmail.value.isNotEmpty) {
+              // Đã liên kết VIAGS → dùng email từ VIAGS
+              email = controller.viagsEmail.value;
+            } else if (user.email != null && user.email!.isNotEmpty) {
+              // Chưa liên kết → dùng email từ Google user
+              email = user.email!;
+            } else {
+              return const SizedBox.shrink();
+            }
+
+            return _buildInfoItem(
+              icon: Icons.email_outlined,
+              label: 'Email',
+              value: email,
+              onTap: email.isNotEmpty && email != 'dev@namphuongso.com'
+                  ? () => _launchEmail(email)
+                  : null,
+            );
+          }),
+          if (user.displayName != null && user.displayName!.isNotEmpty)
+            _buildInfoItem(
+              icon: Icons.badge_outlined,
+              label: 'Tên hiển thị',
+              value: user.displayName!,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotLoggedInState(ProfileController controller) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.person_outline, size: 80.sp, color: Colors.grey[400]),
+            SizedBox(height: 24.h),
+            Text(
+              'Chưa đăng nhập',
+              style: TextStyle(
+                fontSize: 24.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Vui lòng đăng nhập để xem thông tin cá nhân',
+              style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32.h),
+            Container(
+              width: double.infinity,
+              height: 50.h,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primary.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  Get.toNamed(AppRouter.login);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 24.w,
+                      height: 24.w,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'G',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[600],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      'Đăng nhập bằng Google',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfo(
+    UserProfileModel user,
+    ProfileController controller,
+  ) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       padding: EdgeInsets.all(20.w),
@@ -185,14 +520,33 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           SizedBox(height: 20.h),
-          _buildInfoItem(
-            icon: Icons.email_outlined,
-            label: 'Email',
-            value: user.email.isNotEmpty ? user.email : 'dev@namphuongso.com',
-            onTap: user.email.isNotEmpty
-                ? () => _launchEmail(user.email)
-                : null,
-          ),
+          Obx(() {
+            // Sử dụng reactive values để email tự động cập nhật khi liên kết
+            // QUAN TRỌNG: Ưu tiên viagsEmail nếu đã liên kết, sau đó mới dùng userProfile.email
+            String email;
+
+            if (controller.isViagsLinked.value &&
+                controller.viagsEmail.value.isNotEmpty) {
+              // Đã liên kết VIAGS → dùng email từ VIAGS
+              email = controller.viagsEmail.value;
+            } else if (controller.userProfile.value != null &&
+                controller.userProfile.value!.email.isNotEmpty) {
+              // Chưa liên kết → dùng email từ userProfile
+              email = controller.userProfile.value!.email;
+            } else {
+              // Fallback
+              email = 'dev@namphuongso.com';
+            }
+
+            return _buildInfoItem(
+              icon: Icons.email_outlined,
+              label: 'Email',
+              value: email,
+              onTap: email.isNotEmpty && email != 'dev@namphuongso.com'
+                  ? () => _launchEmail(email)
+                  : null,
+            );
+          }),
           _buildInfoItem(
             icon: Icons.phone_outlined,
             label: 'Số điện thoại',
@@ -369,25 +723,37 @@ class ProfileScreen extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
         children: [
-          _buildActionButton(
-            icon: Icons.edit_outlined,
-            title: 'Chỉnh sửa thông tin',
-            onTap: () {
-              Get.snackbar(
-                'Chỉnh sửa',
-                'Tính năng chỉnh sửa đang được phát triển',
+          // Chỉ hiển thị nút liên kết nếu:
+          // 1. Chưa liên kết VIAGS
+          // 2. Không phải nhân viên (không có tab Home)
+          // Nếu đã là nhân viên (có tab Home) thì không hiển thị nút liên kết
+          Obx(() {
+            // Đảm bảo reload trước khi đọc giá trị (để sync với storage)
+            // Điều này đảm bảo khi chọn "Không" trong login screen, giá trị được cập nhật
+            controller.reloadEmployeeStatus();
+            controller.reloadViagsStatus();
+
+            final isEmployee = controller.isEmployee.value;
+            final isViagsLinked = controller.isViagsLinked.value;
+
+            // Debug: In ra giá trị để kiểm tra
+            // print('🔍 ProfileScreen - isEmployee: $isEmployee, isViagsLinked: $isViagsLinked');
+
+            // Chỉ hiển thị nếu chưa liên kết VÀ không phải nhân viên
+            if (!isViagsLinked && !isEmployee) {
+              return Column(
+                children: [
+                  _buildActionButton(
+                    icon: Icons.link,
+                    title: 'Liên kết acc VIAGS',
+                    onTap: () => Get.toNamed(AppRouter.linkViags),
+                  ),
+                  SizedBox(height: 12.h),
+                ],
               );
-            },
-          ),
-          SizedBox(height: 12.h),
-          _buildActionButton(
-            icon: Icons.security_outlined,
-            title: 'Bảo mật',
-            onTap: () {
-              Get.snackbar('Bảo mật', 'Tính năng bảo mật đang được phát triển');
-            },
-          ),
-          SizedBox(height: 12.h),
+            }
+            return const SizedBox.shrink();
+          }),
           _buildActionButton(
             icon: Icons.logout,
             title: 'Đăng xuất',
@@ -478,9 +844,71 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              controller.logout();
-              Get.offAllNamed(AppRouter.login);
+            onPressed: () async {
+              Get.back(); // Đóng dialog trước
+
+              // Hiển thị loading indicator
+              Get.dialog(
+                Center(
+                  child: Container(
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'Đang đăng xuất...',
+                          style: TextStyle(fontSize: 16.sp),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                barrierDismissible: false,
+              );
+
+              try {
+                // 1. Clear auth và storage (KHÔNG thay đổi reactive values)
+                await controller.logout();
+
+                // 2. Navigate TRƯỚC để dispose widget tree (bao gồm chart trong home_tab)
+                // Phải navigate TRƯỚC để tránh mutate disposed widgets
+                Get.offAllNamed(AppRouter.login);
+
+                // 3. Đóng loading dialog SAU KHI navigate (safe vì đã navigate)
+                // Dùng Future.microtask để đảm bảo navigate hoàn tất trước
+                Future.microtask(() {
+                  if (Get.isDialogOpen ?? false) {
+                    Get.back();
+                  }
+                });
+              } catch (e) {
+                // Navigate ngay lập tức dù có lỗi
+                Get.offAllNamed(AppRouter.login);
+
+                // Đóng loading dialog sau khi navigate
+                Future.microtask(() {
+                  if (Get.isDialogOpen ?? false) {
+                    Get.back();
+                  }
+                });
+
+                // Hiển thị lỗi sau khi navigate
+                Future.microtask(() {
+                  Get.snackbar(
+                    'Lỗi',
+                    'Có lỗi xảy ra khi đăng xuất: ${e.toString()}',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.red.shade100,
+                    colorText: Colors.red.shade800,
+                  );
+                });
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,

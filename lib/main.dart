@@ -27,6 +27,9 @@ import 'package:vos_flutter/router/app_router.dart';
 import 'package:vos_flutter/router/deep_link_handler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:vos_flutter/feature/public_app_shell/auth/login/models/google_user_model.dart';
 
 Future<bool> _isIPad() async {
   if (kIsWeb) return false;
@@ -53,6 +56,9 @@ Future<bool> _isIPad() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Init ShorebirdCodePush để kiểm soát OTA updates
   // final shorebirdCodePush = ShorebirdCodePush();
   // await shorebirdCodePush.isNewPatchAvailableForDownload();
@@ -77,6 +83,9 @@ void main() async {
 
 Future<void> _initializeServices() async {
   await Hive.initFlutter();
+
+  // Open Hive box for Google user (stored as JSON)
+  await Hive.openBox('google_user_box');
 
   // Kiểm tra xem có môi trường được set thủ công không
   final savedBaseUrl = GetStorage().read<String>('base_url');
