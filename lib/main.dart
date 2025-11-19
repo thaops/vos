@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:app_links/app_links.dart';
 import 'package:calendar_view/calendar_view.dart';
@@ -20,6 +21,7 @@ import 'package:vos_flutter/common/share/auth/sign_out_clear.dart';
 import 'package:vos_flutter/common/utils/check_awaiting_approval.dart';
 import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
 import 'package:vos_flutter/common/utils/navigation_utils.dart';
+import 'package:vos_flutter/common/utils/file_logger.dart';
 import 'package:vos_flutter/common/widgets/splash_screen_widget.dart';
 import 'package:vos_flutter/controllers/splash_controller.dart';
 import 'package:vos_flutter/core/configs/theme/app_theme.dart';
@@ -29,7 +31,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:vos_flutter/feature/public_app_shell/auth/login/models/google_user_model.dart';
 
 Future<bool> _isIPad() async {
   if (kIsWeb) return false;
@@ -55,30 +56,108 @@ Future<bool> _isIPad() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Khởi tạo file logger trước
+  await FileLogger.initialize();
+  await FileLogger.cleanOldLogs();
+  await FileLogger.log('App starting...');
+  
+  // Bắt tất cả errors để log và tránh crash im lặng
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    
+    // Ghi vào file log (không await để tránh block)
+    FileLogger.logError(
+      details.exception,
+      details.stack,
+      context: 'Flutter Error | Library: ${details.library} | Context: ${details.context}',
+    );
+    
+    if (kDebugMode) {
+      print('🚨 Flutter Error: ${details.exception}');
+      print('📍 Stack trace: ${details.stack}');
+      print('📍 Library: ${details.library}');
+      print('📍 Context: ${details.context}');
+      print('📄 Log file: ${FileLogger.getLogFilePath()}');
+    }
+  };
 
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Bắt errors trong async operations không được catch
+  PlatformDispatcher.instance.onError = (error, stack) {
+    // Ghi vào file log (không await để tránh block)
+    FileLogger.logError(
+      error,
+      stack,
+      context: 'Platform Error',
+    );
+    
+    if (kDebugMode) {
+      print('🚨 Platform Error: $error');
+      print('📍 Stack trace: $stack');
+      print('📄 Log file: ${FileLogger.getLogFilePath()}');
+    }
+    return true; // Trả về true để báo rằng error đã được xử lý
+  };
 
-  // Init ShorebirdCodePush để kiểm soát OTA updates
-  // final shorebirdCodePush = ShorebirdCodePush();
-  // await shorebirdCodePush.isNewPatchAvailableForDownload();
+  try {
+    await FileLogger.log('Initializing Firebase...');
+    // Initialize Firebase
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await FileLogger.log('Firebase initialized');
 
-  await GetStorage.init();
+    // Init ShorebirdCodePush để kiểm soát OTA updates
+    // final shorebirdCodePush = ShorebirdCodePush();
+    // await shorebirdCodePush.isNewPatchAvailableForDownload();
 
-  final appLinks = AppLinks();
-  final initialDeepLink = await appLinks.getInitialLink();
-  await _initializeServices();
-  // Removed problematic MediaQuery calls that can cause UI issues
-  if (kDebugMode) {
-    print("App initialized successfully");
+    await GetStorage.init();
+    await FileLogger.log('GetStorage initialized');
+
+    final appLinks = AppLinks();
+    final initialDeepLink = await appLinks.getInitialLink();
+    await _initializeServices();
+    await FileLogger.log('Services initialized');
+    
+    // Removed problematic MediaQuery calls that can cause UI issues
+    if (kDebugMode) {
+      print("App initialized successfully");
+      print("📄 Log file location: ${FileLogger.getLogFilePath()}");
+    }
+
+    runApp(
+      CalendarControllerProvider(
+        controller: EventController(),
+        child: MyApp(initialDeepLink: initialDeepLink),
+      ),
+    );
+  } catch (e, stackTrace) {
+    // Ghi vào file log
+    await FileLogger.logError(e, stackTrace, context: 'Critical Error in main()');
+    
+    if (kDebugMode) {
+      print('🚨 Critical Error in main(): $e');
+      print('📍 Stack trace: $stackTrace');
+      print('📄 Log file: ${FileLogger.getLogFilePath()}');
+    }
+    // Vẫn chạy app để user có thể thấy lỗi thay vì crash im lặng
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: Colors.red),
+                SizedBox(height: 16),
+                Text('Lỗi khởi tạo ứng dụng'),
+                SizedBox(height: 8),
+                Text('$e', style: TextStyle(fontSize: 12)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
-
-  runApp(
-    CalendarControllerProvider(
-      controller: EventController(),
-      child: MyApp(initialDeepLink: initialDeepLink),
-    ),
-  );
 }
 
 Future<void> _initializeServices() async {
