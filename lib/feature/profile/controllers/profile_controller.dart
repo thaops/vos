@@ -3,15 +3,15 @@ import 'package:get_storage/get_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/feature/profile/models/user_profile_model.dart';
-import 'package:vos_flutter/feature/public_app_shell/auth/login/models/google_user_model.dart';
 
 class ProfileController extends GetxController {
   final GetStorage _storage = GetStorage();
 
   // Reactive variables
   final Rx<UserProfileModel?> userProfile = Rx<UserProfileModel?>(null);
-  final Rx<GoogleUserModel?> googleUser = Rx<GoogleUserModel?>(null);
+  final Rx<GoogleUserDto?> googleUser = Rx<GoogleUserDto?>(null);
   final RxBool isLoading = false.obs;
 
   // Flag để track logout state - ngăn Obx() rebuild khi đang logout
@@ -60,7 +60,7 @@ class ProfileController extends GetxController {
       final box = Hive.box('google_user_box');
       final userData = box.get('current_user');
       if (userData != null) {
-        googleUser.value = GoogleUserModel.fromJson(
+        googleUser.value = GoogleUserDto.fromJson(
           Map<String, dynamic>.from(userData),
         );
         print('✅ Loaded Google user: ${googleUser.value?.displayName}');
@@ -226,7 +226,7 @@ class ProfileController extends GetxController {
           googleUserData['email'] = email; // Cập nhật email mới
           await box.put('current_user', googleUserData);
           // Cập nhật reactive value
-          googleUser.value = GoogleUserModel.fromJson(googleUserData);
+          googleUser.value = GoogleUserDto.fromJson(googleUserData);
           googleUser.refresh();
         } catch (e) {
           print('⚠️ Error updating Google user email: $e');

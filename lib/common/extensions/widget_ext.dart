@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vos_flutter/common/design_system/tokens/app_sizes.dart';
+import 'package:vos_flutter/core/configs/theme/design_system/tokens/app_sizes.dart';
 
 extension WidgetExtensions on Widget {
   /* =========== Padding =========== */

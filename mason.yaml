@@ -1,0 +1,4 @@
+bricks:
+  feature_clean_architecture:
+    path: bricks/feature_clean_architecture
+

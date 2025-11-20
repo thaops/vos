@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vos_flutter/common/widgets/state_widget/empty_lottie_state.dart';
-import 'package:vos_flutter/controllers/base/base_controller.dart';
+import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/widgets/state_widget/loading_widget.dart';
 
 // ignore: must_be_immutable

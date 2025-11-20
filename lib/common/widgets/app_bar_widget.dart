@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:vos_flutter/common/design_system/tokens/app_sizes.dart';
+import 'package:vos_flutter/core/configs/theme/design_system/tokens/app_sizes.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 

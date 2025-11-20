@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:dio/dio.dart' as dio;
 import 'package:vos_flutter/common/constants/http_status_codes.dart';
-import 'package:vos_flutter/common/repositoty/dio_api.dart';
+import 'package:vos_flutter/core/network/dio_api.dart';
 
 class UploadImage {
   DioApi dioApi = DioApi();

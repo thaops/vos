@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/Services/config.dart';
-import 'package:vos_flutter/common/repositoty/dio_api.dart';
+import 'package:vos_flutter/core/network/dio_api.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 
 class ShowDialogSetUrl {

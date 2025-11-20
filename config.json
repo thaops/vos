@@ -1,0 +1,17 @@
+{
+    "feature_name": "product",
+    "model_name": "product",
+    "usecase_definitions": [
+      "get_products:List<Product>",
+      "get_product_detail:Product",
+      "create_product:void",
+      "update_product:bool",
+      "delete_product:bool"
+    ],
+    "has_local_storage": true,
+    "has_remote_api": true,
+    "has_pagination": true,
+    "has_search": true,
+    "has_full_cache": false,
+    "api_base_path": "/api/products"
+  }

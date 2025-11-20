@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vos_flutter/common/share/cache/version_app.dart';
+import 'package:vos_flutter/common/shared/cache/version_app.dart';
 import 'package:vos_flutter/common/utils/custom_dialog.dart';
 import 'package:vos_flutter/common/utils/update_status_channel.dart';
 import 'package:vos_flutter/common/widgets/custom_snackbar.dart';

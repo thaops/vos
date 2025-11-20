@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
-import 'package:vos_flutter/common/design_system/tokens/app_sizes.dart';
+import 'package:vos_flutter/core/configs/theme/design_system/tokens/app_sizes.dart';
 
 /// Widget to measure size and call back when size changes
 class MeasureSize extends StatefulWidget {

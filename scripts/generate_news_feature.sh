@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+mason make feature_clean_architecture \
+  --feature_name news \
+  --model_name article \
+  --usecase_definitions "get_news:List<Article>,get_article_detail:Article,search_news:List<Article>,create_article:void,update_article:bool,delete_article:bool" \
+  --has_local_storage true \
+  --has_remote_api true \
+  --has_pagination true \
+  --has_search true \
+  --has_full_cache false \
+  --api_base_path "/api/news"
+
+echo "✅ Generated news feature."
+
+

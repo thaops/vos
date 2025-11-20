@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:vos_flutter/common/utils/webview_debug_utils.dart';
 
 class WebViewTabController extends GetxController {
   late WebViewController webViewController;
@@ -15,13 +14,7 @@ class WebViewTabController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _testUrlBeforeLoad();
     _initializeWebView();
-  }
-
-  void _testUrlBeforeLoad() async {
-    print('🧪 Pre-testing default URL...');
-    await WebViewDebugUtils.testUrl(defaultUrl);
   }
 
   void _initializeWebView() {
@@ -42,7 +35,6 @@ class WebViewTabController extends GetxController {
             if (_lastLoadedUrl != url ||
                 _lastLoadTime == null ||
                 now.difference(_lastLoadTime!).inSeconds > 1) {
-              print('WebView started loading: $url');
               _lastLoadedUrl = url;
               _lastLoadTime = now;
             }
@@ -55,45 +47,19 @@ class WebViewTabController extends GetxController {
             if (_lastLoadedUrl != url ||
                 _lastLoadTime == null ||
                 now.difference(_lastLoadTime!).inSeconds > 1) {
-              print('WebView finished loading: $url');
               _lastLoadedUrl = url;
               _lastLoadTime = now;
             }
             isLoading.value = false;
           },
           onWebResourceError: (error) {
-            print('❌ WebView Error Details:');
-            print('   Description: ${error.description}');
-            print('   Error Code: ${error.errorCode}');
-            print('   Error Type: ${error.errorType}');
-            print('   Is For Main Frame: ${error.isForMainFrame}');
-            print('   Current URL: ${currentUrl.value}');
 
-            // Handle specific error types
-            if (error.description.contains('ERR_HTTP_RESPONSE_CODE_FAILURE')) {
-              print('🚨 HTTP Response Code Failure detected!');
-              print(
-                '   This usually means server returned 4xx or 5xx status code',
-              );
-              print(
-                '   Check server logs or try accessing URL directly in browser',
-              );
 
-              // Test URL directly to get more details
-              if (currentUrl.value.isNotEmpty) {
-                print('🔍 Testing URL directly...');
-                WebViewDebugUtils.testUrl(currentUrl.value);
-              }
-            }
 
             isLoading.value = false;
           },
           onNavigationRequest: (request) {
-            print('WebView navigation request: ${request.url}');
-
-            // Prevent duplicate navigation to same URL
             if (currentUrl.value == request.url && isLoading.value) {
-              print('Preventing duplicate navigation to: ${request.url}');
               return NavigationDecision.prevent;
             }
 
@@ -105,7 +71,6 @@ class WebViewTabController extends GetxController {
   }
 
   void loadUrl(String url) {
-    // Thêm delay nhỏ để tránh load quá nhanh và prevent duplicate
     if (currentUrl.value != url) {
       Future.delayed(const Duration(milliseconds: 200), () {
         webViewController.loadRequest(Uri.parse(url));

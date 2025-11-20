@@ -5,7 +5,7 @@ import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart'
 import 'package:flutter/material.dart';
 import 'package:vos_flutter/feature/profile/view/profile_screen.dart';
 import 'package:vos_flutter/feature/home/view/home_tab.dart';
-import 'package:vos_flutter/feature/news/news_view.dart';
+import 'package:vos_flutter/feature/news_v2/news_view.dart';
 // import 'package:vos_flutter/common/services/navigation_service.dart'; // DISABLED: Module deleted
 
 class MainScreen extends StatefulWidget {

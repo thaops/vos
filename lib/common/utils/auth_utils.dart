@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/instance_manager.dart';
-import 'package:vos_flutter/common/Services/services.dart';
+import 'package:vos_flutter/common/services/services.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
 class AuthUtils {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:vos_flutter/controllers/splash_controller.dart';
+import 'package:vos_flutter/common/utils/splash_controller.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 
 class OTAUpdateWidget extends StatelessWidget {

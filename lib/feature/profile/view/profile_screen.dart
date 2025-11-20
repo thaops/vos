@@ -7,7 +7,7 @@ import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart'
 import 'package:vos_flutter/feature/profile/models/user_profile_model.dart';
 import 'package:vos_flutter/router/app_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:vos_flutter/feature/public_app_shell/auth/login/models/google_user_model.dart';
+import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -201,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildGoogleUserHeader(
-    GoogleUserModel user,
+    GoogleUserDto user,
     ProfileController controller,
   ) {
     return Container(
@@ -331,7 +331,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildGoogleUserInfo(
-    GoogleUserModel user,
+    GoogleUserDto user,
     ProfileController controller,
   ) {
     return Container(

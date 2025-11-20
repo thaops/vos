@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:vos_flutter/feature/public_app_shell/auth/login/binding/login_binding.dart';
-import 'package:vos_flutter/feature/public_app_shell/auth/login/view/login_screen.dart';
+import 'package:vos_flutter/feature/login/binding/login_binding.dart';
+import 'package:vos_flutter/feature/login/presentation/view/login_screen.dart';
 // import 'package:vos_flutter/feature/public_app_shell/auth/login_with_microsoft/login_with_microsoft.dart'; // DELETED
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:vos_flutter/feature/profile/view/profile_screen.dart';
