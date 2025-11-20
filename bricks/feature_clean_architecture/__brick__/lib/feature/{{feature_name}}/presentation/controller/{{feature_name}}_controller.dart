@@ -154,7 +154,7 @@ class {{feature_name.pascalCase()}}Controller extends BaseController
     }
     {{/isVoidReturn}}
     {{^isVoidReturn}}
-    await handleApiCall<{{returnType}}>(
+    await handleApiCall<{{#isList}}List<{{model_name_pascal}}>{{/isList}}{{^isList}}{{#isDetail}}{{model_name_pascal}}{{/isDetail}}{{^isDetail}}{{returnType}}{{/isDetail}}{{/isList}}>(
       apiCall: () => {{camelName}}Usecase.call({{#hasParams}}{{methodCallArgs}}{{/hasParams}}),
       onSuccess: (data) {
         {{#isList}}

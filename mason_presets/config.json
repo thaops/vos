@@ -1,6 +1,6 @@
 {
-    "feature_name":  "news",
-    "model_name":  "news",
+    "feature_name":  "news_detail",
+    "model_name":  "news_detail",
     "usecase_definitions":  [
                                 "get_news:List\u003cArticle\u003e",
                                 "get_article_detail:Article",
@@ -9,10 +9,10 @@
                                 "update_article:bool",
                                 "delete_article:bool"
                             ],
-    "has_local_storage":  true,
+    "has_local_storage":  false,
     "has_remote_api":  true,
-    "has_pagination":  true,
-    "has_search":  true,
-    "has_full_cache":  true,
-    "api_base_path":  "/v4/search"
+    "has_pagination":  false,
+    "has_search":  false,
+    "has_full_cache":  false,
+    "api_base_path":  "newss/getnewsbyid"
 }

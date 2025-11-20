@@ -6,7 +6,7 @@ import 'package:vos_flutter/feature/{{feature_name}}/domain/models/{{model_name}
 
 abstract class {{feature_name.pascalCase()}}RemoteDataSource {
 {{#parsed_usecases}}
-  Future<ApiResult<{{#isVoidReturn}}void{{/isVoidReturn}}{{^isVoidReturn}}{{returnType}}{{/isVoidReturn}}>> {{camelName}}({{#hasParams}}{{remoteMethodParams}}{{/hasParams}});
+  Future<ApiResult<{{#isVoidReturn}}void{{/isVoidReturn}}{{^isVoidReturn}}{{#isList}}List<{{model_name.pascalCase()}}>{{/isList}}{{^isList}}{{#isDetail}}{{model_name.pascalCase()}}{{/isDetail}}{{^isDetail}}{{returnType}}{{/isDetail}}{{/isList}}{{/isVoidReturn}}>> {{camelName}}({{#hasParams}}{{remoteMethodParams}}{{/hasParams}});
 {{/parsed_usecases}}
 }
 
@@ -19,7 +19,7 @@ class {{feature_name.pascalCase()}}RemoteDataSourceImpl
 
 {{#parsed_usecases}}
   @override
-  Future<ApiResult<{{#isVoidReturn}}void{{/isVoidReturn}}{{^isVoidReturn}}{{returnType}}{{/isVoidReturn}}>> {{camelName}}({{#hasParams}}{{remoteMethodParams}}{{/hasParams}}) async {
+  Future<ApiResult<{{#isVoidReturn}}void{{/isVoidReturn}}{{^isVoidReturn}}{{#isList}}List<{{model_name.pascalCase()}}>{{/isList}}{{^isList}}{{#isDetail}}{{model_name.pascalCase()}}{{/isDetail}}{{^isDetail}}{{returnType}}{{/isDetail}}{{/isList}}{{/isVoidReturn}}>> {{camelName}}({{#hasParams}}{{remoteMethodParams}}{{/hasParams}}) async {
     try {
 {{#isList}}
       final response = await dioApi.get(

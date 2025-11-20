@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_storage/get_storage.dart';
 
 class Config {
@@ -6,12 +7,18 @@ class Config {
   // https://namphuong-dev.azurewebsites.net/
   static const String _baseUrlKey = 'base_url';
   static const String _manualEnvKey = 'manual_environment_set';
-  // Default URLs
-  static const String _defaultProdBaseUrl =
-      "https://api-tcs-dev.azurewebsites.net/api";
-  // "https://namphuong-api.azurewebsites.net/api";
-  static const String _defaultDevBaseUrl =
-      "https://api-tcs-dev.azurewebsites.net/api";
+  // Default URLs - fallback to .env if available
+  static String get _defaultProdBaseUrl {
+    return dotenv.env['API_BASE_URL_PROD'] ??
+        dotenv.env['API_BASE_URL'] ??
+        "https://api-vos-dev.azurewebsites.net/api";
+  }
+
+  static String get _defaultDevBaseUrl {
+    return dotenv.env['API_BASE_URL_DEV'] ??
+        dotenv.env['API_BASE_URL'] ??
+        "https://api-vos-dev.azurewebsites.net/api";
+  }
 
   // Internal helper to compute current default based on awaiting flag
   static String _currentDefaultBaseUrl(GetStorage storage) {

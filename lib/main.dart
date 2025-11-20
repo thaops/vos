@@ -30,6 +30,7 @@ import 'package:vos_flutter/common/services/deep_link_handler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 
 Future<bool> _isIPad() async {
@@ -56,23 +57,35 @@ Future<bool> _isIPad() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Load .env file
+  try {
+    await dotenv.load(fileName: ".env");
+    await FileLogger.log('Environment variables loaded from .env');
+  } catch (e) {
+    await FileLogger.log('Warning: Could not load .env file: $e');
+    if (kDebugMode) {
+      print('Warning: Could not load .env file: $e');
+    }
+  }
+
   // Khởi tạo file logger trước
   await FileLogger.initialize();
   await FileLogger.cleanOldLogs();
   await FileLogger.log('App starting...');
-  
+
   // Bắt tất cả errors để log và tránh crash im lặng
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    
+
     // Ghi vào file log (không await để tránh block)
     FileLogger.logError(
       details.exception,
       details.stack,
-      context: 'Flutter Error | Library: ${details.library} | Context: ${details.context}',
+      context:
+          'Flutter Error | Library: ${details.library} | Context: ${details.context}',
     );
-    
+
     if (kDebugMode) {
       print('🚨 Flutter Error: ${details.exception}');
       print('📍 Stack trace: ${details.stack}');
@@ -85,12 +98,8 @@ void main() async {
   // Bắt errors trong async operations không được catch
   PlatformDispatcher.instance.onError = (error, stack) {
     // Ghi vào file log (không await để tránh block)
-    FileLogger.logError(
-      error,
-      stack,
-      context: 'Platform Error',
-    );
-    
+    FileLogger.logError(error, stack, context: 'Platform Error');
+
     if (kDebugMode) {
       print('🚨 Platform Error: $error');
       print('📍 Stack trace: $stack');
@@ -102,7 +111,9 @@ void main() async {
   try {
     await FileLogger.log('Initializing Firebase...');
     // Initialize Firebase
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     await FileLogger.log('Firebase initialized');
 
     // Init ShorebirdCodePush để kiểm soát OTA updates
@@ -116,7 +127,7 @@ void main() async {
     final initialDeepLink = await appLinks.getInitialLink();
     await _initializeServices();
     await FileLogger.log('Services initialized');
-    
+
     // Removed problematic MediaQuery calls that can cause UI issues
     if (kDebugMode) {
       print("App initialized successfully");
@@ -131,8 +142,12 @@ void main() async {
     );
   } catch (e, stackTrace) {
     // Ghi vào file log
-    await FileLogger.logError(e, stackTrace, context: 'Critical Error in main()');
-    
+    await FileLogger.logError(
+      e,
+      stackTrace,
+      context: 'Critical Error in main()',
+    );
+
     if (kDebugMode) {
       print('🚨 Critical Error in main(): $e');
       print('📍 Stack trace: $stackTrace');

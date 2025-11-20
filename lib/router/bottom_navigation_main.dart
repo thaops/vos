@@ -5,7 +5,9 @@ import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart'
 import 'package:flutter/material.dart';
 import 'package:vos_flutter/feature/profile/view/profile_screen.dart';
 import 'package:vos_flutter/feature/home/view/home_tab.dart';
-import 'package:vos_flutter/feature/news_v2/news_view.dart';
+import 'package:vos_flutter/feature/news/presentation/view/news_screen.dart';
+import 'package:vos_flutter/feature/news/binding/news_binding.dart';
+import 'package:vos_flutter/feature/news/presentation/controller/news_controller.dart';
 // import 'package:vos_flutter/common/services/navigation_service.dart'; // DISABLED: Module deleted
 
 class MainScreen extends StatefulWidget {
@@ -26,6 +28,11 @@ class _MainScreenState extends State<MainScreen> {
       Get.put(ProfileController());
     }
 
+    // Khởi tạo NewsBinding để đăng ký NewsController
+    if (!Get.isRegistered<NewsController>()) {
+      NewsBinding().dependencies();
+    }
+
     // Khởi tạo _selectedIndex dựa trên isEmployee
     final isEmployee = _storage.read<bool>('is_employee') ?? false;
     _selectedIndex = isEmployee
@@ -44,19 +51,19 @@ class _MainScreenState extends State<MainScreen> {
         final profileController = Get.find<ProfileController>();
         if (profileController.isLoggingOut) {
           // Đang logout → không trả về HomeTab để tránh rebuild
-          return [const NewsView(), ProfileScreen()];
+          return [const NewsScreen(), ProfileScreen()];
         }
       }
     } catch (e) {
       // Controller không tồn tại → có thể đang logout
-      return [const NewsView(), ProfileScreen()];
+      return [const NewsScreen(), ProfileScreen()];
     }
 
     final isEmployee = _storage.read<bool>('is_employee') ?? false;
     if (isEmployee) {
-      return [const HomeTab(), const NewsView(), ProfileScreen()];
+      return [const HomeTab(), const NewsScreen(), ProfileScreen()];
     } else {
-      return [const NewsView(), ProfileScreen()];
+      return [const NewsScreen(), ProfileScreen()];
     }
   }
 

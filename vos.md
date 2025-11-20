@@ -31,3 +31,27 @@ lib/feature/
 │   │       └── login_card_widget.dart
 │   └── binding/
 │       └── login_binding.dart
+
+# Chỉ cần chạy:
+mfeature news
+
+# Script sẽ hỏi:
+# - Usecases (có thể Enter để skip)
+# - Has local storage? [Y]
+# - Has remote API? [Y]  
+# - Has pagination? [N]
+# - Has search? [N]
+# - Has full cache? [N]
+# - API base path [/api/news]
+dfeature news ->delete 
+
+NewsController.getNews() -> bắt đầu sự kiện load news hiên thị state loading error success 
+  → GetNewsUsecase.call() -> Tần domaim chưa lòic nghiệm vụ khưa chưa api hay store  dê gọi repository mục đính quy định ahnh động của app lý tinh tức vv
+    → NewsRepository.getNews() -> tân domain cầu nối giữa domain và data layer  nhận mà không cần biết data remote hay local trả về 
+      → NewsRepositoryImpl.getNews() -> tần newrepositoryImpl -> tần logic nơi quyết định lấy data từ đâu 
+        → NewsRemoteDataSource.getNews() -> tần remotesoure-> tầng api caller -> chỉ call apu hhtp không chưa logic 
+          ├─ ✅ Success → Cache vào Local → Trả về
+          └─ ❌ Error → Fallback Local
+              → NewsLocalDataSource.getNewsPage() -> lưu đọc data base 
+                ├─ ✅ Có data → Trả về từ cache
+                └─ ❌ Không có → Trả về error từ Remote
