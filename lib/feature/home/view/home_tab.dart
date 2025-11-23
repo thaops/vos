@@ -1,12 +1,98 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
-import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
+import 'package:vos_flutter/feature/banner/binding/banner_binding.dart';
+import 'package:vos_flutter/feature/banner/presentation/controller/banner_controller.dart';
+import 'package:vos_flutter/feature/home/binding/home_function_binding.dart';
+import 'package:vos_flutter/feature/home/presentation/controller/home_function_controller.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
+import 'package:vos_flutter/router/app_router.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo BannerBinding nếu chưa có
+    if (!Get.isRegistered<BannerController>()) {
+      BannerBinding().dependencies();
+    }
+    
+    // Khởi tạo HomeFunctionBinding nếu chưa có
+    if (!Get.isRegistered<HomeFunctionController>()) {
+      HomeFunctionBinding().dependencies();
+    }
+    
+    // Load data sau khi widget được build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+      
+      // Listen userProfile changes để reload banner khi link VIAGS thành công
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        ever(profileController.userProfile, (userProfile) {
+          if (userProfile != null && userProfile.token.isNotEmpty) {
+            _loadData();
+          }
+        });
+      }
+    });
+  }
+
+  void _loadData() {
+    try {
+      print('🔄 _loadData called');
+      if (!Get.isRegistered<ProfileController>()) {
+        print('⚠️ ProfileController not registered');
+        return;
+      }
+      
+      final profileController = Get.find<ProfileController>();
+      final token = profileController.userProfile.value?.token ?? '';
+      final userId = profileController.userProfile.value?.userId ?? 0;
+      
+      print('📊 Profile data - token: ${token.isNotEmpty ? "${token.substring(0, 20)}..." : "empty"}, userId: $userId');
+      
+      if (token.isEmpty) {
+        print('⚠️ Token is empty, skipping banner load');
+        return;
+      }
+      
+      // Load banners với token từ VIAGS
+      if (Get.isRegistered<BannerController>()) {
+        final bannerController = Get.find<BannerController>();
+        if (userId > 0) {
+          print('🚀 Calling loadBanners with userId: $userId');
+          // Token từ VIAGS không cần prefix "Bearer "
+          bannerController.loadBanners(token, userId);
+        } else {
+          print('⚠️ userId is 0, skipping banner load');
+        }
+      } else {
+        print('⚠️ BannerController not registered');
+      }
+      
+      // Load home functions với token từ VIAGS
+      if (Get.isRegistered<HomeFunctionController>()) {
+        final homeFunctionController = Get.find<HomeFunctionController>();
+        print('🚀 Calling loadHomeFunctions with lsStatus: TEST;product');
+        // ls_Status: "TEST;product" theo API
+        homeFunctionController.loadHomeFunctions(token, 'TEST;product');
+      } else {
+        print('⚠️ HomeFunctionController not registered');
+      }
+    } catch (e) {
+      print('❌ Error loading data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,474 +148,283 @@ class HomeTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // // Welcome Section
-            // _buildWelcomeSection(),
-            // SizedBox(height: 20.h),
-
-            // Stats Cards
-            _buildStatsCards(),
+            // Banner Section
+            _buildBannerSection(),
             SizedBox(height: 20.h),
 
-            // Charts Section
-            _buildChartsSection(),
-            SizedBox(height: 20.h),
-
-            // Recent Activities
-            _buildRecentActivities(),
+            // Home Functions Section
+            _buildHomeFunctionsSection(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildWelcomeSection() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Chào mừng trở lại! 👋',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24.sp,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Dưới đây là tổng quan về hoạt động của bạn',
-            style: TextStyle(color: Colors.white70, fontSize: 16.sp),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildBannerSection() {
+    if (!Get.isRegistered<BannerController>()) {
+      return const SizedBox.shrink();
+    }
 
-  Widget _buildStatsCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            title: 'Công việc',
-            value: '24',
-            icon: Icons.work_outline,
-            color: const Color(0xFF4CAF50),
+    final controller = Get.find<BannerController>();
+    
+    return Obx(() {
+      // Loading state
+      if (controller.isLoading.value) {
+        return Container(
+          height: 180.h,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(12.r),
           ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: _buildStatCard(
-            title: 'Hoàn thành',
-            value: '18',
-            icon: Icons.check_circle_outline,
-            color: const Color(0xFF2196F3),
+          child: Center(
+            child: CircularProgressIndicator(),
           ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: _buildStatCard(
-            title: 'Đang xử lý',
-            value: '6',
-            icon: Icons.hourglass_empty,
-            color: const Color(0xFFFF9800),
-          ),
-        ),
-      ],
-    );
-  }
+        );
+      }
 
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Icon(icon, color: color, size: 20.sp),
+      // Error state
+      if (controller.error.value.isNotEmpty) {
+        print('❌ Banner error: ${controller.error.value}');
+        return const SizedBox.shrink();
+      }
+
+      // Empty state
+      if (controller.banners.isEmpty) {
+        print('⚠️ Banner list is empty');
+        return const SizedBox.shrink();
+      }
+
+      print('✅ Displaying ${controller.banners.length} banners');
+
+      // Banner list
+      return Container(
+        height: 180.h,
+        margin: EdgeInsets.symmetric(horizontal: 0.w),
+        child: PageView.builder(
+          itemCount: controller.banners.length,
+          itemBuilder: (context, index) {
+            final banner = controller.banners[index];
+            return Container(
+              margin: EdgeInsets.only(right: 8.w),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                  color: color,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12.r),
+                child: CachedNetworkImage(
+                  imageUrl: banner.imageUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) {
+                    print('❌ Banner image error: $error');
+                    return Container(
+                      color: Colors.grey[200],
+                      child: Icon(Icons.error_outline, color: Colors.grey[400]),
+                    );
+                  },
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
+            );
+          },
+        ),
+      );
+    });
   }
 
-  Widget _buildChartsSection() {
-    // Check if user is logged in - don't render charts during logout
-    // Dùng Obx để reactive với Rx variables
-    // QUAN TRỌNG: IndexedStack không dispose widget khi ẩn, nên HomeTab vẫn còn trong tree
-    // Khi logout, Obx() có thể trigger rebuild chart đang dispose → lỗi
-    // Giải pháp: Wrap trong Builder để check context mounted trước khi rebuild
-    return Builder(
-      builder: (context) {
-        return Obx(() {
-          // Check context mounted trước khi access controller
-          if (!context.mounted) {
-            return const SizedBox.shrink();
-          }
+  Widget _buildHomeFunctionsSection() {
+    if (!Get.isRegistered<HomeFunctionController>()) {
+      return const SizedBox.shrink();
+    }
 
-          try {
-            final profileController = Get.find<ProfileController>();
-
-            // QUAN TRỌNG: Nếu đang trong quá trình logout, KHÔNG rebuild
-            // Điều này ngăn mutate disposed RenderObject
-            if (profileController.isLoggingOut) {
-              return const SizedBox.shrink();
-            }
-
-            final isLoggedIn =
-                profileController.userProfile.value != null ||
-                profileController.googleUser.value != null;
-
-            // KHÔNG render chart widget khi user = null
-            // Điều này tránh chart bị tạo ra và dispose trong IndexedStack
-            if (!isLoggedIn) {
-              return const SizedBox.shrink(); // KHÔNG tạo widget chart
-            }
-
-            // Chỉ render chart khi user đã login và context còn mounted
-            if (!context.mounted) {
-              return const SizedBox.shrink();
-            }
-
-            return _buildChartsContent();
-          } catch (e) {
-            // Controller không tồn tại hoặc đã bị dispose
-            return const SizedBox.shrink();
-          }
-        });
-      },
-    );
-  }
-
-  // Widget riêng cho charts để dễ dispose
-  // Dùng key để force dispose khi user logout
-  Widget _buildChartsContent() {
-    // Tạo key dựa trên user để force dispose khi user thay đổi
-    final profileController = Get.find<ProfileController>();
-    final userKey =
-        profileController.userProfile.value?.userCode ??
-        profileController.googleUser.value?.uid ??
-        'no_user';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Biểu đồ thống kê',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+    final controller = Get.find<HomeFunctionController>();
+    
+    return Obx(() {
+      // Loading state
+      if (controller.isLoading.value) {
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          child: Center(
+            child: CircularProgressIndicator(),
           ),
-        ),
-        SizedBox(height: 16.h),
+        );
+      }
 
-        // Line Chart - dùng key để force dispose khi user logout
-        Container(
-          key: ValueKey('line_chart_$userKey'),
-          height: 200.h,
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: SfCartesianChart(
-            // Tắt HOÀN TOÀN animation để tránh crash khi logout (MIUI ANR)
-            enableAxisAnimation: false,
-            enableMultiSelection: false,
-            plotAreaBackgroundColor: Colors.transparent,
-            title: ChartTitle(
-              text: 'Tiến độ công việc theo tuần',
-              textStyle: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-              ),
+      // Error state
+      if (controller.error.value.isNotEmpty) {
+        print('❌ Home function error: ${controller.error.value}');
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          child: Center(
+            child: Text(
+              controller.error.value,
+              style: TextStyle(color: Colors.red),
             ),
-            legend: Legend(isVisible: true),
-            primaryXAxis: CategoryAxis(),
-            primaryYAxis: NumericAxis(),
-            series: <CartesianSeries>[
-              LineSeries<ChartData, String>(
-                name: 'Hoàn thành',
-                dataSource: _getChartData(),
-                xValueMapper: (ChartData data, _) => data.x,
-                yValueMapper: (ChartData data, _) => data.y,
-                color: const Color(0xFF4CAF50),
-                width: 3,
-                markerSettings: const MarkerSettings(isVisible: true),
-                // Tắt HOÀN TOÀN animation để tránh crash (MIUI ANR)
-                animationDuration: 0,
-              ),
-              LineSeries<ChartData, String>(
-                name: 'Tổng số',
-                dataSource: _getTotalChartData(),
-                xValueMapper: (ChartData data, _) => data.x,
-                yValueMapper: (ChartData data, _) => data.y,
-                color: const Color(0xFF2196F3),
-                width: 3,
-                markerSettings: const MarkerSettings(isVisible: true),
-                // Tắt HOÀN TOÀN animation để tránh crash (MIUI ANR)
-                animationDuration: 0,
-              ),
-            ],
           ),
-        ),
+        );
+      }
 
-        SizedBox(height: 16.h),
+      // Empty state
+      if (controller.sessions.isEmpty) {
+        print('⚠️ Home function sessions list is empty');
+        return const SizedBox.shrink();
+      }
 
-        // Pie Chart - dùng key để force dispose khi user logout
-        Container(
-          key: ValueKey('pie_chart_$userKey'),
-          height: 200.h,
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: SfCircularChart(
-            // Tắt animation để tránh crash khi logout
-            title: ChartTitle(
-              text: 'Phân bố công việc',
-              textStyle: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            legend: Legend(isVisible: true),
-            series: <PieSeries<ChartData, String>>[
-              PieSeries<ChartData, String>(
-                dataSource: _getPieChartData(),
-                xValueMapper: (ChartData data, _) => data.x,
-                yValueMapper: (ChartData data, _) => data.y,
-                dataLabelSettings: const DataLabelSettings(isVisible: true),
-                enableTooltip: true,
-                // Tắt animation để tránh crash
-                animationDuration: 0,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+      print('✅ Displaying ${controller.sessions.length} home function sessions');
 
-  Widget _buildRecentActivities() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Hoạt động gần đây',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
-        ),
-        SizedBox(height: 16.h),
-
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
+      // Sessions list
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: controller.sessions.map((session) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildActivityItem(
-                icon: Icons.check_circle,
-                title: 'Hoàn thành báo cáo tháng',
-                subtitle: '2 giờ trước',
-                color: const Color(0xFF4CAF50),
-              ),
-              _buildDivider(),
-              _buildActivityItem(
-                icon: Icons.assignment,
-                title: 'Nhận công việc mới',
-                subtitle: '4 giờ trước',
-                color: const Color(0xFF2196F3),
-              ),
-              _buildDivider(),
-              _buildActivityItem(
-                icon: Icons.schedule,
-                title: 'Cập nhật tiến độ dự án',
-                subtitle: '6 giờ trước',
-                color: const Color(0xFFFF9800),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Icon(icon, color: color, size: 20.sp),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+              // Session Title
+              if (session.sessionName.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Text(
+                    session.sessionName,
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
                   ),
                 ),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+              // Function Items Grid
+              GridView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12.w,
+                  mainAxisSpacing: 12.h,
+                  childAspectRatio: 0.85,
                 ),
-              ],
+                itemCount: session.listItems.length,
+                itemBuilder: (context, index) {
+                  final item = session.listItems[index];
+                  return _buildFunctionItem(item);
+                },
+              ),
+              SizedBox(height: 24.h),
+            ],
+          );
+        }).toList(),
+      );
+    });
+  }
+
+  void _handleFunctionAction(String action) {
+    switch (action) {
+      case 'UyQuyen':
+        // Navigate to authorize screen
+        Get.toNamed(AppRouter.authorize);
+        break;
+      default:
+        Get.snackbar(
+          'Thông báo',
+          'Tính năng $action đang được phát triển',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        break;
+    }
+  }
+
+  Widget _buildFunctionItem(item) {
+    Color itemColor;
+    try {
+      itemColor = Color(int.parse(item.color.replaceFirst('#', '0xFF')));
+    } catch (e) {
+      itemColor = AppColors.primary;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        // Handle tap action
+        if (item.action.isNotEmpty) {
+          _handleFunctionAction(item.action);
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Icon/Image
+            Container(
+              width: 50.w,
+              height: 50.w,
+              decoration: BoxDecoration(
+                color: itemColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: item.imageUrl.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10.r),
+                      child: CachedNetworkImage(
+                        imageUrl: item.imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(itemColor),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Icon(
+                          Icons.apps,
+                          color: itemColor,
+                          size: 24.sp,
+                        ),
+                      ),
+                    )
+                  : Icon(
+                      Icons.apps,
+                      color: itemColor,
+                      size: 24.sp,
+                    ),
+            ),
+            SizedBox(height: 8.h),
+            // Title
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              child: Text(
+                item.title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  Widget _buildDivider() {
-    return Container(
-      height: 1,
-      margin: EdgeInsets.symmetric(vertical: 8.h),
-      color: Colors.grey[200],
-    );
-  }
-
-  List<ChartData> _getChartData() {
-    return [
-      ChartData('T2', 5),
-      ChartData('T3', 8),
-      ChartData('T4', 12),
-      ChartData('T5', 15),
-      ChartData('T6', 18),
-      ChartData('T7', 20),
-      ChartData('CN', 22),
-    ];
-  }
-
-  List<ChartData> _getTotalChartData() {
-    return [
-      ChartData('T2', 8),
-      ChartData('T3', 12),
-      ChartData('T4', 16),
-      ChartData('T5', 20),
-      ChartData('T6', 24),
-      ChartData('T7', 26),
-      ChartData('CN', 28),
-    ];
-  }
-
-  List<ChartData> _getPieChartData() {
-    return [
-      ChartData('Hoàn thành', 18),
-      ChartData('Đang xử lý', 6),
-      ChartData('Chờ duyệt', 3),
-      ChartData('Quá hạn', 1),
-    ];
-  }
-}
-
-class ChartData {
-  final String x;
-  final double y;
-
-  ChartData(this.x, this.y);
 }

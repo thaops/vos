@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 // import 'package:vos_flutter/feature/private_app_shell/filter_user/controller/filter_user_controller.dart';
-import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
 /// Service để clear cache của các controllers cụ thể
 class ControllerCacheClear {

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
-import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
 class LinkViagsScreen extends StatefulWidget {
@@ -14,15 +15,35 @@ class LinkViagsScreen extends StatefulWidget {
 
 class _LinkViagsScreenState extends State<LinkViagsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
   final ProfileController _controller = Get.find<ProfileController>();
+  final GetStorage _storage = GetStorage();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load lại name và password đã lưu
+    _loadSavedCredentials();
+  }
+
+  void _loadSavedCredentials() {
+    final savedName = _storage.read<String>('saved_viags_name');
+    final savedPassword = _storage.read<String>('saved_viags_password');
+    
+    if (savedName != null && savedName.isNotEmpty) {
+      _nameController.text = savedName;
+    }
+    if (savedPassword != null && savedPassword.isNotEmpty) {
+      _passwordController.text = savedPassword;
+    }
+  }
+
+  @override
   void dispose() {
-    _emailController.dispose();
+    _nameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -38,7 +59,7 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
 
     try {
       final success = await _controller.linkViagsAccount(
-        _emailController.text.trim(),
+        _nameController.text.trim(),
         _passwordController.text,
       );
 
@@ -180,15 +201,15 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Email Field
+                        // Name/UserCode Field
                         TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _nameController,
+                          keyboardType: TextInputType.text,
                           decoration: InputDecoration(
-                            labelText: 'Email',
-                            hintText: 'Nhập email VIAGS',
+                            labelText: 'Tên đăng nhập',
+                            hintText: 'Nhập tên đăng nhập VIAGS',
                             prefixIcon: Icon(
-                              Icons.email_outlined,
+                              Icons.person_outlined,
                               color: AppColors.primary,
                               size: 20.sp,
                             ),
@@ -216,10 +237,7 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Vui lòng nhập email';
-                            }
-                            if (!value.contains('@') || !value.contains('.')) {
-                              return 'Email không hợp lệ';
+                              return 'Vui lòng nhập tên đăng nhập';
                             }
                             return null;
                           },
@@ -352,7 +370,7 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
                         SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
-                            'Email VIAGS sẽ được cập nhật vào hồ sơ của bạn',
+                            'Tài khoản VIAGS sẽ được liên kết với tài khoản Google của bạn',
                             style: TextStyle(
                               fontSize: 12.sp,
                               color: Colors.blue.shade800,

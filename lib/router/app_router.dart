@@ -7,6 +7,8 @@ import 'package:vos_flutter/feature/profile/view/profile_screen.dart';
 import 'package:vos_flutter/feature/profile/view/link_viags_screen.dart';
 import 'package:vos_flutter/feature/news_detail/binding/news_detail_binding.dart';
 import 'package:vos_flutter/feature/news_detail/presentation/view/news_detail_screen.dart';
+import 'package:vos_flutter/feature/authorize/binding/authorize_binding.dart';
+import 'package:vos_flutter/feature/authorize/presentation/view/authorize_screen.dart';
 import 'package:vos_flutter/router/bottom_navigation_main.dart';
 
 class AppRouter {
@@ -28,6 +30,9 @@ class AppRouter {
 
   // News routes
   static const newsDetail = '/news-detail';
+
+  // Authorize routes
+  static const authorize = '/authorize';
 
   static final List<GetPage> routes = [
     // Auth
@@ -52,6 +57,11 @@ class AppRouter {
       name: newsDetail,
       page: () => const NewsDetailScreen(),
       binding: NewsDetailBinding(),
+    ),
+    GetPage(
+      name: authorize,
+      page: () => const AuthorizeScreen(),
+      binding: AuthorizeBinding(),
     ),
   ];
 }

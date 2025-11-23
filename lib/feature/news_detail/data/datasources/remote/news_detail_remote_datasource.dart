@@ -21,7 +21,8 @@ abstract class NewsDetailRemoteDataSource {
 class NewsDetailRemoteDataSourceImpl implements NewsDetailRemoteDataSource {
   final DioApi dioApi;
 
-  String get _baseUrl => Config.baseUrl;
+  // News API luôn dùng URL của NPP
+  String get _baseUrl => Config.baseUrlNpp;
   String get _newsDetailUrl => '$_baseUrl/newss/getnewsbyid';
 
   NewsDetailRemoteDataSourceImpl({required this.dioApi});

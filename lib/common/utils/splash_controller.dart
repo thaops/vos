@@ -7,7 +7,7 @@ import 'package:vos_flutter/common/services/ota_update_service.dart';
 import 'package:vos_flutter/common/services/services.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/router/app_router.dart';
-import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
 class SplashController extends GetxController {
   final OTAUpdateService _otaService = OTAUpdateService();

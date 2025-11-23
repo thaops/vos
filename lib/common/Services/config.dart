@@ -7,25 +7,20 @@ class Config {
   // https://namphuong-dev.azurewebsites.net/
   static const String _baseUrlKey = 'base_url';
   static const String _manualEnvKey = 'manual_environment_set';
-  // Default URLs - fallback to .env if available
-  static String get _defaultProdBaseUrl {
-    return dotenv.env['API_BASE_URL_PROD'] ??
-        dotenv.env['API_BASE_URL'] ??
+  
+  // URL cho VACS (dùng cho các API chính: login, profile, tasks, ...)
+  static String get baseUrlVasc {
+    return dotenv.env['API_BASE_URL_VACS'] ??
+        "https://share-api.viags.vn";
+  }
+
+  // URL cho NPP (dùng cho News API)
+  static String get baseUrlNpp {
+    return dotenv.env['API_BASE_URL_NPP'] ??
         "https://api-vos-dev.azurewebsites.net/api";
   }
 
-  static String get _defaultDevBaseUrl {
-    return dotenv.env['API_BASE_URL_DEV'] ??
-        dotenv.env['API_BASE_URL'] ??
-        "https://api-vos-dev.azurewebsites.net/api";
-  }
-
-  // Internal helper to compute current default based on awaiting flag
-  static String _currentDefaultBaseUrl(GetStorage storage) {
-    final bool awaiting = storage.read('awaiting') ?? false;
-    return awaiting ? _defaultDevBaseUrl : _defaultProdBaseUrl;
-  }
-
+  // Base URL chính - mặc định dùng VACS (cho các API chính)
   static String get baseUrl {
     final storage = GetStorage();
     String? savedUrl = storage.read<String>(_baseUrlKey);
@@ -36,8 +31,9 @@ class Config {
       print("Using manual environment: $savedUrl");
       return savedUrl;
     }
-    // Chỉ fallback về awaiting logic khi chưa có URL thủ công
-    return _currentDefaultBaseUrl(storage);
+    
+    // Mặc định dùng VACS cho các API chính
+    return baseUrlVasc;
   }
 
   static set baseUrl(String url) {
@@ -48,7 +44,7 @@ class Config {
     storage.write(_manualEnvKey, true);
   }
 
-  /// Reset về logic awaiting (xóa URL thủ công)
+  /// Reset về logic mặc định (xóa URL thủ công)
   static void resetToAwaitingLogic() {
     final storage = GetStorage();
     storage.remove(_baseUrlKey);

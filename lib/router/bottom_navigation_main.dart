@@ -1,7 +1,8 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
-import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
+import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:flutter/material.dart';
 import 'package:vos_flutter/feature/profile/view/profile_screen.dart';
 import 'package:vos_flutter/feature/home/view/home_tab.dart';
@@ -25,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
     // Chỉ tạo controller nếu chưa tồn tại
     // Tránh tạo nhiều instance gây crash Syncfusion Chart
     if (!Get.isRegistered<ProfileController>()) {
-      Get.put(ProfileController());
+      ProfileBinding().dependencies();
     }
 
     // Khởi tạo NewsBinding để đăng ký NewsController
@@ -34,7 +35,21 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     // Khởi tạo _selectedIndex dựa trên isEmployee
-    final isEmployee = _storage.read<bool>('is_employee') ?? false;
+    // Kiểm tra từ ProfileController nếu có, nếu không thì check profile trực tiếp
+    bool isEmployee = false;
+    try {
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        isEmployee = profileController.isEmployee.value;
+      } else {
+        // Fallback: check profile từ storage
+        final profile = _storage.read('user_profile_data');
+        isEmployee = profile != null;
+      }
+    } catch (e) {
+      // Nếu có lỗi, mặc định là false
+      isEmployee = false;
+    }
     _selectedIndex = isEmployee
         ? 0
         : 1; // Nếu không phải nhân viên, bắt đầu từ WebView (index 1)
@@ -44,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
 
   // Lấy danh sách screens dựa trên isEmployee
   // QUAN TRỌNG: Check logout state để tránh rebuild HomeTab khi đang logout
-  List<Widget> get _screens {
+  List<Widget> _getScreens() {
     try {
       // Check logout state trước
       if (Get.isRegistered<ProfileController>()) {
@@ -59,7 +74,21 @@ class _MainScreenState extends State<MainScreen> {
       return [const NewsScreen(), ProfileScreen()];
     }
 
-    final isEmployee = _storage.read<bool>('is_employee') ?? false;
+    // Kiểm tra từ ProfileController nếu có
+    bool isEmployee = false;
+    try {
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        isEmployee = profileController.isEmployee.value;
+      } else {
+        // Fallback: check profile từ storage
+        final profile = _storage.read('user_profile_data');
+        isEmployee = profile != null;
+      }
+    } catch (e) {
+      isEmployee = false;
+    }
+
     if (isEmployee) {
       return [const HomeTab(), const NewsScreen(), ProfileScreen()];
     } else {
@@ -68,8 +97,22 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   // Lấy index thực tế dựa trên isEmployee
-  int get _actualIndex {
-    final isEmployee = _storage.read<bool>('is_employee') ?? false;
+  int _getActualIndex() {
+    // Kiểm tra từ ProfileController nếu có
+    bool isEmployee = false;
+    try {
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        isEmployee = profileController.isEmployee.value;
+      } else {
+        // Fallback: check profile từ storage
+        final profile = _storage.read('user_profile_data');
+        isEmployee = profile != null;
+      }
+    } catch (e) {
+      isEmployee = false;
+    }
+
     if (isEmployee) {
       return _selectedIndex;
     } else {
@@ -89,7 +132,21 @@ class _MainScreenState extends State<MainScreen> {
 
   void _onTabTapped(int index) {
     setState(() {
-      final isEmployee = _storage.read<bool>('is_employee') ?? false;
+      // Kiểm tra từ ProfileController nếu có
+      bool isEmployee = false;
+      try {
+        if (Get.isRegistered<ProfileController>()) {
+          final profileController = Get.find<ProfileController>();
+          isEmployee = profileController.isEmployee.value;
+        } else {
+          // Fallback: check profile từ storage
+          final profile = _storage.read('user_profile_data');
+          isEmployee = profile != null;
+        }
+      } catch (e) {
+        isEmployee = false;
+      }
+
       if (isEmployee) {
         // Nhân viên: index trực tiếp
         _selectedIndex = index;
@@ -110,10 +167,24 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _actualIndex, children: _screens),
+      body: IndexedStack(index: _getActualIndex(), children: _getScreens()),
       bottomNavigationBar: Builder(
         builder: (context) {
-          final isEmployee = _storage.read<bool>('is_employee') ?? false;
+          // Kiểm tra từ ProfileController nếu có (reactive)
+          return Obx(() {
+            bool isEmployee = false;
+            try {
+              if (Get.isRegistered<ProfileController>()) {
+                final profileController = Get.find<ProfileController>();
+                isEmployee = profileController.isEmployee.value;
+              } else {
+                // Fallback: check profile từ storage
+                final profile = _storage.read('user_profile_data');
+                isEmployee = profile != null;
+              }
+            } catch (e) {
+              isEmployee = false;
+            }
 
           return Container(
             color: Colors.white,
@@ -184,6 +255,7 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           );
+          });
         },
       ),
     );

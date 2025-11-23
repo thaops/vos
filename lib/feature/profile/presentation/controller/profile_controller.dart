@@ -1,0 +1,236 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
+import 'package:vos_flutter/feature/profile/domain/models/user_profile.dart';
+import 'package:vos_flutter/feature/profile/domain/usecases/check_employee_status_usecase.dart';
+import 'package:vos_flutter/feature/profile/domain/usecases/check_viags_status_usecase.dart';
+import 'package:vos_flutter/feature/profile/domain/usecases/get_user_profile_usecase.dart';
+import 'package:vos_flutter/feature/profile/domain/usecases/link_viags_account_usecase.dart';
+import 'package:vos_flutter/feature/profile/domain/usecases/logout_usecase.dart';
+
+class ProfileController extends GetxController {
+  final GetUserProfileUsecase getUserProfileUsecase;
+  final LinkViagsAccountUsecase linkViagsAccountUsecase;
+  final LogoutUsecase logoutUsecase;
+  final CheckViagsStatusUsecase checkViagsStatusUsecase;
+  final CheckEmployeeStatusUsecase checkEmployeeStatusUsecase;
+
+  ProfileController({
+    required this.getUserProfileUsecase,
+    required this.linkViagsAccountUsecase,
+    required this.logoutUsecase,
+    required this.checkViagsStatusUsecase,
+    required this.checkEmployeeStatusUsecase,
+  });
+
+  // Reactive variables
+  final Rx<UserProfile?> userProfile = Rx<UserProfile?>(null);
+  final Rx<GoogleUserDto?> googleUser = Rx<GoogleUserDto?>(null);
+  final RxBool isLoading = false.obs;
+
+  // Flag để track logout state - ngăn Obx() rebuild khi đang logout
+  bool _isLoggingOut = false;
+  bool get isLoggingOut => _isLoggingOut;
+
+  // Flag để track trạng thái liên kết VIAGS (reactive)
+  final RxBool isViagsLinked = false.obs;
+  final RxString viagsEmail = ''.obs;
+
+  // Flag để track trạng thái nhân viên (reactive)
+  final RxBool isEmployee = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadUserProfile();
+    _loadGoogleUser();
+    loadViagsStatus();
+    loadEmployeeStatus();
+  }
+
+  /// Load user profile từ repository
+  Future<void> loadUserProfile() async {
+    try {
+      final result = await getUserProfileUsecase.call();
+      if (result.isSuccess && result.data != null) {
+        userProfile.value = result.data;
+        // Khi có profile mới, tự động update employee status
+        isEmployee.value = true;
+      } else {
+        userProfile.value = null;
+        // Khi không có profile, tự động update employee status
+        isEmployee.value = false;
+      }
+    } catch (e) {
+      print('Error loading user profile: $e');
+      userProfile.value = null;
+      isEmployee.value = false;
+    }
+  }
+
+  /// Load trạng thái liên kết VIAGS
+  Future<void> loadViagsStatus() async {
+    try {
+      final status = await checkViagsStatusUsecase.call();
+      isViagsLinked.value = status['isLinked'] as bool? ?? false;
+      viagsEmail.value = status['email'] as String? ?? '';
+    } catch (e) {
+      print('Error loading VIAGS status: $e');
+      isViagsLinked.value = false;
+      viagsEmail.value = '';
+    }
+  }
+
+  /// Reload trạng thái liên kết VIAGS từ storage (public method để gọi từ bên ngoài)
+  void reloadViagsStatus() {
+    loadViagsStatus();
+  }
+
+  /// Load trạng thái nhân viên
+  /// Tự động xác định: có VACS profile = nhân viên, không có = khách
+  Future<void> loadEmployeeStatus() async {
+    try {
+      // Kiểm tra xem có VACS profile hay không
+      // Nếu có profile thì là nhân viên, nếu không có thì là khách
+      isEmployee.value = userProfile.value != null;
+    } catch (e) {
+      print('Error loading employee status: $e');
+      isEmployee.value = false;
+    }
+  }
+
+  /// Reload trạng thái nhân viên từ storage (public method để gọi từ bên ngoài)
+  void reloadEmployeeStatus() {
+    loadEmployeeStatus();
+  }
+
+  void _loadGoogleUser() {
+    try {
+      final box = Hive.box('google_user_box');
+      final userData = box.get('current_user');
+      if (userData != null) {
+        googleUser.value = GoogleUserDto.fromJson(
+          Map<String, dynamic>.from(userData),
+        );
+        print('✅ Loaded Google user: ${googleUser.value?.displayName}');
+      } else {
+        // Storage đã xóa (sau logout) → clear reactive value
+        googleUser.value = null;
+        print('⚠️ No Google user found in Hive');
+      }
+    } catch (e) {
+      print('❌ Error loading Google user: $e');
+      googleUser.value = null;
+    }
+  }
+
+  /// Refresh Google user from Hive (call after login)
+  void refreshGoogleUser() {
+    _loadGoogleUser();
+  }
+
+  /// Đăng xuất: xóa cache, đăng xuất Google, trở về màn hình login
+  /// Lưu ý: KHÔNG thay đổi reactive values để tránh mutate disposed widgets
+  Future<void> logout() async {
+    try {
+      // Set flag để ngăn Obx() rebuild trong home_tab
+      _isLoggingOut = true;
+
+      // 1. Sign out Firebase Auth
+      await FirebaseAuth.instance.signOut();
+
+      // 2. Sign out Google (disconnect để xóa hoàn toàn)
+      final googleSignIn = GoogleSignIn(scopes: ['email']);
+      await googleSignIn.disconnect();
+
+      // 3. Clear Hive (Google user data) - phải clear TRƯỚC để tránh auto-login
+      final box = Hive.box('google_user_box');
+      await box.delete('current_user');
+
+      // 4. Clear GetStorage thông qua usecase
+      await logoutUsecase.call();
+
+      // KHÔNG thay đổi reactive values (isLoading, userProfile, googleUser) ở đây
+      // Flag _isLoggingOut sẽ được reset khi controller được dispose hoặc recreate
+    } catch (e) {
+      print('❌ Logout error: $e');
+
+      // Fallback: vẫn clear data ngay cả khi sign out lỗi
+      try {
+        final box = Hive.box('google_user_box');
+        await box.delete('current_user');
+        await logoutUsecase.call();
+      } catch (_) {
+        // Ignore cleanup errors
+      }
+    } finally {
+      // Reset flag sau một delay để đảm bảo navigation đã hoàn tất
+      Future.delayed(const Duration(seconds: 2), () {
+        _isLoggingOut = false;
+      });
+    }
+  }
+
+  /// Liên kết tài khoản VIAGS - sử dụng usecase
+  Future<bool> linkViagsAccount(String name, String password) async {
+    try {
+      isLoading.value = true;
+
+      final result = await linkViagsAccountUsecase.call(name, password);
+
+      if (result.isSuccess && result.data != null) {
+        // Cập nhật userProfile từ response
+        userProfile.value = result.data;
+
+        // Reload VIAGS status
+        await loadViagsStatus();
+        // Employee status sẽ tự động update vì userProfile đã được set
+        isEmployee.value = true;
+
+        // Cập nhật email trong GoogleUserModel nếu có email từ userProfile (KHÔNG xóa Google cache)
+        if (googleUser.value != null && userProfile.value?.email.isNotEmpty == true) {
+          try {
+            final box = Hive.box('google_user_box');
+            final googleUserData = googleUser.value!.toJson();
+            googleUserData['email'] = userProfile.value!.email; // Cập nhật email từ VIAGS profile
+            await box.put('current_user', googleUserData);
+            // Cập nhật reactive value
+            googleUser.value = GoogleUserDto.fromJson(googleUserData);
+            googleUser.refresh();
+          } catch (e) {
+            print('⚠️ Error updating Google user email: $e');
+          }
+        }
+
+        print('✅ Linked VIAGS account successfully');
+        return true;
+      } else {
+        print('❌ Link VIAGS failed: ${result.error}');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error linking VIAGS account: $e');
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  String get displayName => userProfile.value?.userName ?? 'Người dùng';
+  String get userCode => userProfile.value?.userCode ?? '';
+  String get companyName => userProfile.value?.companyNameVN ?? '';
+  String get email {
+    // Ưu tiên email từ VIAGS nếu đã liên kết
+    if (isViagsLinked.value && viagsEmail.value.isNotEmpty) {
+      return viagsEmail.value;
+    }
+    return userProfile.value?.email ?? '';
+  }
+
+  String get phone => userProfile.value?.phone ?? '';
+  String get status => userProfile.value?.status ?? '';
+  String get userType => userProfile.value?.userType ?? '';
+  String get description => userProfile.value?.description ?? '';
+}

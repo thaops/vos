@@ -3,8 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
-import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
-import 'package:vos_flutter/feature/profile/models/user_profile_model.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
+import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
+import 'package:vos_flutter/feature/profile/domain/models/user_profile.dart';
 import 'package:vos_flutter/router/app_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
@@ -39,11 +40,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Tạo controller nếu chưa tồn tại (khi được dùng trong MainScreen)
-    // Hoặc tìm controller đã tồn tại (khi được navigate từ route có binding)
-    final controller = Get.isRegistered<ProfileController>()
-        ? Get.find<ProfileController>()
-        : Get.put(ProfileController());
+    // Đảm bảo ProfileBinding được gọi trước
+    if (!Get.isRegistered<ProfileController>()) {
+      ProfileBinding().dependencies();
+    }
+    
+    // Controller sẽ được tạo bởi ProfileBinding
+    final controller = Get.find<ProfileController>();
 
     // QUAN TRỌNG: Reload isEmployee và isViagsLinked từ storage TRƯỚC KHI Obx() build
     // Đảm bảo giá trị được sync với storage (đặc biệt khi chọn "Không" trong login screen)
@@ -69,13 +72,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return _buildNotLoggedInState(controller);
               }
 
-              // Ưu tiên hiển thị Google user nếu có
+              // ✅ ƯU TIÊN: Hiển thị VACS profile nếu có (profile từ VACS)
+              if (hasUserProfile) {
+                return _buildProfileContent(controller);
+              }
+
+              // Nếu không có VACS profile nhưng có Google user thì hiển thị Google user
               if (hasGoogleUser) {
                 return _buildGoogleUserContent(controller);
               }
 
-              // Nếu không có Google user nhưng có userProfile thì hiển thị userProfile
-              return _buildProfileContent(controller);
+              // Fallback
+              return _buildNotLoggedInState(controller);
             } catch (e) {
               // Controller đã bị dispose hoặc không tồn tại
               return const SizedBox.shrink();
@@ -133,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildHeaderCard(UserProfileModel user) {
+  Widget _buildHeaderCard(UserProfile user) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.all(16.w),
@@ -491,7 +499,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildPersonalInfo(
-    UserProfileModel user,
+    UserProfile user,
     ProfileController controller,
   ) {
     return Container(
@@ -628,7 +636,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildCompanyInfo(UserProfileModel user) {
+  Widget _buildCompanyInfo(UserProfile user) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       padding: EdgeInsets.all(20.w),
