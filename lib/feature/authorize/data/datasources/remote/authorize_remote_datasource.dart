@@ -45,10 +45,8 @@ class AuthorizeRemoteDataSourceImpl implements AuthorizeRemoteDataSource {
           }
         }
 
-        if (authorizes.isEmpty) {
-          throw Exception('Không tìm thấy dữ liệu ủy quyền. Vui lòng kiểm tra HR_ID hoặc quyền truy cập.');
-        }
-
+        // Empty list là trường hợp hợp lệ (user có thể chưa có ủy quyền nào)
+        // UI sẽ xử lý empty state để hiển thị "Chưa có ủy quyền nào"
         return authorizes;
       },
     );
