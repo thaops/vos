@@ -1,7 +1,5 @@
-import 'dart:convert';
-import 'package:dio/dio.dart' as dioLib;
-import 'package:vos_flutter/common/services/config.dart';
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
+import 'package:vos_flutter/core/network/share_api_repository.dart';
 
 abstract class AuthorizeCreateRemoteDataSource {
   Future<ApiResult<List<Map<String, dynamic>>>> searchAuthorizedPersons(
@@ -23,102 +21,90 @@ abstract class AuthorizeCreateRemoteDataSource {
 
 class AuthorizeCreateRemoteDataSourceImpl
     implements AuthorizeCreateRemoteDataSource {
-  final dioLib.Dio dio;
+  final ShareApiRepository shareApiRepository;
 
-  AuthorizeCreateRemoteDataSourceImpl({required this.dio});
+  AuthorizeCreateRemoteDataSourceImpl({required this.shareApiRepository});
 
   @override
   Future<ApiResult<List<Map<String, dynamic>>>> searchAuthorizedPersons(
     String token,
     String query,
   ) async {
-    try {
-      final lsData = jsonEncode({
-        'Module': 'USER',
-        'KeySearch': query,
-        'Dep_ID': 0,
-      });
-      final list = await _fetchShareList(
-        token: token,
-        functionCode: 'HR_DATA_SEARCH',
-        lsData: lsData,
-      );
-      final persons = list
-          .whereType<Map<String, dynamic>>()
-          .where((item) {
-            final hrId = item['HR_ID'];
-            final userCode = item['UserCode'] ?? item['HR_No'];
-            final userName = item['UserName'] ?? item['FullName'];
-            return hrId != null && (userCode != null || userName != null);
-          })
-          .map(
-            (item) => {
-              'HR_ID': item['HR_ID'] ?? 0,
-              'HR_No': item['UserCode'] ?? item['HR_No'] ?? '',
-              'FullName': item['UserName'] ?? item['FullName'] ?? '',
-              'Dep_Name_VN': item['Level_3_Name'] ?? item['Dep_Name_VN'] ?? '',
-              'Code_Job_Title': item['Code_Job_Title']?.toString() ?? '',
-              'JobTitle_NameVN':
-                  item['Name_Job_Title'] ?? item['JobTitle_NameVN'] ?? '',
-            },
-          )
-          .toList();
-      return ApiResult.success(persons);
-    } catch (e) {
-      return ApiResult.error('searchAuthorizedPersons failed: $e');
-    }
+    return shareApiRepository.callShareGet<List<Map<String, dynamic>>>(
+      functionCode: 'HR_DATA_SEARCH',
+      token: token,
+      data: {'Module': 'USER', 'KeySearch': query, 'Dep_ID': 0},
+      parser: (json) {
+        if (json is! List) return [];
+        return json
+            .whereType<Map<String, dynamic>>()
+            .where((item) {
+              final hrId = item['HR_ID'];
+              final userCode = item['UserCode'] ?? item['HR_No'];
+              final userName = item['UserName'] ?? item['FullName'];
+              return hrId != null && (userCode != null || userName != null);
+            })
+            .map(
+              (item) => {
+                'HR_ID': item['HR_ID'] ?? 0,
+                'HR_No': item['UserCode'] ?? item['HR_No'] ?? '',
+                'FullName': item['UserName'] ?? item['FullName'] ?? '',
+                'Dep_Name_VN':
+                    item['Level_3_Name'] ?? item['Dep_Name_VN'] ?? '',
+                'Code_Job_Title': item['Code_Job_Title']?.toString() ?? '',
+                'JobTitle_NameVN':
+                    item['Name_Job_Title'] ?? item['JobTitle_NameVN'] ?? '',
+              },
+            )
+            .toList();
+      },
+    );
   }
 
   @override
   Future<ApiResult<List<Map<String, String>>>> loadAuthorizeTypes(
     String token,
   ) async {
-    try {
-      final list = await _fetchShareList(
-        token: token,
-        functionCode: 'EAF_HR.dbo.HR_Authorize.ls_Authorize',
-        lsData: '{}',
-      );
-      final types = list
-          .whereType<Map<String, dynamic>>()
-          .map(
-            (item) => {
-              'code': item['Code']?.toString() ?? '',
-              'name': item['Name_VN']?.toString() ?? '',
-            },
-          )
-          .where((type) => type['code']!.isNotEmpty)
-          .toList();
-      return ApiResult.success(types);
-    } catch (e) {
-      return ApiResult.error('loadAuthorizeTypes failed: $e');
-    }
+    return shareApiRepository.callShareGet<List<Map<String, String>>>(
+      functionCode: 'EAF_HR.dbo.HR_Authorize.ls_Authorize',
+      token: token,
+      parser: (json) {
+        if (json is! List) return [];
+        return json
+            .whereType<Map<String, dynamic>>()
+            .map(
+              (item) => {
+                'code': item['Code']?.toString() ?? '',
+                'name': item['Name_VN']?.toString() ?? '',
+              },
+            )
+            .where((type) => type['code']!.isNotEmpty)
+            .toList();
+      },
+    );
   }
 
   @override
   Future<ApiResult<List<Map<String, String>>>> loadAuthorizeStatuses(
     String token,
   ) async {
-    try {
-      final list = await _fetchShareList(
-        token: token,
-        functionCode: 'EAF_HR.dbo.HR_Authorize.Status',
-        lsData: '{}',
-      );
-      final statuses = list
-          .whereType<Map<String, dynamic>>()
-          .map(
-            (item) => {
-              'code': item['Code']?.toString() ?? '',
-              'name': item['Name_VN']?.toString() ?? '',
-            },
-          )
-          .where((status) => status['code']!.isNotEmpty)
-          .toList();
-      return ApiResult.success(statuses);
-    } catch (e) {
-      return ApiResult.error('loadAuthorizeStatuses failed: $e');
-    }
+    return shareApiRepository.callShareGet<List<Map<String, String>>>(
+      functionCode: 'EAF_HR.dbo.HR_Authorize.Status',
+      token: token,
+      parser: (json) {
+        if (json is! List) return [];
+        return json
+            .whereType<Map<String, dynamic>>()
+            .map(
+              (item) => {
+                'code': item['Code']?.toString() ?? '',
+                'name': item['Name_VN']?.toString() ?? '',
+              },
+            )
+            .where((status) => status['code']!.isNotEmpty)
+            .toList();
+      },
+    );
   }
 
   @override
@@ -126,79 +112,35 @@ class AuthorizeCreateRemoteDataSourceImpl
     String token,
     Map<String, dynamic> payload,
   ) async {
-    try {
-      final requestData = {
-        'FunctionCode': 'HR_AUTHORIZE_UPDATE',
-        'ls_Data': jsonEncode(payload),
-      };
+    return shareApiRepository.callShareUpdate<String>(
+      functionCode: 'HR_AUTHORIZE_UPDATE',
+      token: token,
+      data: payload,
+      parser: (json) {
+        // Response từ Share_Update có thể trả về:
+        // - String: "Cập nhật thành công" hoặc message
+        // - null: nếu không có data
+        // - Object: nếu có data object
 
-      final response = await dio.request(
-        '${Config.baseUrlVasc}/Share/Share_Update',
-        options: dioLib.Options(
-          method: 'POST',
-          headers: {
-            'Authorization': token,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          responseType: dioLib.ResponseType.plain,
-        ),
-        data: requestData,
-      );
+        if (json == null) {
+          return 'Cập nhật thành công';
+        }
 
-      final body = _decodeResponse(response.data);
-      final resultCode = body['ResultCode'] as int? ?? -1;
-      if (resultCode != 0) {
-        final message = body['Message'] as String? ?? 'Tạo ủy quyền thất bại';
-        return ApiResult.error(message);
-      }
+        if (json is String) {
+          return json.isEmpty ? 'Cập nhật thành công' : json;
+        }
 
-      final data = body['Data']?.toString() ?? 'Cập nhật thành công';
-      return ApiResult.success(data);
-    } catch (e) {
-      return ApiResult.error('createAuthorize failed: $e');
-    }
-  }
+        // Nếu là object, lấy message hoặc convert sang string
+        if (json is Map) {
+          final message = json['Message'] as String?;
+          if (message != null && message.isNotEmpty) {
+            return message;
+          }
+        }
 
-  Future<List<dynamic>> _fetchShareList({
-    required String token,
-    required String functionCode,
-    required String lsData,
-  }) async {
-    final response = await dio.request(
-      '${Config.baseUrlVasc}/Share/Share_Get',
-      options: dioLib.Options(
-        method: 'POST',
-        headers: {
-          'Authorization': token,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        responseType: dioLib.ResponseType.plain,
-      ),
-      data: {'FunctionCode': functionCode, 'ls_Data': lsData},
+        // Fallback: convert sang string
+        return json.toString();
+      },
     );
-    final body = _decodeResponse(response.data);
-    final resultCode = body['ResultCode'] as int? ?? -1;
-    if (resultCode != 0) {
-      final message = body['Message'] as String? ?? 'Không thể lấy dữ liệu';
-      throw message;
-    }
-    final dataString = body['Data'] as String? ?? '';
-    if (dataString.trim().isEmpty) {
-      return [];
-    }
-    final cleanedString = dataString.replaceAll('\r', '').replaceAll('\n', '');
-    final decoded = jsonDecode(cleanedString);
-    if (decoded is List) {
-      return decoded;
-    }
-    return [];
-  }
-
-  Map<String, dynamic> _decodeResponse(dynamic data) {
-    if (data is Map<String, dynamic>) return data;
-    if (data is String && data.trim().isNotEmpty) {
-      return json.decode(data) as Map<String, dynamic>;
-    }
-    return {};
   }
 }

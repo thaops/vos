@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
+import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/authorize_create/data/datasources/remote/authorize_create_remote_datasource.dart';
 import 'package:vos_flutter/feature/authorize_create/data/repository_impl/authorize_create_repository_impl.dart';
 import 'package:vos_flutter/feature/authorize_create/domain/repositories/authorize_create_repository.dart';
@@ -12,9 +13,16 @@ import 'package:vos_flutter/feature/authorize_create/presentation/controller/aut
 class AuthorizeCreateBinding extends Bindings {
   @override
   void dependencies() {
+    // ShareApiRepository (singleton)
+    if (!Get.isRegistered<ShareApiRepository>()) {
+      Get.lazyPut<ShareApiRepository>(
+        () => ShareApiRepository(dio: dioLib.Dio()),
+      );
+    }
+
     Get.lazyPut<AuthorizeCreateRemoteDataSource>(
       () => AuthorizeCreateRemoteDataSourceImpl(
-        dio: dioLib.Dio(),
+        shareApiRepository: Get.find<ShareApiRepository>(),
       ),
     );
 

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
+import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/banner/data/datasources/remote/banner_remote_datasource.dart';
 import 'package:vos_flutter/feature/banner/data/repository_impl/banner_repository_impl.dart';
 import 'package:vos_flutter/feature/banner/domain/repositories/banner_repository.dart';
@@ -9,10 +10,17 @@ import 'package:vos_flutter/feature/banner/presentation/controller/banner_contro
 class BannerBinding extends Bindings {
   @override
   void dependencies() {
+    // ShareApiRepository (singleton)
+    if (!Get.isRegistered<ShareApiRepository>()) {
+      Get.lazyPut<ShareApiRepository>(
+        () => ShareApiRepository(dio: dioLib.Dio()),
+      );
+    }
+
     // Data Source
     if (!Get.isRegistered<BannerRemoteDataSource>()) {
       Get.lazyPut<BannerRemoteDataSource>(
-        () => BannerRemoteDataSourceImpl(dio: dioLib.Dio()),
+        () => BannerRemoteDataSourceImpl(shareApiRepository: Get.find<ShareApiRepository>()),
         // ✅ Bỏ fenix: true - tránh cycle xóa/tạo lại khi dùng Get.offAllNamed()
       );
     }

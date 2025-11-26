@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
+import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/authorize/data/datasources/remote/authorize_remote_datasource.dart';
 import 'package:vos_flutter/feature/authorize/data/repository_impl/authorize_repository_impl.dart';
 import 'package:vos_flutter/feature/authorize/domain/repositories/authorize_repository.dart';
@@ -9,10 +10,17 @@ import 'package:vos_flutter/feature/authorize/presentation/controller/authorize_
 class AuthorizeBinding extends Bindings {
   @override
   void dependencies() {
+    // ShareApiRepository (singleton)
+    if (!Get.isRegistered<ShareApiRepository>()) {
+      Get.lazyPut<ShareApiRepository>(
+        () => ShareApiRepository(dio: dioLib.Dio()),
+      );
+    }
+
     // Data Source
     Get.lazyPut<AuthorizeRemoteDataSource>(
       () => AuthorizeRemoteDataSourceImpl(
-        dio: dioLib.Dio(),
+        shareApiRepository: Get.find<ShareApiRepository>(),
       ),
     );
 

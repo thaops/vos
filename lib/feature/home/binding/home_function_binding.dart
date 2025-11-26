@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
+import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/home/data/datasources/remote/home_function_remote_datasource.dart';
 import 'package:vos_flutter/feature/home/data/repository_impl/home_function_repository_impl.dart';
 import 'package:vos_flutter/feature/home/domain/repositories/home_function_repository.dart';
@@ -9,10 +10,17 @@ import 'package:vos_flutter/feature/home/presentation/controller/home_function_c
 class HomeFunctionBinding extends Bindings {
   @override
   void dependencies() {
+    // ShareApiRepository (singleton)
+    if (!Get.isRegistered<ShareApiRepository>()) {
+      Get.lazyPut<ShareApiRepository>(
+        () => ShareApiRepository(dio: dioLib.Dio()),
+      );
+    }
+
     // Data Source
     Get.lazyPut<HomeFunctionRemoteDataSource>(
       () => HomeFunctionRemoteDataSourceImpl(
-        dio: dioLib.Dio(),
+        shareApiRepository: Get.find<ShareApiRepository>(),
       ),
     );
 

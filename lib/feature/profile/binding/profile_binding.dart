@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
+import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/profile/data/datasources/local/profile_local_datasource.dart';
 import 'package:vos_flutter/feature/profile/data/datasources/remote/profile_remote_datasource.dart';
 import 'package:vos_flutter/feature/profile/data/repository_impl/profile_repository_impl.dart';
@@ -15,10 +16,17 @@ import 'package:vos_flutter/feature/profile/presentation/controller/profile_cont
 class ProfileBinding extends Bindings {
   @override
   void dependencies() {
+    // ShareApiRepository (singleton)
+    if (!Get.isRegistered<ShareApiRepository>()) {
+      Get.lazyPut<ShareApiRepository>(
+        () => ShareApiRepository(dio: dioLib.Dio()),
+      );
+    }
+
     // Data Sources
     Get.lazyPut<ProfileRemoteDataSource>(
       () => ProfileRemoteDataSourceImpl(
-        dio: dioLib.Dio(),
+        shareApiRepository: Get.find<ShareApiRepository>(),
       ),
     );
 

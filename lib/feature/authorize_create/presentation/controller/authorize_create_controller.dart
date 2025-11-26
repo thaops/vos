@@ -100,7 +100,6 @@ class AuthorizeCreateController extends BaseController with ApiResultMixin {
         }
       }
     } catch (e) {
-      // Handle error silently
     } finally {
       isLoadingAuthorizeTypes.value = false;
     }
@@ -122,7 +121,6 @@ class AuthorizeCreateController extends BaseController with ApiResultMixin {
         }
       }
     } catch (e) {
-      // Handle error silently
     } finally {
       isLoadingStatuses.value = false;
     }
@@ -246,8 +244,23 @@ class AuthorizeCreateController extends BaseController with ApiResultMixin {
 
       if (result.isSuccess) {
         Get.back(result: true);
-      } else {}
+      } else {
+        Get.snackbar(
+          'Lỗi',
+          result.error ?? 'Tạo ủy quyền thất bại',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withOpacity(0.9),
+          colorText: Colors.white,
+        );
+      }
     } catch (e) {
+      Get.snackbar(
+        'Lỗi',
+        'Có lỗi xảy ra khi tạo ủy quyền: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.9),
+        colorText: Colors.white,
+      );
     } finally {
       isSubmitting.value = false;
     }
