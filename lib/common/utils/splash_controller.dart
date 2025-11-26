@@ -24,33 +24,119 @@ class SplashController extends GetxController {
     _initializeApp();
   }
 
-  /// Khởi tạo app với FORCE UPDATE flow (silent)
+  /// Khởi tạo app - chỉ check auth nhanh, OTA chạy background
   Future<void> _initializeApp() async {
     try {
-      // Bước 1: BẮT BUỘC check và update OTA (silent)
-      loadingText.value = 'Đang khởi tạo...';
-      isCheckingUpdate.value = true;
+      loadingText.value = 'Đang kiểm tra đăng nhập...';
 
-      // Bước 2: Force check và update OTA
-      final updateResult = await _forceCheckAndUpdateSilent();
+      // ✅ Bước 1: Check auth NGAY (chỉ đọc local storage - nhanh)
+      final hasAuth = await _checkAuthQuick();
 
-      if (updateResult) {
-        // Có update và đã update xong → App sẽ restart
-        if (kDebugMode) {
-          print('🔄 App will restart after force update');
-        }
-        return;
+      if (hasAuth) {
+        // ✅ Navigate ngay, không đợi OTA
+        loadingText.value = 'Chào mừng trở lại!';
+        await _navigateToMain();
+      } else {
+        await _navigateToLogin();
       }
 
-      // Bước 3: Không có update → Tiếp tục vào app
-      await _checkAuthenticationAndNavigate();
+      // ✅ Bước 2: OTA check chạy background (không block)
+      _lazyCheckOTA();
+
+      // ✅ Bước 3: Refresh token chạy background
+      _lazyRefreshFirebaseToken();
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error in force update initialization: $e');
+        print('❌ Error in initialization: $e');
       }
-      // Fallback: vẫn vào app (để tránh block user)
+      // Fallback: vẫn vào app
       await _navigateToLogin();
     }
+  }
+
+  /// Check auth nhanh (chỉ đọc local storage)
+  Future<bool> _checkAuthQuick() async {
+    try {
+      // Check Google user từ Hive (nhanh)
+      final box = Hive.box('google_user_box');
+      final userData = box.get('current_user');
+      if (userData != null) {
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          return true; // Có session hợp lệ
+        }
+      }
+
+      // Check token cũ (nhanh)
+      final service = await Services.create();
+      final token = await service.getAccessToken();
+      return token.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// OTA check chạy background với timeout
+  void _lazyCheckOTA() {
+    Future.microtask(() async {
+      try {
+        isCheckingUpdate.value = true;
+        final updateResult = await _forceCheckAndUpdateSilent()
+            .timeout(
+              const Duration(seconds: 2),
+              onTimeout: () => false,
+            );
+
+        if (updateResult) {
+          // Có update → restart app sau khi user đã vào (delay 5s)
+          Future.delayed(const Duration(seconds: 5), () {
+            _otaService.restartAppIfNeeded();
+          });
+        }
+      } catch (e) {
+        // Silent fail
+      } finally {
+        isCheckingUpdate.value = false;
+      }
+    });
+  }
+
+  /// Refresh Firebase token background
+  void _lazyRefreshFirebaseToken() {
+    Future.microtask(() async {
+      try {
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          await currentUser.getIdToken(true).timeout(
+                const Duration(seconds: 3),
+                onTimeout: () => throw TimeoutException('Token refresh timeout'),
+              );
+
+          // Update Hive nếu cần
+          final box = Hive.box('google_user_box');
+          final userData = box.get('current_user');
+          if (userData != null) {
+            final updatedUser = GoogleUserDto.fromFirebaseUser(
+              currentUser,
+              await currentUser.getIdToken(),
+            );
+            await box.put('current_user', updatedUser.toJson());
+
+            // Refresh ProfileController nếu có
+            try {
+              if (Get.isRegistered<ProfileController>()) {
+                final profileController = Get.find<ProfileController>();
+                profileController.refreshGoogleUser();
+              }
+            } catch (e) {
+              // ProfileController chưa được tạo, không sao
+            }
+          }
+        }
+      } catch (e) {
+        // Silent fail - không block app
+      }
+    });
   }
 
   /// BẮT BUỘC check và update OTA (silent - không hiển thị UI)
@@ -105,98 +191,8 @@ class SplashController extends GetxController {
     }
   }
 
-  /// Kiểm tra authentication và navigate
-  /// Ưu tiên check Google auth trước (nhanh hơn), sau đó mới check token cũ
-  Future<void> _checkAuthenticationAndNavigate() async {
-    try {
-      loadingText.value = 'Đang kiểm tra đăng nhập...';
-
-      // Ưu tiên 1: Check Google Auth (nhanh hơn, không cần delay)
-      final hasGoogleAuth = await _checkGoogleAuth();
-      if (hasGoogleAuth) {
-        // Đã có Google auth hợp lệ → vào main ngay
-        loadingText.value = 'Chào mừng trở lại!';
-        await _navigateToMain();
-        return;
-      }
-
-      // Ưu tiên 2: Check token cũ (fallback)
-      final service = await Services.create();
-      final token = await service.getAccessToken();
-
-      if (token.isNotEmpty) {
-        loadingText.value = 'Chào mừng trở lại!';
-        await _navigateToMain();
-      } else {
-        // Không có auth nào → vào login
-        await _navigateToLogin();
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error checking authentication: $e');
-      }
-      await _navigateToLogin();
-    }
-  }
-
-  /// Check Google Auth - trả về true nếu có session hợp lệ
-  Future<bool> _checkGoogleAuth() async {
-    try {
-      final box = Hive.box('google_user_box');
-      final userData = box.get('current_user');
-
-      if (userData == null) {
-        return false; // Không có Google user
-      }
-
-      final googleUser = GoogleUserDto.fromJson(
-        Map<String, dynamic>.from(userData),
-      );
-
-      // Check Firebase Auth session
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null || currentUser.uid != googleUser.uid) {
-        // Session không hợp lệ → clear
-        await box.delete('current_user');
-        if (currentUser != null) {
-          await FirebaseAuth.instance.signOut();
-        }
-        return false;
-      }
-
-      // Session hợp lệ → refresh token và update Hive
-      try {
-        final idToken = await currentUser.getIdToken(true);
-        final updatedUser = GoogleUserDto.fromFirebaseUser(
-          currentUser,
-          idToken,
-        );
-        await box.put('current_user', updatedUser.toJson());
-
-        // Refresh ProfileController nếu có
-        try {
-          if (Get.isRegistered<ProfileController>()) {
-            final profileController = Get.find<ProfileController>();
-            profileController.refreshGoogleUser();
-          }
-        } catch (e) {
-          // ProfileController chưa được tạo, không sao
-        }
-
-        return true; // Có Google auth hợp lệ
-      } catch (e) {
-        // Token expired → clear
-        await box.delete('current_user');
-        await FirebaseAuth.instance.signOut();
-        return false;
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error checking Google auth: $e');
-      }
-      return false;
-    }
-  }
+  // ✅ REMOVED: _checkAuthenticationAndNavigate() và _checkGoogleAuth()
+  // Đã thay thế bằng _checkAuthQuick() - chỉ check local storage, không refresh token
 
   /// Navigate to main app
   Future<void> _navigateToMain() async {

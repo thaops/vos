@@ -10,6 +10,7 @@ abstract class ProfileLocalDataSource {
   Future<bool> getEmployeeStatus();
   Future<void> saveViagsCredentials(String name, String password);
   Future<Map<String, String?>> getViagsCredentials();
+  Future<void> unlinkViagsAccount();
   Future<void> clearAll();
 }
 
@@ -106,6 +107,36 @@ class ProfileLocalDataSourceImpl implements ProfileLocalDataSource {
     } catch (e) {
       print('Error getting VIAGS credentials: $e');
       return {'name': null, 'password': null};
+    }
+  }
+
+  @override
+  Future<void> unlinkViagsAccount() async {
+    try {
+      // Giữ lại name và password trước khi xóa
+      final savedName = _storage.read<String>('saved_viags_name');
+      final savedPassword = _storage.read<String>('saved_viags_password');
+      
+      // Xóa profile VACS
+      await _storage.remove('user_profile_data');
+      
+      // Xóa trạng thái liên kết
+      await _storage.remove('viags_linked');
+      await _storage.remove('viags_email');
+      
+      // Xóa employee status
+      await _storage.remove('is_employee');
+      
+      // Khôi phục name và password (nếu có)
+      if (savedName != null && savedName.isNotEmpty) {
+        await _storage.write('saved_viags_name', savedName);
+      }
+      if (savedPassword != null && savedPassword.isNotEmpty) {
+        await _storage.write('saved_viags_password', savedPassword);
+      }
+    } catch (e) {
+      print('Error unlinking VIAGS account: $e');
+      rethrow;
     }
   }
 

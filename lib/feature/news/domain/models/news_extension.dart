@@ -1,5 +1,5 @@
 import 'package:vos_flutter/feature/news/domain/models/news.dart';
-import 'package:vos_flutter/feature/news_v2/models/news_item_model.dart';
+import 'package:vos_flutter/feature/news/data/models/news_item_model.dart';
 
 extension NewsToNewsItemModel on News {
   NewsItemModel toNewsItemModel() {

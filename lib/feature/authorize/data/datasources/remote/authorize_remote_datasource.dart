@@ -7,6 +7,7 @@ import 'package:vos_flutter/feature/authorize/data/models/authorize_dto.dart';
 abstract class AuthorizeRemoteDataSource {
   Future<ApiResult<List<AuthorizeDto>>> getAuthorizes(
       String token, int authorizeId, int hrId, int year);
+  Future<ApiResult<List<Map<String, String>>>> getAuthorizeStatuses(String token);
 }
 
 class AuthorizeRemoteDataSourceImpl implements AuthorizeRemoteDataSource {
@@ -23,29 +24,35 @@ class AuthorizeRemoteDataSourceImpl implements AuthorizeRemoteDataSource {
         'Content-Type': 'application/x-www-form-urlencoded',
       };
 
-      final requestBody = {
-        'Authorize_ID': authorizeId,
-        'HR_ID': hrId,
-        'Year': year,
-      };
+      // Format ls_Data giống ví dụ: '{"Authorize_ID":0, "HR_ID":1750, "Year":0 }'
+      // Có khoảng trắng sau dấu phẩy và trước dấu ngoặc đóng
+      final lsDataString = '{"Authorize_ID":$authorizeId, "HR_ID":$hrId, "Year":$year }';
 
       final data = {
         'FunctionCode': 'HR_AUTHORIZE_GET',
-        'ls_Data': jsonEncode(requestBody),
+        'ls_Data': lsDataString,
       };
 
-      // Log request details
-      print('📤 [AUTHORIZE API] Request URL: ${Config.baseUrlVasc}/Share/Share_Get');
-      print('📤 [AUTHORIZE API] Request Method: POST');
-      print('📤 [AUTHORIZE API] Request Headers: ${headers.keys.toList()}');
-      print('📤 [AUTHORIZE API] Authorization token: ${token.length > 50 ? "${token.substring(0, 50)}..." : token}');
-      print('📤 [AUTHORIZE API] Request Body:');
-      print('   - FunctionCode: ${data['FunctionCode']}');
-      print('   - ls_Data: ${data['ls_Data']}');
+      // Log request details - đầy đủ như ví dụ
+      print('📤 [AUTHORIZE API] ========== REQUEST ==========');
+      print('📤 [AUTHORIZE API] URL: ${Config.baseUrlVasc}/Share/Share_Get');
+      print('📤 [AUTHORIZE API] Method: POST');
+      print('📤 [AUTHORIZE API] Headers:');
+      headers.forEach((key, value) {
+        if (key == 'Authorization') {
+          print('   - $key: ${value.length > 50 ? "${value.substring(0, 50)}..." : value}');
+        } else {
+          print('   - $key: $value');
+        }
+      });
+      print('📤 [AUTHORIZE API] Data:');
+      print(json.encode(data));
+      print('📤 [AUTHORIZE API] ls_Data (raw string): $lsDataString');
       print('📤 [AUTHORIZE API] Request Parameters:');
       print('   - Authorize_ID: $authorizeId');
       print('   - HR_ID: $hrId');
       print('   - Year: $year');
+      print('📤 [AUTHORIZE API] ============================');
 
       final response = await dio.request(
         '${Config.baseUrlVasc}/Share/Share_Get',
@@ -57,14 +64,64 @@ class AuthorizeRemoteDataSourceImpl implements AuthorizeRemoteDataSource {
         data: data,
       );
 
-      // Log response details
-      print('📥 [AUTHORIZE API] Response Status: ${response.statusCode}');
-      print('📥 [AUTHORIZE API] Response Type: ${response.data.runtimeType}');
-      if (response.data is String) {
-        final responseStr = response.data as String;
-        print('📥 [AUTHORIZE API] Response Length: ${responseStr.length}');
-        print('📥 [AUTHORIZE API] Response Preview (first 500 chars): ${responseStr.length > 500 ? responseStr.substring(0, 500) : responseStr}');
+      // Log response details - đầy đủ như ví dụ
+      print('📥 [AUTHORIZE API] ========== RESPONSE ==========');
+      print('📥 [AUTHORIZE API] Status Code: ${response.statusCode}');
+      if (response.statusMessage != null) {
+        print('📥 [AUTHORIZE API] Status Message: ${response.statusMessage}');
       }
+      
+      if (response.statusCode == 200) {
+        if (response.data != null) {
+          try {
+            // Log full response data as JSON string - format đẹp như ví dụ
+            dynamic dataToLog;
+            if (response.data is String) {
+              // Nếu là String, thử parse thành JSON object rồi encode lại để format đẹp
+              try {
+                dataToLog = json.decode(response.data as String);
+                print('📥 [AUTHORIZE API] Response Data:');
+                print(json.encode(dataToLog));
+              } catch (e) {
+                // Nếu không parse được, in trực tiếp string
+                print('📥 [AUTHORIZE API] Response Data (Raw String):');
+                print(response.data);
+              }
+            } else {
+              // Nếu là object, encode trực tiếp
+              print('📥 [AUTHORIZE API] Response Data:');
+              print(json.encode(response.data));
+            }
+          } catch (e) {
+            print('📥 [AUTHORIZE API] Response Data (Raw):');
+            print(response.data.toString());
+          }
+        } else {
+          print('📥 [AUTHORIZE API] Response Data: null');
+        }
+      } else {
+        print('📥 [AUTHORIZE API] Error Response:');
+        print('   Status: ${response.statusCode}');
+        print('   Message: ${response.statusMessage ?? "No message"}');
+        if (response.data != null) {
+          try {
+            print('   Data:');
+            if (response.data is String) {
+              try {
+                final errorData = json.decode(response.data as String);
+                print(json.encode(errorData));
+              } catch (e) {
+                print(response.data);
+              }
+            } else {
+              print(json.encode(response.data));
+            }
+          } catch (e) {
+            print('   Data (Raw): ${response.data}');
+          }
+        }
+      }
+      print('📥 [AUTHORIZE API] =============================');
 
       if (response.statusCode == 200 && response.data != null) {
         Map<String, dynamic> responseData;
@@ -195,6 +252,97 @@ class AuthorizeRemoteDataSourceImpl implements AuthorizeRemoteDataSource {
       print('❌ [AUTHORIZE API] Exception: $e');
       print('❌ [AUTHORIZE API] Stack trace: $stackTrace');
       return ApiResult.error('getAuthorizes failed: $e');
+    }
+  }
+
+  @override
+  Future<ApiResult<List<Map<String, String>>>> getAuthorizeStatuses(String token) async {
+    try {
+      final headers = {
+        'Authorization': token,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+
+      final data = {
+        'FunctionCode': 'EAF_HR.dbo.HR_Authorize.Status',
+        'ls_Data': '{}',
+      };
+
+      print('📤 [STATUS API] ========== REQUEST ==========');
+      print('📤 [STATUS API] URL: ${Config.baseUrlVasc}/Share/Share_Get');
+      print('📤 [STATUS API] Method: POST');
+      print('📤 [STATUS API] Data:');
+      print(json.encode(data));
+
+      final response = await dio.request(
+        '${Config.baseUrlVasc}/Share/Share_Get',
+        options: dioLib.Options(
+          method: 'POST',
+          headers: headers,
+          responseType: dioLib.ResponseType.plain,
+        ),
+        data: data,
+      );
+
+      print('📥 [STATUS API] Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200 && response.data != null) {
+        Map<String, dynamic> responseData;
+
+        try {
+          if (response.data is String) {
+            final jsonString = response.data as String;
+            responseData = json.decode(jsonString) as Map<String, dynamic>;
+          } else {
+            responseData = response.data as Map<String, dynamic>;
+          }
+        } catch (e) {
+          return ApiResult.error('Failed to parse response: ${e.toString()}');
+        }
+
+        final resultCode = responseData['ResultCode'] as int?;
+        final message = responseData['Message'] as String? ?? '';
+
+        if (resultCode != 0) {
+          return ApiResult.error(message.isNotEmpty ? message : 'Lấy danh sách trạng thái thất bại');
+        }
+
+        final dataString = responseData['Data'] as String?;
+        if (dataString == null || dataString.isEmpty) {
+          return ApiResult.success([]);
+        }
+
+        try {
+          final cleanedString = dataString
+              .replaceAll('\r\n', '')
+              .replaceAll('\r', '')
+              .replaceAll('\n', '')
+              .trim();
+
+          final List<dynamic> dataList = jsonDecode(cleanedString);
+          final statuses = <Map<String, String>>[];
+
+          for (final item in dataList) {
+            if (item is Map<String, dynamic>) {
+              statuses.add({
+                'code': (item['Code'] as String? ?? '').toString(),
+                'name': (item['Name_VN'] as String? ?? '').toString(),
+              });
+            }
+          }
+
+          print('📥 [STATUS API] Parsed ${statuses.length} statuses');
+          return ApiResult.success(statuses);
+        } catch (e) {
+          return ApiResult.error('Failed to parse status list: ${e.toString()}');
+        }
+      } else {
+        return ApiResult.error('Invalid response status: ${response.statusCode}');
+      }
+    } catch (e, stackTrace) {
+      print('❌ [STATUS API] Exception: $e');
+      print('❌ [STATUS API] Stack trace: $stackTrace');
+      return ApiResult.error('getAuthorizeStatuses failed: $e');
     }
   }
 }

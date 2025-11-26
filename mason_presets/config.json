@@ -1,6 +1,6 @@
 {
-    "feature_name":  "news_detail",
-    "model_name":  "news_detail",
+    "feature_name":  "authorize_create",
+    "model_name":  "authorize_create",
     "usecase_definitions":  [
                                 "get_news:List\u003cArticle\u003e",
                                 "get_article_detail:Article",
@@ -14,5 +14,5 @@
     "has_pagination":  false,
     "has_search":  false,
     "has_full_cache":  false,
-    "api_base_path":  "newss/getnewsbyid"
+    "api_base_path":  "/api/authorize_create"
 }

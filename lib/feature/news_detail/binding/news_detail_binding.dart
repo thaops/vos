@@ -16,11 +16,28 @@ import 'package:vos_flutter/feature/news_detail/domain/usecases/update_article_u
 
 import 'package:vos_flutter/feature/news_detail/domain/usecases/delete_article_usecase.dart';
 
+import 'package:vos_flutter/feature/news_detail/domain/models/news_detail_args.dart';
 import 'package:vos_flutter/feature/news_detail/presentation/controller/news_detail_controller.dart';
+import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
 class NewsDetailBinding extends Bindings {
   @override
   void dependencies() {
+    // 1. Parse arguments TẠI ĐÂY
+    final args = Get.arguments as NewsDetailArgs?;
+
+    // 2. Đảm bảo ProfileController được register trước
+    if (!Get.isRegistered<ProfileController>()) {
+      ProfileBinding().dependencies();
+    }
+
+    // 3. Đăng ký DioApi nếu chưa có
+    if (!Get.isRegistered<DioApi>()) {
+      Get.lazyPut<DioApi>(() => DioApi());
+    }
+
+    // 4. Data Sources
     Get.lazyPut<NewsDetailRemoteDataSource>(
       () => NewsDetailRemoteDataSourceImpl(dioApi: Get.find<DioApi>()),
     );
@@ -66,6 +83,7 @@ class NewsDetailBinding extends Bindings {
 
     Get.lazyPut<NewsDetailController>(
       () => NewsDetailController(
+        args: args,
         getNewsUsecase: Get.find<GetNewsDetailUsecase>(),
         getArticleDetailUsecase: Get.find<GetNewsDetailArticleUsecase>(),
         searchNewsUsecase: Get.find<SearchNewsDetailUsecase>(),

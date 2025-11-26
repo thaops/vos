@@ -139,7 +139,15 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/
+    - assets/image/logo_viags.png
+    - assets/image/login_backgroud.png
+    - assets/image/copy.png
+    - assets/image/google.png
+    - assets/image/icon_app.png
+    - assets/image/avatar.jpg
+    - assets/image/logo_mc.png
+    - assets/icon/
+    - assets/fonts/
     - shorebird.yaml
     - .env
 

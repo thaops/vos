@@ -1,0 +1,597 @@
+---
+alwaysApply: true
+---
+
+# Clean Architecture Feature Structure
+
+## 📁 Cấu trúc thư mục chuẩn
+
+Mỗi feature phải tuân theo cấu trúc Clean Architecture với 3 layer chính:
+
+```
+lib/feature/{feature_name}/
+├── data/                          ✅ Data layer (external concerns)
+│   ├── models/                    ✅ DTOs (Data Transfer Objects)
+│   │   ├── {feature}_request_dto.dart
+│   │   ├── {feature}_response_dto.dart
+│   │   └── {model}_dto.dart
+│   ├── datasources/               ✅ Data sources
+│   │   ├── remote/                ✅ API calls (HTTP)
+│   │   │   └── {feature}_remote_datasource.dart
+│   │   └── local/                 ✅ Local storage (Hive) - TÙY CHỌN
+│   │       └── {feature}_local_datasource.dart
+│   └── repository_impl/           ✅ Repository implementations
+│       └── {feature}_repository_impl.dart
+├── domain/                        ✅ Domain layer (business logic)
+│   ├── models/                    ✅ Domain entities (pure Dart)
+│   │   ├── {model}.dart
+│   │   └── {feature}_args.dart    ✅ Routing arguments (nếu có)
+│   ├── repositories/             ✅ Repository interfaces
+│   │   └── {feature}_repository.dart
+│   └── usecases/                  ✅ Use cases (business rules)
+│       ├── get_{feature}_usecase.dart
+│       ├── get_{model}_detail_usecase.dart
+│       └── ...
+├── presentation/                  ✅ Presentation layer (UI)
+│   ├── controller/
+│   │   └── {feature}_controller.dart
+│   ├── view/
+│   │   └── {feature}_screen.dart
+│   └── widgets/
+│       └── {feature}_widget.dart
+└── binding/
+    └── {feature}_binding.dart     ✅ Dependency injection
+```
+
+---
+
+## 🎯 Trách nhiệm từng layer
+
+### 1. **Data Layer** - Xử lý dữ liệu bên ngoài
+
+**DTOs (Data Transfer Objects)**:
+- ✅ Chuyển đổi giữa Domain models và JSON
+- ✅ Có methods: `toDomain()`, `fromDomain()`, `toJson()`, `fromJson()`
+- ✅ Đặt trong `data/models/`
+
+**Remote DataSource**:
+- ✅ Chỉ gọi API HTTP, KHÔNG có business logic
+- ✅ Trả về `ApiResult<T>` hoặc `ApiResult<List<T>>`
+- ✅ Đặt trong `data/datasources/remote/`
+
+**Local DataSource** (TÙY CHỌN):
+- ✅ Lưu/đọc từ Hive database
+- ✅ Chỉ làm việc với DTOs
+- ✅ Đặt trong `data/datasources/local/`
+- ✅ **Khi nào cần**: Feature cần cache data, offline support, hoặc fallback khi API fail
+
+**Repository Implementation**:
+- ✅ Quyết định lấy data từ Remote hay Local
+- ✅ Pattern: **Remote first → Cache → Fallback Local**
+- ✅ Chuyển đổi DTOs ↔ Domain models
+- ✅ Đặt trong `data/repository_impl/`
+
+### 2. **Domain Layer** - Business logic thuần túy
+
+**Domain Models**:
+- ✅ Pure Dart classes, KHÔNG phụ thuộc framework
+- ✅ Chứa business rules và validation
+- ✅ Đặt trong `domain/models/`
+
+**Repository Interface**:
+- ✅ Abstract class định nghĩa contract
+- ✅ Domain layer KHÔNG biết implementation
+- ✅ Đặt trong `domain/repositories/`
+
+**Use Cases**:
+- ✅ Mỗi use case = 1 business action
+- ✅ Gọi repository, KHÔNG gọi trực tiếp DataSource
+- ✅ Đặt trong `domain/usecases/`
+
+### 3. **Presentation Layer** - UI và state management
+
+**Controller**:
+- ✅ Quản lý state (RxList, RxString, etc.)
+- ✅ Gọi UseCase, KHÔNG gọi Repository trực tiếp
+- ✅ Xử lý UI logic (loading, error, success)
+- ✅ Đặt trong `presentation/controller/`
+
+**View/Screen**:
+- ✅ Chỉ render UI, KHÔNG có business logic
+- ✅ Lấy data từ Controller
+- ✅ Đặt trong `presentation/view/`
+
+**Widgets**:
+- ✅ Reusable UI components cho feature
+- ✅ Đặt trong `presentation/widgets/`
+
+### 4. **Binding** - Dependency Injection
+
+**Binding**:
+- ✅ Inject tất cả dependencies vào GetX
+- ✅ Parse routing arguments (nếu có)
+- ✅ Đặt trong `binding/`
+
+---
+
+## 🔄 Data Flow Pattern
+
+```
+Controller.getNews()
+  ↓
+UseCase.call()
+  ↓
+Repository.getNews()
+  ↓
+RepositoryImpl.getNews()
+  ↓
+RemoteDataSource.getNews()
+  ├─ ✅ Success → Cache vào Local → Trả về Domain Model
+  └─ ❌ Error → Fallback Local
+      ↓
+      LocalDataSource.getNews()
+        ├─ ✅ Có data → Trả về từ cache
+        └─ ❌ Không có → Trả về error từ Remote
+```
+
+**Quy tắc**:
+- ✅ Controller chỉ gọi UseCase
+- ✅ UseCase chỉ gọi Repository interface
+- ✅ RepositoryImpl quyết định Remote hay Local
+- ✅ RemoteDataSource chỉ call API
+- ✅ LocalDataSource chỉ đọc/ghi Hive
+
+---
+
+## 📋 Khi nào cần Local Storage?
+
+### ✅ CẦN Local Storage khi:
+- Feature cần **offline support**
+- Feature cần **cache data** để tăng performance
+- Feature cần **fallback** khi API fail
+- Feature có **pagination** và cần cache từng page
+- Feature có **search** và muốn search offline
+
+### ❌ KHÔNG CẦN Local Storage khi:
+- Feature chỉ hiển thị data real-time
+- Feature không cần offline
+- Feature chỉ là form input (không cần cache)
+
+**Ví dụ**:
+- ✅ **News**: Cần cache để đọc offline → Có Local
+- ✅ **Profile**: Cần cache user info → Có Local
+- ❌ **Login**: Chỉ gửi request, không cần cache → Có thể không cần Local
+- ❌ **Simple form**: Chỉ submit, không cần cache → Không cần Local
+
+---
+
+## 📋 Khi nào cần Remote API?
+
+### ✅ CẦN Remote API khi:
+- Feature cần lấy data từ server
+- Feature cần gửi data lên server (create, update, delete)
+- Feature cần sync với backend
+
+### ❌ KHÔNG CẦN Remote API khi:
+- Feature chỉ làm việc với local data
+- Feature chỉ là UI components thuần túy
+- Feature chỉ xử lý navigation
+
+**Ví dụ**:
+- ✅ **News**: Lấy tin tức từ API → Có Remote
+- ✅ **Login**: Gửi credentials lên server → Có Remote
+- ❌ **Settings**: Chỉ lưu local preferences → Không cần Remote
+
+---
+
+## 🏗️ Repository Pattern với Fallback
+
+**Pattern chuẩn**: Remote first → Cache → Fallback Local
+
+```dart
+// RepositoryImpl pattern
+@override
+Future<ApiResult<List<News>>> getNews({int page = 1}) async {
+  // 1. Thử Remote trước
+  final remoteResult = await remoteDataSource.getNews(page: page);
+  
+  // 2. Nếu Remote success → Cache vào Local
+  if (remoteResult.isSuccess && remoteResult.data != null) {
+    final dtoList = remoteResult.data!
+        .map((news) => NewsDto.fromDomain(news))
+        .toList();
+    await localDataSource.saveNewsPage(page, dtoList);
+    return remoteResult;
+  }
+  
+  // 3. Nếu Remote fail → Fallback Local
+  try {
+    final localData = await localDataSource.getNewsPage(page);
+    if (localData != null && localData.isNotEmpty) {
+      final domainList = localData.map((dto) => dto.toDomain()).toList();
+      return ApiResult.success(domainList);
+    }
+  } catch (e) {
+    // Log error nhưng không throw
+  }
+  
+  // 4. Nếu Local cũng không có → Trả về error từ Remote
+  return remoteResult;
+}
+```
+
+**Quy tắc**:
+- ✅ Luôn thử Remote trước
+- ✅ Cache data khi Remote success
+- ✅ Fallback Local khi Remote fail
+- ✅ Trả về error từ Remote nếu cả 2 đều fail
+
+---
+
+## ✅ Checklist khi tạo feature mới
+
+1. ✅ Xác định có cần **Local Storage** không?
+2. ✅ Xác định có cần **Remote API** không?
+3. ✅ Tạo cấu trúc thư mục đầy đủ
+4. ✅ Tạo DTOs với `toDomain()`, `fromDomain()`
+5. ✅ Tạo Domain models (pure Dart)
+6. ✅ Tạo Repository interface trong domain
+7. ✅ Tạo RepositoryImpl với fallback pattern
+8. ✅ Tạo UseCases cho mỗi business action
+9. ✅ Tạo Controller với state management
+10. ✅ Tạo Binding với dependency injection
+11. ✅ Tạo Screen/View
+12. ✅ Khai báo route trong `AppRouter`
+
+---
+
+## 🚀 Sử dụng script tự động
+
+Thay vì tạo thủ công, dùng script:
+
+```powershell
+# Tạo feature mới
+mfeature news
+
+# Script sẽ hỏi:
+# - Usecases (có thể Enter để skip)
+# - Has local storage? [Y/N]
+# - Has remote API? [Y/N]
+# - Has pagination? [Y/N]
+# - Has search? [Y/N]
+# - Has full cache? [Y/N]
+# - API base path [/api/news]
+```
+
+Script sẽ tự động tạo toàn bộ cấu trúc theo pattern này.
+
+---
+
+# GetX Routing Arguments Pattern
+
+## Nguyên tắc: Typed Arguments + Dependency Injection tại Binding
+
+**Mục tiêu**: Tách biệt hoàn toàn UI và logic, inject arguments vào Controller tại Binding layer.
+
+---
+
+## ⭐ 1) Tạo class Argument (typed, sạch, gợi ý IDE)
+
+**Vị trí**: `lib/feature/{feature}/domain/models/{feature}_args.dart`
+
+```dart
+class DetailArgs {
+  final int id;
+  final String title;
+
+  DetailArgs({
+    required this.id,
+    required this.title,
+  });
+}
+```
+
+**Quy tắc**:
+- ✅ Đặt trong `domain/models/` (business logic layer)
+- ✅ Tên class: `{Feature}Args` (ví dụ: `NewsDetailArgs`, `AuthorizeArgs`)
+- ✅ Tất cả fields là `final` và `required`
+- ✅ Không có logic, chỉ data transfer
+
+---
+
+## ⭐ 2) Truyền arguments khi điều hướng
+
+**Vị trí**: Bất kỳ nơi nào cần navigate
+
+```dart
+Get.toNamed(
+  AppRouter.newsDetail,
+  arguments: NewsDetailArgs(
+    id: 123,
+    title: "Chi tiết tin tức",
+  ),
+);
+```
+
+**Quy tắc**:
+- ✅ Luôn dùng typed class, KHÔNG dùng `Map` hoặc primitive types
+- ✅ Dùng route constants từ `AppRouter`
+- ✅ Truyền đầy đủ required fields
+
+---
+
+## ⭐ 3) Binding – inject thẳng argument vào Controller
+
+**Vị trí**: `lib/feature/{feature}/binding/{feature}_binding.dart`
+
+**👉 Đây là điểm QUAN TRỌNG NHẤT để code sạch**
+
+```dart
+class NewsDetailBinding extends Bindings {
+  @override
+  void dependencies() {
+    // 1. Parse arguments TẠI ĐÂY
+    final args = Get.arguments as NewsDetailArgs;
+    
+    // 2. Inject dependencies như bình thường
+    Get.lazyPut<NewsDetailRemoteDataSource>(
+      () => NewsDetailRemoteDataSourceImpl(dioApi: Get.find<DioApi>()),
+    );
+    
+    // ... các dependencies khác ...
+    
+    // 3. Inject Controller với args
+    Get.lazyPut<NewsDetailController>(
+      () => NewsDetailController(
+        args: args, // ← Inject args vào đây
+        getNewsUsecase: Get.find<GetNewsDetailUsecase>(),
+        // ... các dependencies khác ...
+      ),
+    );
+  }
+}
+```
+
+**Quy tắc**:
+- ✅ Parse `Get.arguments` TẠI Binding, KHÔNG phải trong Controller hay UI
+- ✅ Cast về typed class: `as {Feature}Args`
+- ✅ Inject args vào Controller constructor
+- ✅ UI KHÔNG cần xử lý argument nữa
+- ✅ Logic nằm hết trong Controller
+
+---
+
+## ⭐ 4) Controller – nhận args typed
+
+**Vị trí**: `lib/feature/{feature}/presentation/controller/{feature}_controller.dart`
+
+```dart
+class NewsDetailController extends BaseController {
+  final NewsDetailArgs args;
+  
+  // Extract fields nếu cần (optional, để code ngắn gọn hơn)
+  late final int id = args.id;
+  late final String title = args.title;
+  
+  final GetNewsDetailUsecase getNewsUsecase;
+  // ... các dependencies khác ...
+
+  NewsDetailController({
+    required this.args, // ← Nhận args từ Binding
+    required this.getNewsUsecase,
+    // ... các dependencies khác ...
+  });
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Sử dụng args trực tiếp
+    if (id != null) {
+      getArticleDetail(id);
+    } else {
+      getNews();
+    }
+  }
+}
+```
+
+**Quy tắc**:
+- ✅ Controller có đầy đủ data, KHÔNG phải gọi `Get.arguments` nữa
+- ✅ Tách biệt UI – logic hoàn toàn
+- ✅ Viết test dễ hơn (có thể mock args)
+- ✅ Optional: Extract fields thành `late final` để code ngắn gọn
+
+---
+
+## ⭐ 5) UI – cực clean
+
+**Vị trí**: `lib/feature/{feature}/presentation/view/{feature}_screen.dart`
+
+```dart
+class NewsDetailScreen extends GetView<NewsDetailController> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(controller.title), // ← Lấy từ controller
+      ),
+      body: Center(
+        child: Text("ID: ${controller.id}"), // ← Lấy từ controller
+      ),
+    );
+  }
+}
+```
+
+**Quy tắc**:
+- ✅ KHÔNG xử lý argument trong UI
+- ✅ UI chỉ lấy từ controller: `controller.args.id`, `controller.id`
+- ✅ KHÔNG import `{Feature}Args` trong UI
+- ✅ UI chỉ tập trung vào rendering
+
+---
+
+## ⭐ 6) Khai báo route (chuẩn nhất)
+
+**Vị trí**: `lib/router/app_router.dart`
+
+```dart
+class AppRouter {
+  static const newsDetail = '/news-detail';
+  
+  static final List<GetPage> routes = [
+    GetPage(
+      name: newsDetail,
+      page: () => const NewsDetailScreen(),
+      binding: NewsDetailBinding(), // ← Binding tự động inject args
+    ),
+  ];
+}
+```
+
+**Quy tắc**:
+- ✅ Route constant trong `AppRouter`
+- ✅ Binding được khai báo tại route
+- ✅ GetX tự động gọi `binding.dependencies()` khi navigate
+
+---
+
+## ❌ Anti-patterns (KHÔNG làm)
+
+### ❌ KHÔNG parse arguments trong Controller
+```dart
+// ❌ SAI
+class NewsDetailController extends BaseController {
+  @override
+  void onInit() {
+    super.onInit();
+    final newsId = Get.arguments as String?; // ❌ SAI
+  }
+}
+```
+
+### ❌ KHÔNG parse arguments trong UI
+```dart
+// ❌ SAI
+class NewsDetailScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final args = Get.arguments as NewsDetailArgs; // ❌ SAI
+    return Text(args.title);
+  }
+}
+```
+
+### ❌ KHÔNG dùng Map hoặc dynamic
+```dart
+// ❌ SAI
+Get.toNamed('/detail', arguments: {'id': 123, 'title': 'Test'});
+```
+
+---
+
+## ✅ Checklist khi tạo feature mới với arguments
+
+1. ✅ Tạo `{Feature}Args` class trong `domain/models/`
+2. ✅ Thêm route constant vào `AppRouter`
+3. ✅ Khai báo route với binding trong `AppRouter.routes`
+4. ✅ Parse args trong `{Feature}Binding.dependencies()`
+5. ✅ Inject args vào Controller constructor
+6. ✅ Controller sử dụng args, KHÔNG gọi `Get.arguments`
+7. ✅ UI chỉ lấy data từ controller
+
+---
+
+## 📝 Ví dụ hoàn chỉnh
+
+### 1. Args class
+```dart
+// lib/feature/news_detail/domain/models/news_detail_args.dart
+class NewsDetailArgs {
+  final String id;
+  final String? title;
+
+  NewsDetailArgs({
+    required this.id,
+    this.title,
+  });
+}
+```
+
+### 2. Navigation
+```dart
+// lib/feature/news/presentation/view/news_screen.dart
+Get.toNamed(
+  AppRouter.newsDetail,
+  arguments: NewsDetailArgs(
+    id: item.id,
+    title: item.title,
+  ),
+);
+```
+
+### 3. Binding
+```dart
+// lib/feature/news_detail/binding/news_detail_binding.dart
+class NewsDetailBinding extends Bindings {
+  @override
+  void dependencies() {
+    final args = Get.arguments as NewsDetailArgs;
+    
+    // ... dependencies ...
+    
+    Get.lazyPut<NewsDetailController>(
+      () => NewsDetailController(
+        args: args,
+        getArticleDetailUsecase: Get.find<GetNewsDetailArticleUsecase>(),
+      ),
+    );
+  }
+}
+```
+
+### 4. Controller
+```dart
+// lib/feature/news_detail/presentation/controller/news_detail_controller.dart
+class NewsDetailController extends BaseController {
+  final NewsDetailArgs args;
+  late final String id = args.id;
+  
+  final GetNewsDetailArticleUsecase getArticleDetailUsecase;
+
+  NewsDetailController({
+    required this.args,
+    required this.getArticleDetailUsecase,
+  });
+
+  @override
+  void onInit() {
+    super.onInit();
+    getArticleDetail(id);
+  }
+}
+```
+
+### 5. UI
+```dart
+// lib/feature/news_detail/presentation/view/news_detail_screen.dart
+class NewsDetailScreen extends GetView<NewsDetailController> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(controller.args.title ?? 'Chi tiết')),
+      body: Text(controller.id),
+    );
+  }
+}
+```
+
+---
+
+## 🎯 Lợi ích
+
+✅ **Type-safe**: IDE gợi ý đầy đủ, compile-time checking  
+✅ **Separation of Concerns**: UI không biết về routing arguments  
+✅ **Testable**: Dễ mock args trong unit test  
+✅ **Maintainable**: Thay đổi args chỉ cần sửa 1 nơi (Args class)  
+✅ **Clean Code**: Controller có đầy đủ context, không cần gọi `Get.arguments`

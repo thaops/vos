@@ -1,0 +1,52 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
+import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
+import 'package:vos_flutter/feature/profile/presentation/widgets/google_user_content.dart';
+import 'package:vos_flutter/feature/profile/presentation/widgets/logout_dialog.dart';
+import 'package:vos_flutter/feature/profile/presentation/widgets/not_logged_in_state.dart';
+import 'package:vos_flutter/feature/profile/presentation/widgets/profile_content.dart';
+
+class ProfileScreen extends GetView<ProfileController> {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Đảm bảo ProfileBinding được gọi trước
+    if (!Get.isRegistered<ProfileController>()) {
+      ProfileBinding().dependencies();
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBarWidget(
+        title: 'Thông tin cá nhân',
+        isBack: false,
+        iconRightfirst: Icons.logout,
+        colorfirst: Colors.white,
+        functionfirst: () => LogoutDialog.show(controller),
+      ),
+      body: Obx(() {
+        final hasGoogleUser = controller.googleUser.value != null;
+        final hasUserProfile = controller.userProfile.value != null;
+
+        if (!hasGoogleUser && !hasUserProfile) {
+          return const NotLoggedInState();
+        }
+
+        // Ưu tiên VACS profile nếu có
+        if (hasUserProfile) {
+          return ProfileContent(controller: controller);
+        }
+
+        // Fallback Google user
+        if (hasGoogleUser) {
+          return GoogleUserContent(controller: controller);
+        }
+
+        return const NotLoggedInState();
+      }),
+    );
+  }
+}

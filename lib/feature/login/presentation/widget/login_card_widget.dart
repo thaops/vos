@@ -48,16 +48,28 @@ class LoginCardWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header
-          Text(
-            'Chào mừng trở lại! 👋',
-            style: TextStyle(
-              fontSize: isTablet ? 28.sp : 24.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-            textAlign: TextAlign.center,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Chào mừng trở lại',
+                style: TextStyle(
+                  fontSize: isTablet ? 28.sp : 24.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                '👋',
+                style: TextStyle(
+                  fontSize: isTablet ? 28.sp : 24.sp,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 12.h),
           Text(
             'Đăng nhập bằng tài khoản Google của bạn',
             style: TextStyle(
@@ -133,7 +145,7 @@ class LoginCardWidget extends StatelessWidget {
                   ),
                 ),
           label: Text(
-            isLoading ? 'Đang đăng nhập...' : 'Đăng nhập bằng Google',
+            isLoading ? 'Đang đăng nhập...' : 'Tiếp tục với Google',
             style: TextStyle(
               fontSize: isTablet ? 16.sp : 15.sp,
               fontWeight: FontWeight.w600,

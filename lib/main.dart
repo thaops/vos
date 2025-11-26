@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show PlatformDispatcher;
 
@@ -6,7 +7,7 @@ import 'package:calendar_view/calendar_view.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, kDebugMode, TargetPlatform;
+    show defaultTargetPlatform, kIsWeb, TargetPlatform, compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -36,7 +37,6 @@ import 'firebase_options.dart';
 Future<bool> _isIPad() async {
   if (kIsWeb) return false;
 
-  // macOS không phải iPad
   if (defaultTargetPlatform == TargetPlatform.macOS) {
     return false;
   }
@@ -58,182 +58,149 @@ Future<bool> _isIPad() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load .env file
+  _setupErrorHandlers();
+
   try {
     await dotenv.load(fileName: ".env");
-    await FileLogger.log('Environment variables loaded from .env');
   } catch (e) {
-    await FileLogger.log('Warning: Could not load .env file: $e');
-    if (kDebugMode) {
-      print('Warning: Could not load .env file: $e');
-    }
+    // Silent fail
   }
 
-  // Khởi tạo file logger trước
   await FileLogger.initialize();
-  await FileLogger.cleanOldLogs();
-  await FileLogger.log('App starting...');
 
-  // Bắt tất cả errors để log và tránh crash im lặng
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  runApp(
+    CalendarControllerProvider(
+      controller: EventController(),
+      child: const MyApp(initialDeepLink: null),
+    ),
+  );
+
+  _initializeServicesInBackground();
+}
+
+void _setupErrorHandlers() {
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
 
-    // Ghi vào file log (không await để tránh block)
     FileLogger.logError(
       details.exception,
       details.stack,
       context:
           'Flutter Error | Library: ${details.library} | Context: ${details.context}',
     );
-
-    if (kDebugMode) {
-      print('🚨 Flutter Error: ${details.exception}');
-      print('📍 Stack trace: ${details.stack}');
-      print('📍 Library: ${details.library}');
-      print('📍 Context: ${details.context}');
-      print('📄 Log file: ${FileLogger.getLogFilePath()}');
-    }
   };
 
-  // Bắt errors trong async operations không được catch
   PlatformDispatcher.instance.onError = (error, stack) {
-    // Ghi vào file log (không await để tránh block)
     FileLogger.logError(error, stack, context: 'Platform Error');
-
-    if (kDebugMode) {
-      print('🚨 Platform Error: $error');
-      print('📍 Stack trace: $stack');
-      print('📄 Log file: ${FileLogger.getLogFilePath()}');
-    }
-    return true; // Trả về true để báo rằng error đã được xử lý
+    return true;
   };
-
-  try {
-    await FileLogger.log('Initializing Firebase...');
-    // Initialize Firebase
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    await FileLogger.log('Firebase initialized');
-
-    // Init ShorebirdCodePush để kiểm soát OTA updates
-    // final shorebirdCodePush = ShorebirdCodePush();
-    // await shorebirdCodePush.isNewPatchAvailableForDownload();
-
-    await GetStorage.init();
-    await FileLogger.log('GetStorage initialized');
-
-    final appLinks = AppLinks();
-    final initialDeepLink = await appLinks.getInitialLink();
-    await _initializeServices();
-    await FileLogger.log('Services initialized');
-
-    // Removed problematic MediaQuery calls that can cause UI issues
-    if (kDebugMode) {
-      print("App initialized successfully");
-      print("📄 Log file location: ${FileLogger.getLogFilePath()}");
-    }
-
-    runApp(
-      CalendarControllerProvider(
-        controller: EventController(),
-        child: MyApp(initialDeepLink: initialDeepLink),
-      ),
-    );
-  } catch (e, stackTrace) {
-    // Ghi vào file log
-    await FileLogger.logError(
-      e,
-      stackTrace,
-      context: 'Critical Error in main()',
-    );
-
-    if (kDebugMode) {
-      print('🚨 Critical Error in main(): $e');
-      print('📍 Stack trace: $stackTrace');
-      print('📄 Log file: ${FileLogger.getLogFilePath()}');
-    }
-    // Vẫn chạy app để user có thể thấy lỗi thay vì crash im lặng
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 64, color: Colors.red),
-                SizedBox(height: 16),
-                Text('Lỗi khởi tạo ứng dụng'),
-                SizedBox(height: 8),
-                Text('$e', style: TextStyle(fontSize: 12)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-Future<void> _initializeServices() async {
-  await Hive.initFlutter();
+void _initializeServicesInBackground() {
+  Future.microtask(() async {
+    try {
+      final appLinks = AppLinks();
+      await appLinks.getInitialLink();
 
-  // Open Hive box for Google user (stored as JSON)
-  await Hive.openBox('google_user_box');
+      await Future.wait([
+        _initializeCriticalServices(),
+        _initializeNonCriticalServices(),
+      ]);
+    } catch (e, stackTrace) {
+      await FileLogger.logError(
+        e,
+        stackTrace,
+        context: 'Background initialization error',
+      );
+    }
+  });
+}
 
-  // Kiểm tra xem có môi trường được set thủ công không
-  final savedBaseUrl = GetStorage().read<String>('base_url');
-  final isManualEnv =
-      GetStorage().read<bool>('manual_environment_set') ?? false;
-
-  if (savedBaseUrl != null && savedBaseUrl.isNotEmpty && isManualEnv) {
-    // URL đã được set thủ công, giữ nguyên và không bị ghi đè
-    print("Using manually set base URL: $savedBaseUrl");
-  } else {
-    // Chưa có URL thủ công, để Config tự động chọn dựa trên awaiting flag
-    print("No manual URL set, using awaiting logic");
-  }
-  Get.put(NetworkController());
-
+Future<void> _initializeCriticalServices() async {
   try {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    await generateUUID();
+    await Future.wait([GetStorage.init(), Hive.initFlutter()]);
+
+    await Hive.openBox('google_user_box');
+    Get.put(NetworkController());
+    await Get.put(SignOutClear());
   } catch (e) {
-    debugPrint('Lỗi khi khởi tạo ứng dụng: $e');
+    FileLogger.logError(e, null, context: 'Critical services init error');
   }
-
-  final serviceCheckawaiting =
-      await CheckAwaitingServices.createCheckAwaitingServices();
-  CheckAwaitingApproval checkAwaitingApproval = CheckAwaitingApproval();
-  PackageInfo packageInfo = await PackageInfo.fromPlatform();
-
-  String appId = packageInfo.packageName;
-  String appVersion = packageInfo.version;
-  String appBuild = packageInfo.buildNumber;
-  String platform = Platform.isIOS ? "iOS" : "Android";
-  Uuid uuid = Uuid();
-
-  bool result = await checkAwaitingApproval.checkAwaitingApproval(
-    platform: platform,
-    appId: appId,
-    appBuild: appBuild,
-    appVersion: appVersion,
-    udid: uuid.v4(),
-  );
-
-  await serviceCheckawaiting.saveawaiting(result);
-  await initializeDateFormatting('vi_VN', null);
-  await Get.put(SignOutClear());
 }
 
-// Future<void> _loadUserData() async {
-//   final controllerProfile = Get.put(ProfileLogic());
-//   await controllerProfile.loadUserData();
-// }
+Future<void> _initializeNonCriticalServices() async {
+  try {
+    await Future.wait([
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]),
+      generateUUID(),
+    ]);
+
+    // _lazyLoadCheckAwaitingApproval();
+    _lazyLoadDateFormatting();
+    _lazyCleanOldLogs();
+  } catch (e) {
+    FileLogger.logError(e, null, context: 'Non-critical services init error');
+  }
+}
+
+void _lazyLoadCheckAwaitingApproval() {
+  Future.microtask(() async {
+    try {
+      final serviceCheckawaiting =
+          await CheckAwaitingServices.createCheckAwaitingServices();
+      final checkAwaitingApproval = CheckAwaitingApproval();
+      final packageInfo = await PackageInfo.fromPlatform();
+
+      final result = await checkAwaitingApproval
+          .checkAwaitingApproval(
+            platform: Platform.isIOS ? "iOS" : "Android",
+            appId: packageInfo.packageName,
+            appBuild: packageInfo.buildNumber,
+            appVersion: packageInfo.version,
+            udid: Uuid().v4(),
+          )
+          .timeout(const Duration(seconds: 3), onTimeout: () => false);
+
+      await serviceCheckawaiting.saveawaiting(result);
+    } catch (e) {
+      FileLogger.logError(e, null, context: 'Lazy load checkAwaitingApproval');
+    }
+  });
+}
+
+void _lazyLoadDateFormatting() {
+  Future.microtask(() async {
+    try {
+      await compute(_loadDateFormattingInIsolate, 'vi_VN');
+    } catch (e) {
+      try {
+        await initializeDateFormatting('vi_VN', null);
+      } catch (e2) {
+        // Silent fail
+      }
+    }
+  });
+}
+
+void _lazyCleanOldLogs() {
+  Future.microtask(() async {
+    try {
+      await compute(_cleanOldLogsInIsolate, null);
+    } catch (e) {
+      try {
+        await FileLogger.cleanOldLogs();
+      } catch (e2) {
+        // Silent fail
+      }
+    }
+  });
+}
 
 class MyApp extends StatefulWidget {
   final Uri? initialDeepLink;
@@ -256,7 +223,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // OneSignalService().handlePendingNavigation();
+      // Handle app resumed
     }
   }
 
@@ -272,7 +239,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return FutureBuilder<bool>(
       future: _isIPad(),
       builder: (context, snapshot) {
-        // Thêm error handling
         if (snapshot.hasError) {
           return MaterialApp(
             home: Scaffold(
@@ -297,10 +263,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
         final isIPad = snapshot.data ?? false;
 
-        // Cải thiện design size cho macOS
         Size designSize;
         if (defaultTargetPlatform == TargetPlatform.macOS) {
-          designSize = const Size(1200, 800); // Desktop size
+          designSize = const Size(1200, 800);
         } else if (isIPad) {
           designSize = const Size(768, 1024);
         } else {
@@ -332,7 +297,6 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
-    // Sử dụng MaterialApp cho tất cả platform để tránh lỗi MaterialLocalizations
     return GetMaterialApp(
       home: SplashScreen(initialDeepLink: widget.initialDeepLink),
       getPages: AppRouter.routes,
@@ -369,14 +333,16 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize splash controller
     Get.put(SplashController());
 
-    return SplashScreenWidget(
-      onComplete: () {
-        // Navigation sẽ được handle bởi SplashController
-        // Không cần làm gì ở đây
-      },
-    );
+    return SplashScreenWidget(onComplete: () {});
   }
+}
+
+Future<void> _loadDateFormattingInIsolate(String locale) async {
+  await initializeDateFormatting(locale, null);
+}
+
+Future<void> _cleanOldLogsInIsolate(_) async {
+  await FileLogger.cleanOldLogs();
 }

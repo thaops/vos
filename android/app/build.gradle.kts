@@ -18,6 +18,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }

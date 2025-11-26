@@ -57,8 +57,10 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       // toolbarHeight: heightAppBar,
       backgroundColor: backgroundColor ?? AppColors.primary,
       surfaceTintColor: Colors.transparent,
+      // ✅ Sửa: Ẩn nút back tự động khi isBack == false
+      automaticallyImplyLeading: isBack != false,
       leading: isBack == false
-          ? sizeBox
+          ? (sizeBox ?? const SizedBox(width: 0))
           : IconButton(
               onPressed: () {
                 Get.back(result: isTrueBack ?? false);

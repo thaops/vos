@@ -4,7 +4,7 @@ import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:flutter/material.dart';
-import 'package:vos_flutter/feature/profile/view/profile_screen.dart';
+import 'package:vos_flutter/feature/profile/presentation/view/profile_screen.dart';
 import 'package:vos_flutter/feature/home/view/home_tab.dart';
 import 'package:vos_flutter/feature/news/presentation/view/news_screen.dart';
 import 'package:vos_flutter/feature/news/binding/news_binding.dart';

@@ -8,6 +8,7 @@ import 'package:vos_flutter/feature/profile/domain/usecases/check_employee_statu
 import 'package:vos_flutter/feature/profile/domain/usecases/check_viags_status_usecase.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/get_user_profile_usecase.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/link_viags_account_usecase.dart';
+import 'package:vos_flutter/feature/profile/domain/usecases/unlink_viags_account_usecase.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/logout_usecase.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
@@ -46,6 +47,12 @@ class ProfileBinding extends Bindings {
       ),
     );
 
+    Get.lazyPut<UnlinkViagsAccountUsecase>(
+      () => UnlinkViagsAccountUsecase(
+        Get.find<ProfileRepository>(),
+      ),
+    );
+
     Get.lazyPut<LogoutUsecase>(
       () => LogoutUsecase(
         Get.find<ProfileRepository>(),
@@ -69,6 +76,7 @@ class ProfileBinding extends Bindings {
       () => ProfileController(
         getUserProfileUsecase: Get.find<GetUserProfileUsecase>(),
         linkViagsAccountUsecase: Get.find<LinkViagsAccountUsecase>(),
+        unlinkViagsAccountUsecase: Get.find<UnlinkViagsAccountUsecase>(),
         logoutUsecase: Get.find<LogoutUsecase>(),
         checkViagsStatusUsecase: Get.find<CheckViagsStatusUsecase>(),
         checkEmployeeStatusUsecase: Get.find<CheckEmployeeStatusUsecase>(),

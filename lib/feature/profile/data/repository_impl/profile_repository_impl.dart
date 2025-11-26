@@ -99,6 +99,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<ApiResult<void>> unlinkViagsAccount() async {
+    try {
+      await localDataSource.unlinkViagsAccount();
+      return ApiResult.success(null);
+    } catch (e) {
+      return ApiResult.error('unlinkViagsAccount failed: $e');
+    }
+  }
+
+  @override
   Future<ApiResult<void>> logout() async {
     try {
       await localDataSource.clearAll();

@@ -2,17 +2,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:vos_flutter/feature/banner/presentation/controller/banner_controller.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/feature/profile/domain/models/user_profile.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/check_employee_status_usecase.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/check_viags_status_usecase.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/get_user_profile_usecase.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/link_viags_account_usecase.dart';
+import 'package:vos_flutter/feature/profile/domain/usecases/unlink_viags_account_usecase.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/logout_usecase.dart';
 
 class ProfileController extends GetxController {
   final GetUserProfileUsecase getUserProfileUsecase;
   final LinkViagsAccountUsecase linkViagsAccountUsecase;
+  final UnlinkViagsAccountUsecase unlinkViagsAccountUsecase;
   final LogoutUsecase logoutUsecase;
   final CheckViagsStatusUsecase checkViagsStatusUsecase;
   final CheckEmployeeStatusUsecase checkEmployeeStatusUsecase;
@@ -20,6 +23,7 @@ class ProfileController extends GetxController {
   ProfileController({
     required this.getUserProfileUsecase,
     required this.linkViagsAccountUsecase,
+    required this.unlinkViagsAccountUsecase,
     required this.logoutUsecase,
     required this.checkViagsStatusUsecase,
     required this.checkEmployeeStatusUsecase,
@@ -131,6 +135,15 @@ class ProfileController extends GetxController {
     _loadGoogleUser();
   }
 
+  /// Refresh tất cả data (gọi sau khi link/unlink VIAGS hoặc khi cần reload)
+  Future<void> refreshAll() async {
+    await Future.wait([
+      loadUserProfile(),
+      loadViagsStatus(),
+      loadEmployeeStatus(),
+    ]);
+  }
+
   /// Đăng xuất: xóa cache, đăng xuất Google, trở về màn hình login
   /// Lưu ý: KHÔNG thay đổi reactive values để tránh mutate disposed widgets
   Future<void> logout() async {
@@ -204,6 +217,9 @@ class ProfileController extends GetxController {
           }
         }
 
+        // ✅ Reset BannerController state để tránh hiển thị banners cũ
+        _resetBannerController();
+
         print('✅ Linked VIAGS account successfully');
         return true;
       } else {
@@ -212,6 +228,52 @@ class ProfileController extends GetxController {
       }
     } catch (e) {
       print('❌ Error linking VIAGS account: $e');
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Reset BannerController state khi liên kết tài khoản thành công
+  void _resetBannerController() {
+    try {
+      if (Get.isRegistered<BannerController>()) {
+        final bannerController = Get.find<BannerController>();
+        // Clear banners cũ và set loading state
+        bannerController.banners.clear();
+        bannerController.isLoading.value = true;
+        bannerController.error.value = '';
+        print('✅ Reset BannerController state');
+      }
+    } catch (e) {
+      print('⚠️ Error resetting BannerController: $e');
+    }
+  }
+
+  /// Hủy liên kết tài khoản VIAGS - chỉ xóa profile VACS, giữ lại name và password
+  Future<bool> unlinkViagsAccount() async {
+    try {
+      isLoading.value = true;
+
+      final result = await unlinkViagsAccountUsecase.call();
+
+      if (result.isSuccess) {
+        // Xóa userProfile
+        userProfile.value = null;
+
+        // Reload VIAGS status
+        await loadViagsStatus();
+        // Employee status sẽ tự động update vì userProfile đã được xóa
+        isEmployee.value = false;
+
+        print('✅ Unlinked VIAGS account successfully');
+        return true;
+      } else {
+        print('❌ Unlink VIAGS failed: ${result.error}');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error unlinking VIAGS account: $e');
       return false;
     } finally {
       isLoading.value = false;

@@ -10,32 +10,46 @@ class BannerBinding extends Bindings {
   @override
   void dependencies() {
     // Data Source
-    Get.lazyPut<BannerRemoteDataSource>(
-      () => BannerRemoteDataSourceImpl(
-        dio: dioLib.Dio(),
-      ),
-    );
+    if (!Get.isRegistered<BannerRemoteDataSource>()) {
+      Get.lazyPut<BannerRemoteDataSource>(
+        () => BannerRemoteDataSourceImpl(dio: dioLib.Dio()),
+        // ✅ Bỏ fenix: true - tránh cycle xóa/tạo lại khi dùng Get.offAllNamed()
+      );
+    }
 
     // Repository
-    Get.lazyPut<BannerRepository>(
-      () => BannerRepositoryImpl(
-        remoteDataSource: Get.find<BannerRemoteDataSource>(),
-      ),
-    );
+    if (!Get.isRegistered<BannerRepository>()) {
+      Get.lazyPut<BannerRepository>(
+        () => BannerRepositoryImpl(
+          remoteDataSource: Get.find<BannerRemoteDataSource>(),
+        ),
+        // ✅ Bỏ fenix: true - tránh cycle xóa/tạo lại khi dùng Get.offAllNamed()
+      );
+    }
 
     // Use Case
-    Get.lazyPut<GetBannersUsecase>(
-      () => GetBannersUsecase(
-        Get.find<BannerRepository>(),
-      ),
-    );
+    if (!Get.isRegistered<GetBannersUsecase>()) {
+      Get.lazyPut<GetBannersUsecase>(
+        () => GetBannersUsecase(Get.find<BannerRepository>()),
+        // ✅ Bỏ fenix: true - tránh cycle xóa/tạo lại khi dùng Get.offAllNamed()
+      );
+    }
 
     // Controller
-    Get.lazyPut<BannerController>(
-      () => BannerController(
-        getBannersUsecase: Get.find<GetBannersUsecase>(),
-      ),
-    );
+    // ✅ Sửa: Bỏ fenix: true vì BannerController được quản lý bởi HomeTab.initState()
+    // fenix: true gây ra cycle xóa/tạo lại khi dùng Get.offAllNamed()
+    if (!Get.isRegistered<BannerController>()) {
+      try {
+        Get.lazyPut<BannerController>(
+          () => BannerController(
+            getBannersUsecase: Get.find<GetBannersUsecase>(),
+          ),
+          // ✅ Bỏ fenix: true - HomeTab sẽ tự quản lý lifecycle
+        );
+      } catch (e) {
+        // Nếu đã được đăng ký trong lúc check, bỏ qua
+        print('⚠️ BannerController registration error (may already exist): $e');
+      }
+    }
   }
 }
-
