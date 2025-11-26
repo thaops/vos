@@ -48,3 +48,9 @@ app.*.map.json
 .env
 .env.local
 .env.*.local
+
+# VOS Keystore files (sensitive - DO NOT COMMIT)
+android/key.properties
+android/vos-upload-keystore.jks
+*.jks
+*.keystore
