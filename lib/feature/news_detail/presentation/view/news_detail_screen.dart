@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
@@ -56,12 +58,19 @@ class _AppNewsDetailScreenState extends State<_AppNewsDetailScreen> {
   @override
   void initState() {
     super.initState();
+    
+    // User agent phù hợp với platform
+    final userAgent = _getUserAgent();
+    
     _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white)
-      ..setUserAgent(
-        'Mozilla/5.0 (Linux; Android 13; Pixel 6 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-      );
+      ..setJavaScriptMode(JavaScriptMode.unrestricted);
+    
+    // setBackgroundColor không được hỗ trợ trên macOS
+    if (!Platform.isMacOS) {
+      _webViewController.setBackgroundColor(Colors.white);
+    }
+    
+    _webViewController.setUserAgent(userAgent);
 
     // Listen changes từ controller
     ever(widget.controller.selectedNewsDetail, (newsDetail) {
@@ -137,6 +146,20 @@ class _AppNewsDetailScreenState extends State<_AppNewsDetailScreen> {
       }),
     );
   }
+
+  String _getUserAgent() {
+    if (kIsWeb) {
+      return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    } else if (Platform.isMacOS) {
+      return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    } else if (Platform.isIOS) {
+      return 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+    } else if (Platform.isAndroid) {
+      return 'Mozilla/5.0 (Linux; Android 13; Pixel 6 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
+    } else {
+      return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    }
+  }
 }
 
 class _WebViewScreen extends StatefulWidget {
@@ -164,12 +187,18 @@ class _WebViewScreenState extends State<_WebViewScreen> {
         ? {'X-Token': widget.token!}
         : null;
 
+    // User agent phù hợp với platform
+    final userAgent = _getUserAgent();
+
     webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(Colors.white)
-      ..setUserAgent(
-        'Mozilla/5.0 (Linux; Android 13; Pixel 6 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-      );
+      ..setJavaScriptMode(JavaScriptMode.unrestricted);
+    
+    // setBackgroundColor không được hỗ trợ trên macOS
+    if (!Platform.isMacOS) {
+      webViewController.setBackgroundColor(Colors.white);
+    }
+    
+    webViewController.setUserAgent(userAgent);
 
     _loadInitialRequest();
   }
@@ -196,5 +225,19 @@ class _WebViewScreenState extends State<_WebViewScreen> {
       ),
       body: WebViewWidget(controller: webViewController),
     );
+  }
+
+  String _getUserAgent() {
+    if (kIsWeb) {
+      return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    } else if (Platform.isMacOS) {
+      return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    } else if (Platform.isIOS) {
+      return 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+    } else if (Platform.isAndroid) {
+      return 'Mozilla/5.0 (Linux; Android 13; Pixel 6 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
+    } else {
+      return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    }
   }
 }

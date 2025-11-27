@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -19,6 +21,8 @@ class FunctionItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMacOS = !kIsWeb && Platform.isMacOS;
+    
     Color itemColor;
     try {
       itemColor = Color(int.parse(item.color.replaceFirst('#', '0xFF')));
@@ -39,48 +43,72 @@ class FunctionItemWidget extends StatelessWidget {
           onActionTap(item.action);
         }
       },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          // Icon tròn lớn với nền màu xanh nhạt
-          Container(
-            width: 48.w,
-            height: 48.w,
-            decoration: BoxDecoration(
-              color: itemColor.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: item.imageUrl.isNotEmpty
-                ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: item.imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(itemColor),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isMacOS ? 4.w : 4.w,
+          vertical: isMacOS ? 8.h : 8.h,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Icon tròn lớn với nền màu xanh nhạt
+            Container(
+              width: isMacOS ? 52.w : 48.w,
+              height: isMacOS ? 52.w : 48.w,
+              decoration: BoxDecoration(
+                color: itemColor.withOpacity(isMacOS ? 0.12 : 0.15),
+                shape: BoxShape.circle,
+                boxShadow: isMacOS
+                    ? [
+                        BoxShadow(
+                          color: itemColor.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
+                      ]
+                    : null,
+              ),
+              child: item.imageUrl.isNotEmpty
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: item.imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(itemColor),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) =>
+                            Icon(
+                              Icons.apps,
+                              color: itemColor,
+                              size: isMacOS ? 32.sp : 28.sp,
+                            ),
                       ),
-                      errorWidget: (context, url, error) =>
-                          Icon(Icons.apps, color: itemColor, size: 28.sp),
+                    )
+                  : Icon(
+                      Icons.apps,
+                      color: itemColor,
+                      size: isMacOS ? 32.sp : 28.sp,
                     ),
-                  )
-                : Icon(Icons.apps, color: itemColor, size: 28.sp),
-          ),
-          SizedBox(height: 10.h),
-          // Title
-          Text(
-            item.title,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[800],
             ),
-          ),
-        ],
+            SizedBox(height: isMacOS ? 12.h : 10.h),
+            // Title
+            Text(
+              item.title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: isMacOS ? 13.sp : 12.sp,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[800],
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

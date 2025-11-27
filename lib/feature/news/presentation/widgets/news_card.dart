@@ -179,14 +179,4 @@ class NewsCard extends StatelessWidget {
   //     ],
   //   );
   // }
-
-  String _formatCount(int count) {
-    if (count < 1000) {
-      return count.toString();
-    } else if (count < 1000000) {
-      return '${(count / 1000).toStringAsFixed(1)}K';
-    } else {
-      return '${(count / 1000000).toStringAsFixed(1)}M';
-    }
-  }
 }

@@ -17,12 +17,20 @@ class NewsScreen extends StatefulWidget {
 }
 
 class _NewsScreenState extends State<NewsScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     if (!Get.isRegistered<NewsController>()) {
       NewsBinding().dependencies();
     }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,20 +57,31 @@ class _NewsScreenState extends State<NewsScreen> {
         }
         return RefreshIndicator(
           onRefresh: controller.onRefresh,
-          child: ListView.builder(
-            itemCount: data.length,
-            itemBuilder: (context, index) {
-              final item = data[index];
-              return NewsCard(
-                newsItem: item.toNewsItemModel(),
-                onTap: () {
-                  Get.toNamed(
-                    AppRouter.newsDetail,
-                    arguments: NewsDetailArgs(id: item.id, title: item.title),
-                  );
-                },
-              );
-            },
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final item = data[index];
+                      return NewsCard(
+                        newsItem: item.toNewsItemModel(),
+                        onTap: () {
+                          Get.toNamed(
+                            AppRouter.newsDetail,
+                            arguments: NewsDetailArgs(id: item.id, title: item.title),
+                          );
+                        },
+                      );
+                    },
+                    childCount: data.length,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       }),
