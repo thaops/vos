@@ -7,6 +7,9 @@ class MainFlutterWindow: NSWindow {
     let windowFrame = self.frame
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
+    
+    // Set window title to VOS
+    self.title = "VOS"
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 

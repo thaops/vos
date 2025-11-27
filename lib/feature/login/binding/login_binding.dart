@@ -14,13 +14,19 @@ import 'package:vos_flutter/feature/login/domain/usecases/sign_out_usecase.dart'
 class LoginBinding extends Bindings {
   @override
   void dependencies() {
-    // 1. Tạo GoogleSignIn instance
+    // 1. Tạo GoogleSignIn instance với cấu hình cho từng platform
     final googleSignIn = Platform.isIOS
         ? GoogleSignIn(
             scopes: ['email', 'profile'],
             serverClientId: DefaultFirebaseOptions.ios.iosClientId,
           )
-        : GoogleSignIn(scopes: ['email', 'profile']);
+        : Platform.isMacOS
+            ? GoogleSignIn(
+                scopes: ['email', 'profile'],
+                clientId: DefaultFirebaseOptions.macos.iosClientId, // Client ID cho macOS
+                serverClientId: DefaultFirebaseOptions.macos.iosClientId, // Server Client ID
+              )
+            : GoogleSignIn(scopes: ['email', 'profile']);
 
     // 2. Data Sources (Remote & Local)
     Get.lazyPut<LoginRemoteDataSource>(
