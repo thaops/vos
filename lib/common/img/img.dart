@@ -5,6 +5,7 @@ class Img {
   static const String logo = 'assets/image/logo_viags.png';
   static const String emptyIcon = 'assets/icon/empty_icon.json';
   static const String loading_lottie = 'assets/icon/loading_lottie.json';
+  static const String google = 'assets/image/google.png';
 
   // Loading animation URL
   static const String loading =

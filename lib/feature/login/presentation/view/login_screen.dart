@@ -161,23 +161,11 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                   )
-                : Container(
+                : Image.asset(
+                    Img.google,
                     width: isTablet ? 24.w : 20.w,
                     height: isTablet ? 24.h : 20.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'G',
-                        style: TextStyle(
-                          fontSize: isTablet ? 18.sp : 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[600],
-                        ),
-                      ),
-                    ),
+                    fit: BoxFit.contain,
                   ),
             label: Text(
               isLoading ? 'Đang đăng nhập...' : 'Tiếp tục với Google',

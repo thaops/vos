@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:vos_flutter/common/img/img.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/login/presentation/controller/login_controller.dart';
 
@@ -126,23 +127,11 @@ class LoginCardWidget extends StatelessWidget {
                     ),
                   ),
                 )
-              : Container(
+              : Image.asset(
+                  Img.google,
                   width: isTablet ? 24.w : 20.w,
                   height: isTablet ? 24.h : 20.h,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'G',
-                      style: TextStyle(
-                        fontSize: isTablet ? 18.sp : 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[600],
-                      ),
-                    ),
-                  ),
+                  fit: BoxFit.contain,
                 ),
           label: Text(
             isLoading ? 'Đang đăng nhập...' : 'Tiếp tục với Google',
