@@ -15,7 +15,7 @@ $functions = @'
 
 function mfeature {
     param([Parameter(Mandatory=$true)][string]$name)
-    & ".\scripts\make_feature.ps1" -FeatureName $name
+    & ".\scripts\make_feature_simple.ps1" -FeatureName $name
 }
 
 function dfeature {
@@ -28,14 +28,21 @@ Set-Alias mgen mfeature -ErrorAction SilentlyContinue
 Set-Alias dgen dfeature -ErrorAction SilentlyContinue
 '@
 
-# Inject into PowerShell profile if missing
+# Inject into PowerShell profile - always update to latest version
 if (Test-Path $profilePath) {
     $content = Get-Content $profilePath -Raw
-    if ($content -notmatch "function mfeature") {
+    if ($content -match "function mfeature") {
+        # Replace existing mfeature function
+        $newContent = $content -replace '(?s)function mfeature.*?Set-Alias mgen mfeature', $functions.Trim()
+        if ($newContent -ne $content) {
+            Set-Content $profilePath $newContent
+            Write-Host "Updated mfeature function in profile" -ForegroundColor Green
+        } else {
+            Write-Host "Alias already up to date" -ForegroundColor Yellow
+        }
+    } else {
         Add-Content $profilePath "`n$functions"
         Write-Host "Added alias functions to profile" -ForegroundColor Green
-    } else {
-        Write-Host "Alias already exists in profile" -ForegroundColor Yellow
     }
 } else {
     Set-Content $profilePath $functions

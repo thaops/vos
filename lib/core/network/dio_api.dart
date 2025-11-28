@@ -44,11 +44,10 @@ class DioApi {
       header['X_REQUEST_DEVICE_NAME'] = deviceInfo['deviceName'];
       header['X_REQUEST_OS_VERSION'] = deviceInfo['osVersion'];
       header['X_REQUEST_UDID'] = udid;
-      header['X_APP_ID'] = "NPP";
+      header['X_APP_ID'] = "VOS";
       header['X_APP_BUILD'] = packageInfo['buildNumber'];
       header['X_APP_VERSION'] = packageInfo['version'];
 
-      print('Header: $header');
     } catch (e) {
       print('Lỗi khi xây dựng header: $e');
     }

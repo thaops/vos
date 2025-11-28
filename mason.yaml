@@ -1,4 +1,4 @@
 bricks:
-  feature_clean_architecture:
-    path: bricks/feature_clean_architecture
+  feature_simple:
+    path: bricks/feature_simple
 

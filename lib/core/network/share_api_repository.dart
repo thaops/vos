@@ -74,7 +74,9 @@ class ShareApiRepository {
 
       // Chỉ thêm Authorization nếu có token
       if (token.isNotEmpty) {
-        headers['Authorization'] = token;
+        // Thêm "Bearer " prefix nếu token chưa có
+        final authToken = token.startsWith('Bearer ') ? token : 'Bearer $token';
+        headers['Authorization'] = authToken;
       }
 
       // 2. Build request data

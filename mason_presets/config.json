@@ -1,6 +1,6 @@
 {
-    "feature_name":  "authorize_create",
-    "model_name":  "authorize_create",
+    "feature_name":  "time_off",
+    "model_name":  "time_off",
     "usecase_definitions":  [
                                 "get_news:List\u003cArticle\u003e",
                                 "get_article_detail:Article",
@@ -9,10 +9,10 @@
                                 "update_article:bool",
                                 "delete_article:bool"
                             ],
-    "has_local_storage":  false,
+    "has_local_storage":  true,
     "has_remote_api":  true,
     "has_pagination":  false,
     "has_search":  false,
     "has_full_cache":  false,
-    "api_base_path":  "/api/authorize_create"
+    "api_base_path":  "/api/time_off"
 }

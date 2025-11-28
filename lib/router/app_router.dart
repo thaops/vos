@@ -10,6 +10,10 @@ import 'package:vos_flutter/feature/authorize/binding/authorize_binding.dart';
 import 'package:vos_flutter/feature/authorize/presentation/view/authorize_screen.dart';
 import 'package:vos_flutter/feature/authorize_create/binding/authorize_create_binding.dart';
 import 'package:vos_flutter/feature/authorize_create/presentation/view/authorize_create_screen.dart';
+import 'package:vos_flutter/feature/time_off/binding/time_off_binding.dart';
+import 'package:vos_flutter/feature/time_off/presentation/view/time_off_screen.dart';
+import 'package:vos_flutter/feature/time_off_create/binding/time_off_create_binding.dart';
+import 'package:vos_flutter/feature/time_off_create/presentation/view/time_off_create_screen.dart';
 import 'package:vos_flutter/router/bottom_navigation_main.dart';
 
 class AppRouter {
@@ -27,6 +31,10 @@ class AppRouter {
   // Authorize routes
   static const authorize = '/authorize';
   static const authorizeCreate = '/authorize/create';
+
+  // Time Off routes
+  static const timeOff = '/time-off';
+  static const timeOffCreate = '/time-off/create';
 
   static final List<GetPage> routes = [
     // Auth
@@ -60,6 +68,16 @@ class AppRouter {
       name: authorizeCreate,
       page: () => const AuthorizeCreateScreen(),
       binding: AuthorizeCreateBinding(),
+    ),
+    GetPage(
+      name: timeOff,
+      page: () => const TimeOffScreen(),
+      binding: TimeOffBinding(),
+    ),
+    GetPage(
+      name: timeOffCreate,
+      page: () => const TimeOffCreateScreen(),
+      binding: TimeOffCreateBinding(),
     ),
   ];
 }

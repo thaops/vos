@@ -151,6 +151,9 @@ class _HomeTabState extends State<HomeTab> {
       case 'UyQuyen':
         Get.toNamed(AppRouter.authorize);
         break;
+      case 'Phep':
+        Get.toNamed(AppRouter.timeOff);
+        break;
       default:
         Get.snackbar(
           'Thông báo',
