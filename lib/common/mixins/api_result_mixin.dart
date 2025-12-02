@@ -25,20 +25,31 @@ mixin ApiResultMixin on BaseController {
       setStatus(ControllerStatus.loading);
       final result = await apiCall();
 
-      if (result.isSuccess && result.data != null) {
+      if (result.isSuccess) {
         setStatus(ControllerStatus.success);
-        onSuccess?.call(result.data!);
-        return result.data;
+        // Với void type, result.data sẽ là null, nhưng vẫn là success
+        // Gọi onSuccess bất kể có data hay không (void type không cần data)
+        if (result.data != null) {
+          onSuccess?.call(result.data!);
+          return result.data;
+        } else {
+          // Với void type, vẫn là success nhưng không có data
+          // Gọi onSuccess với null (sẽ được cast về void)
+          print('✅ [ApiResultMixin] Success with void type, calling onSuccess');
+          onSuccess?.call(null as T);
+          return null;
+        }
       } else {
+        print('❌ [ApiResultMixin] API call failed: ${result.error}');
         final errorMsg = result.error ?? 'Có lỗi xảy ra';
-        
+
         // Kiểm tra nếu token expired thì tự động đăng xuất
         if (_isTokenExpiredError(errorMsg)) {
           print('🔒 Token expired detected, signing out...');
           SignOutClear().signOut();
           return null;
         }
-        
+
         setStatus(ControllerStatus.error, error: errorMsg);
         if (showErrorSnackbar) {
           CustomSnackbar.show(errorMsg);
@@ -48,14 +59,14 @@ mixin ApiResultMixin on BaseController {
       }
     } catch (e) {
       final errorMsg = e.toString().replaceFirst('Exception: ', '');
-      
+
       // Kiểm tra nếu token expired thì tự động đăng xuất
       if (_isTokenExpiredError(errorMsg)) {
         print('🔒 Token expired detected in exception, signing out...');
         SignOutClear().signOut();
         return null;
       }
-      
+
       setStatus(ControllerStatus.error, error: errorMsg);
       if (showErrorSnackbar) {
         CustomSnackbar.show(errorMsg);
@@ -84,14 +95,14 @@ mixin ApiResultMixin on BaseController {
         return true;
       } else {
         final errorMsg = result.error ?? 'Có lỗi xảy ra';
-        
+
         // Kiểm tra nếu token expired thì tự động đăng xuất
         if (_isTokenExpiredError(errorMsg)) {
           print('🔒 Token expired detected, signing out...');
           SignOutClear().signOut();
           return false;
         }
-        
+
         setStatus(ControllerStatus.error, error: errorMsg);
         if (showErrorSnackbar) {
           CustomSnackbar.show(errorMsg);
@@ -101,14 +112,14 @@ mixin ApiResultMixin on BaseController {
       }
     } catch (e) {
       final errorMsg = e.toString().replaceFirst('Exception: ', '');
-      
+
       // Kiểm tra nếu token expired thì tự động đăng xuất
       if (_isTokenExpiredError(errorMsg)) {
         print('🔒 Token expired detected in exception, signing out...');
         SignOutClear().signOut();
         return false;
       }
-      
+
       setStatus(ControllerStatus.error, error: errorMsg);
       if (showErrorSnackbar) {
         CustomSnackbar.show(errorMsg);

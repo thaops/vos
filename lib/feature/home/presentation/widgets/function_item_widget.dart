@@ -50,6 +50,7 @@ class FunctionItemWidget extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Icon tròn lớn với nền màu xanh nhạt
             Container(
@@ -93,18 +94,20 @@ class FunctionItemWidget extends StatelessWidget {
                       size: isMacOS ? 32.sp : 28.sp,
                     ),
             ),
-            SizedBox(height: isMacOS ? 12.h : 10.h),
+            SizedBox(height: isMacOS ? 10.h : 8.h),
             // Title
-            Text(
-              item.title,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: isMacOS ? 13.sp : 12.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[800],
-                height: 1.3,
+            Flexible(
+              child: Text(
+                item.title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: isMacOS ? 13.sp : 12.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[800],
+                  height: 1.2,
+                ),
               ),
             ),
           ],

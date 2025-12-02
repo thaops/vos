@@ -13,62 +13,45 @@ class WorkCodeItemWidget extends GetView<TimeOffCreateController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final item = controller.workCodeList[index];
-      final isSelected = item.days > 0;
+      final canDecrement = item.days > 0;
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(flex: 2, child: _buildText(item.code)),
-            Expanded(flex: 3, child: _buildText(item.name)),
-            Expanded(
-              flex: 2,
-              child: isSelected
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildCounterButton(
-                          Icons.remove,
-                          () => controller.decrementDays(index),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: TextWidget(
-                            text: '${item.days}',
-                            fontSize: 16,
-                            color: TimeOffCreateColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildCounterButton(
-                          Icons.add,
-                          () => controller.incrementDays(index),
-                        ),
-                      ],
-                    )
-                  : GestureDetector(
-                      onTap: () => controller.incrementDays(index),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: TimeOffCreateColors.borderColor,
-                            width: 1,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextWidget(
-                          text: 'Chọn',
-                          fontSize: 14,
-                          color: TimeOffCreateColors.textSecondary,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
+            Expanded(flex: 3, child: _buildText(item.name, maxLines: 2)),
+            SizedBox(
+              width: 100, // Width cố định cho phần counter
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildCounterButton(
+                    Icons.remove,
+                    canDecrement ? () => controller.decrementDays(index) : null,
+                    enabled: canDecrement,
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 30, // Width cố định cho số
+                    child: TextWidget(
+                      text: item.days == item.days.toInt()
+                          ? '${item.days.toInt()}' // Hiển thị số nguyên nếu là số nguyên
+                          : '${item.days.toStringAsFixed(1)}', // Hiển thị 1 chữ số thập phân
+                      fontSize: 16,
+                      color: TimeOffCreateColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      textAlign: TextAlign.center,
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildCounterButton(
+                    Icons.add,
+                    () => controller.incrementDays(index),
+                    enabled: true,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -76,31 +59,43 @@ class WorkCodeItemWidget extends GetView<TimeOffCreateController> {
     });
   }
 
-  Widget _buildText(String text) {
+  Widget _buildText(String text, {int? maxLines}) {
     return TextWidget(
       text: text,
       fontSize: 14,
       color: TimeOffCreateColors.textPrimary,
       fontWeight: FontWeight.w400,
+      maxLines: maxLines,
     );
   }
 
-  Widget _buildCounterButton(IconData icon, VoidCallback onTap) {
+  Widget _buildCounterButton(
+    IconData icon,
+    VoidCallback? onTap, {
+    required bool enabled,
+  }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       child: Container(
-        width: 30,
-        height: 30,
+        width: 24,
+        height: 24,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: TimeOffCreateColors.primary,
-            width: 1.5,
+            color: enabled
+                ? TimeOffCreateColors.primary
+                : TimeOffCreateColors.borderColor,
+            width: 1.0,
           ),
         ),
-        child: Icon(icon, size: 18, color: TimeOffCreateColors.primary),
+        child: Icon(
+          icon,
+          size: 14,
+          color: enabled
+              ? TimeOffCreateColors.primary
+              : TimeOffCreateColors.textSecondary,
+        ),
       ),
     );
   }
 }
-

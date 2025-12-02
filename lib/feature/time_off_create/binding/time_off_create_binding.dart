@@ -4,8 +4,13 @@ import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/repository_impl/time_off_create_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/repositories/time_off_create_repository.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/create_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_all_vacation_reasons_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_leave_locations_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_leave_types_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
 
 class TimeOffCreateBinding extends Bindings {
@@ -31,13 +36,39 @@ class TimeOffCreateBinding extends Bindings {
     );
 
     Get.lazyPut<GetLeaveTypesUsecase>(
-      () => GetLeaveTypesUsecase(
+      () =>
+          GetLeaveTypesUsecase(repository: Get.find<TimeOffCreateRepository>()),
+    );
+
+    Get.lazyPut<GetStatusesUsecase>(
+      () => GetStatusesUsecase(repository: Get.find<TimeOffCreateRepository>()),
+    );
+
+    Get.lazyPut<GetVacationReasonsUsecase>(
+      () => GetVacationReasonsUsecase(
         repository: Get.find<TimeOffCreateRepository>(),
       ),
     );
 
-    Get.lazyPut<GetStatusesUsecase>(
-      () => GetStatusesUsecase(
+    Get.lazyPut<GetAllVacationReasonsUsecase>(
+      () => GetAllVacationReasonsUsecase(
+        repository: Get.find<TimeOffCreateRepository>(),
+      ),
+    );
+
+    Get.lazyPut<GetWorkCodesUsecase>(
+      () =>
+          GetWorkCodesUsecase(repository: Get.find<TimeOffCreateRepository>()),
+    );
+
+    Get.lazyPut<GetLeaveLocationsUsecase>(
+      () => GetLeaveLocationsUsecase(
+        repository: Get.find<TimeOffCreateRepository>(),
+      ),
+    );
+
+    Get.lazyPut<CreateTimeOffUsecase>(
+      () => CreateTimeOffUsecase(
         repository: Get.find<TimeOffCreateRepository>(),
       ),
     );
@@ -46,8 +77,12 @@ class TimeOffCreateBinding extends Bindings {
       () => TimeOffCreateController(
         getLeaveTypesUsecase: Get.find<GetLeaveTypesUsecase>(),
         getStatusesUsecase: Get.find<GetStatusesUsecase>(),
+        getVacationReasonsUsecase: Get.find<GetVacationReasonsUsecase>(),
+        getAllVacationReasonsUsecase: Get.find<GetAllVacationReasonsUsecase>(),
+        getWorkCodesUsecase: Get.find<GetWorkCodesUsecase>(),
+        getLeaveLocationsUsecase: Get.find<GetLeaveLocationsUsecase>(),
+        createTimeOffUsecase: Get.find<CreateTimeOffUsecase>(),
       ),
     );
   }
 }
-

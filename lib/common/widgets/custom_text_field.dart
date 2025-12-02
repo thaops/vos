@@ -39,6 +39,7 @@ class CustomTextField extends StatefulWidget {
   final bool? enableSuggestions;
   final TextInputAction? textInputAction;
   final EdgeInsets? scrollPadding;
+  final EdgeInsets? contentPadding;
 
   CustomTextField({
     super.key,
@@ -77,6 +78,7 @@ class CustomTextField extends StatefulWidget {
     this.enableSuggestions,
     this.textInputAction,
     this.scrollPadding,
+    this.contentPadding,
   });
 
   @override
@@ -187,10 +189,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
             fillColor: widget.isEnabled == true
                 ? Colors.white
                 : Colors.grey.shade100,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: widget.isMobile ? 12 : 24,
-              vertical: widget.isMobile ? 12 : 12,
-            ),
+            contentPadding:
+                widget.contentPadding ??
+                EdgeInsets.symmetric(
+                  horizontal: widget.isMobile ? 12 : 24,
+                  vertical: widget.isMobile ? 12 : 12,
+                ),
             hintText: widget.hintText,
             hintStyle: TextStyle(
               fontSize: widget.fontSize ?? 16,

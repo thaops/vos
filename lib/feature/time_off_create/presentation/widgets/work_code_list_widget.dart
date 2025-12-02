@@ -4,6 +4,7 @@ import 'package:vos_flutter/common/widgets/text_widget.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/time_off_create_colors.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/work_code_item_widget.dart';
+import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 
 class WorkCodeListWidget extends GetView<TimeOffCreateController> {
   const WorkCodeListWidget({super.key});
@@ -20,8 +21,8 @@ class WorkCodeListWidget extends GetView<TimeOffCreateController> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              color: TimeOffCreateColors.headerBg,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -55,7 +56,10 @@ class WorkCodeListWidget extends GetView<TimeOffCreateController> {
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: TimeOffCreateColors.dividerColor, width: 1),
+                  top: BorderSide(
+                    color: TimeOffCreateColors.dividerColor,
+                    width: 1,
+                  ),
                 ),
               ),
               child: Row(
@@ -68,7 +72,9 @@ class WorkCodeListWidget extends GetView<TimeOffCreateController> {
                     fontWeight: FontWeight.w500,
                   ),
                   TextWidget(
-                    text: '${controller.totalDays}',
+                    text: controller.totalDays == controller.totalDays.toInt()
+                        ? '${controller.totalDays.toInt()}' // Hiển thị số nguyên nếu là số nguyên
+                        : '${controller.totalDays.toStringAsFixed(1)}', // Hiển thị 1 chữ số thập phân
                     fontSize: 16,
                     color: TimeOffCreateColors.primary,
                     fontWeight: FontWeight.w700,
@@ -86,10 +92,9 @@ class WorkCodeListWidget extends GetView<TimeOffCreateController> {
     return TextWidget(
       text: text,
       fontSize: 14,
-      color: TimeOffCreateColors.textSecondary,
+      color: AppColors.white,
       fontWeight: FontWeight.w500,
       textAlign: center ? TextAlign.center : TextAlign.left,
     );
   }
 }
-

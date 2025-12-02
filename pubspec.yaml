@@ -139,20 +139,20 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/image/logo_viags.png
-    - assets/image/login_backgroud.png
-    - assets/image/copy.png
-    - assets/image/google.png
-    - assets/image/icon_app.png
-    - assets/image/avatar.jpg
-    - assets/image/logo_mc.png
-    - assets/image/google.png
+    - assets/images/logo_viags.png
+    - assets/images/login_backgroud.png
+    - assets/images/copy.png
+    - assets/images/google.png
+    - assets/images/icon_app.png
+    - assets/images/avatar.jpg
+    - assets/images/logo_mc.png
+    - assets/images/google.png
     - assets/icon/
     - assets/fonts/
     - shorebird.yaml
     - .env
 
-  # An image asset can refer to one or more resolution-specific "variants", see
+  # An images asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
   # For details regarding adding assets from package dependencies, see

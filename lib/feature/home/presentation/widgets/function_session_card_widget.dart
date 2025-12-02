@@ -22,7 +22,7 @@ class FunctionSessionCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMacOS = !kIsWeb && Platform.isMacOS;
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: isMacOS ? 16.h : 10.h),
       decoration: BoxDecoration(
@@ -87,7 +87,7 @@ class FunctionSessionCardWidget extends StatelessWidget {
             indent: isMacOS ? 20.w : 16.w,
             endIndent: isMacOS ? 20.w : 16.w,
           ),
-          // Function Items Grid (chỉ hiển thị khi expanded)
+          // Function Items (chỉ hiển thị khi expanded)
           if (isExpanded)
             Padding(
               padding: EdgeInsets.only(
@@ -98,63 +98,29 @@ class FunctionSessionCardWidget extends StatelessWidget {
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final itemCount = session.listItems.length;
-                  
-                  // Nếu có ít items (≤2), dùng Row để không chiếm quá nhiều không gian
-                  if (itemCount <= 2) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: session.listItems.map((item) {
-                        return Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isMacOS ? 12.w : 8.w,
-                            ),
-                            child: FunctionItemWidget(
-                              item: item,
-                              onActionTap: onActionTap,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  }
-                  
-                  // Tính số cột dựa trên chiều rộng màn hình cho nhiều items
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  int crossAxisCount = 3;
-                  
-                  // Trên macOS hoặc màn hình lớn, tăng số cột
-                  if (kIsWeb || (!kIsWeb && Platform.isMacOS)) {
-                    if (screenWidth > 1200) {
-                      crossAxisCount = 6;
-                    } else if (screenWidth > 800) {
-                      crossAxisCount = 4;
-                    } else {
-                      crossAxisCount = 3;
-                    }
-                  } else {
-                    // Mobile: giữ nguyên 3 cột
-                    crossAxisCount = 3;
-                  }
-                  
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: isMacOS ? 12.w : 8.w,
-                      mainAxisSpacing: isMacOS ? 12.h : 8.h,
-                      childAspectRatio: isMacOS ? 0.95 : 1.0,
-                    ),
-                    itemCount: itemCount,
-                    itemBuilder: (context, index) {
-                      final item = session.listItems[index];
-                      return FunctionItemWidget(
-                        item: item,
-                        onActionTap: onActionTap,
+                  // số cột
+                  final columns = isMacOS ? 4 : 3;
+
+                  // spacing giữa items
+                  final spacing = isMacOS ? 12.w : 8.w;
+
+                  // tính width cho mỗi item
+                  final totalSpacing = spacing * (columns - 1);
+                  final itemWidth =
+                      (constraints.maxWidth - totalSpacing) / columns;
+
+                  return Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: session.listItems.map((item) {
+                      return SizedBox(
+                        width: itemWidth,
+                        child: FunctionItemWidget(
+                          item: item,
+                          onActionTap: onActionTap,
+                        ),
                       );
-                    },
+                    }).toList(),
                   );
                 },
               ),

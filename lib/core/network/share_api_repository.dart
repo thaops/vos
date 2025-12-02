@@ -86,6 +86,13 @@ class ShareApiRepository {
         'ls_Data': lsDataString,
       };
 
+      // Log request
+      print('📤 [ShareAPI] Request:');
+      print('   URL: ${Config.baseUrlVasc}$endpoint');
+      print('   FunctionCode: $functionCode');
+      print('   ls_Data: $lsDataString');
+      print('   Headers: ${headers.keys.join(", ")}');
+
       // 3. Call API
       final response = await dio.request(
         '${Config.baseUrlVasc}$endpoint',
@@ -98,7 +105,7 @@ class ShareApiRepository {
       );
 
       // 4. Parse response
-      return _parseResponse<T>(response, parser);
+      return _parseResponse<T>(response, parser, functionCode);
     } catch (e) {
       return ApiResult.error('Share API call failed: ${e.toString()}');
     }
@@ -108,7 +115,21 @@ class ShareApiRepository {
   ApiResult<T> _parseResponse<T>(
     dioLib.Response response,
     T Function(dynamic json)? parser,
+    String functionCode,
   ) {
+    // Log raw response
+    print('📥 [ShareAPI] Response for $functionCode:');
+    print('   Status Code: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      try {
+        print('   Raw Response: ${jsonEncode(response.data)}');
+      } catch (e) {
+        print('   Raw Response (cannot encode): ${response.data}');
+      }
+    } else {
+      print('   Error: ${response.statusMessage}');
+    }
+
     // Check HTTP status
     if (response.statusCode != 200) {
       return ApiResult.error(
@@ -138,9 +159,15 @@ class ShareApiRepository {
         );
       }
 
+      // Log parsed response
+      print('   Parsed Response: ${jsonEncode(responseData)}');
+
       // Check API result code
       final resultCode = responseData['ResultCode'] as int?;
       final message = responseData['Message'] as String? ?? '';
+
+      print('   ResultCode: $resultCode');
+      print('   Message: $message');
 
       if (resultCode != 0) {
         return ApiResult.error(
@@ -151,6 +178,13 @@ class ShareApiRepository {
 
       // Extract data
       final dataValue = responseData['Data'];
+
+      print('   Data type: ${dataValue.runtimeType}');
+      if (dataValue is String) {
+        print('   Data (String): $dataValue');
+      } else {
+        print('   Data: ${jsonEncode(dataValue)}');
+      }
 
       // Handle case: Data có thể là String (JSON string) hoặc Map/Object trực tiếp
       dynamic parsedData;
@@ -210,14 +244,21 @@ class ShareApiRepository {
       // Apply parser nếu có
       if (parser != null) {
         try {
+          print('   Parsing data with parser...');
           final result = parser(parsedData);
+          print('   ✅ Parse successful');
+          // Nếu parser trả về void, vẫn tạo success result nhưng không có data
+          // Với void type, result sẽ là null hoặc void, nhưng vẫn là success
           return ApiResult.success(result, message);
-        } catch (e) {
+        } catch (e, stackTrace) {
+          print('   ❌ Parser error: $e');
+          print('   Stack trace: $stackTrace');
           return ApiResult.error('Parser error: ${e.toString()}');
         }
       }
 
       // Trả về raw data nếu không có parser
+      print('   ✅ Returning raw data');
       return ApiResult.success(parsedData as T, message);
     } catch (e) {
       return ApiResult.error('Response parsing failed: ${e.toString()}');

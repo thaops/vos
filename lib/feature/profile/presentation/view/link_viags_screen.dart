@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
+import 'package:vos_flutter/common/widgets/custom_snackbar.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/link_viags_form_fields.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/link_viags_header_card.dart';
@@ -70,9 +71,21 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
         // ✅ Sửa: Dùng offNamed thay vì offAllNamed để không xóa tất cả controllers
         // offNamed chỉ xóa route hiện tại và quay về main, giữ lại controllers đã đăng ký
         Get.offNamed(AppRouter.main);
+      } else {
+        // Hiển thị error message từ server
+        final errorMsg = _controller.linkViagsError.value;
+        if (errorMsg.isNotEmpty) {
+          CustomSnackbar.show(errorMsg);
+        } else {
+          CustomSnackbar.show('Không thể liên kết tài khoản VIAGS');
+        }
       }
     } catch (e) {
-      // Error handling nếu cần
+      // Hiển thị error từ exception
+      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      CustomSnackbar.show(
+        errorMsg.isNotEmpty ? errorMsg : 'Có lỗi xảy ra khi liên kết tài khoản',
+      );
     } finally {
       if (mounted) {
         setState(() {

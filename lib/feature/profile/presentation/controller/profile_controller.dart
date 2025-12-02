@@ -45,6 +45,9 @@ class ProfileController extends GetxController {
   // Flag để track trạng thái nhân viên (reactive)
   final RxBool isEmployee = false.obs;
 
+  // Error message khi link VIAGS thất bại
+  final RxString linkViagsError = ''.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -190,6 +193,7 @@ class ProfileController extends GetxController {
   Future<bool> linkViagsAccount(String name, String password) async {
     try {
       isLoading.value = true;
+      linkViagsError.value = ''; // Clear error trước khi thử lại
 
       final result = await linkViagsAccountUsecase.call(name, password);
 
@@ -217,17 +221,19 @@ class ProfileController extends GetxController {
           }
         }
 
-        // ✅ Reset BannerController state để tránh hiển thị banners cũ
         _resetBannerController();
 
-        print('✅ Linked VIAGS account successfully');
         return true;
       } else {
-        print('❌ Link VIAGS failed: ${result.error}');
+        // Lưu error message từ server
+        final errorMsg = result.error ?? 'Không thể liên kết tài khoản VIAGS';
+        linkViagsError.value = errorMsg;
         return false;
       }
     } catch (e) {
-      print('❌ Error linking VIAGS account: $e');
+      // Lưu error message từ exception
+      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      linkViagsError.value = errorMsg.isNotEmpty ? errorMsg : 'Có lỗi xảy ra khi liên kết tài khoản';
       return false;
     } finally {
       isLoading.value = false;
