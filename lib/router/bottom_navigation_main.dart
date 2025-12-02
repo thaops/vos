@@ -186,75 +186,75 @@ class _MainScreenState extends State<MainScreen> {
               isEmployee = false;
             }
 
-          return Container(
-            color: Colors.white,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                navigationBarTheme: NavigationBarThemeData(
-                  labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((
-                    Set<WidgetState> states,
-                  ) {
-                    if (states.contains(WidgetState.selected)) {
-                      return TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      );
-                    }
-                    return TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    );
-                  }),
+            return Container(
+              color: Colors.white,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  navigationBarTheme: NavigationBarThemeData(
+                    labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>(
+                      (Set<WidgetState> states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          );
+                        }
+                        return TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
-              child: NavigationBar(
-                selectedIndex: isEmployee
-                    ? _selectedIndex
-                    : (_selectedIndex == 0 ? 0 : _selectedIndex - 1),
-                onDestinationSelected: _onTabTapped,
-                backgroundColor: Colors.white,
-                surfaceTintColor: Colors.white,
-                indicatorColor: AppColors.primary.withOpacity(0.8),
-                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                destinations: [
-                  // Chỉ hiển thị tab Home nếu là nhân viên
-                  if (isEmployee)
+                child: NavigationBar(
+                  selectedIndex: isEmployee
+                      ? _selectedIndex
+                      : (_selectedIndex == 0 ? 0 : _selectedIndex - 1),
+                  onDestinationSelected: _onTabTapped,
+                  backgroundColor: Colors.white,
+                  surfaceTintColor: Colors.white,
+                  indicatorColor: AppColors.primary.withOpacity(0.8),
+                  labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                  destinations: [
+                    // Chỉ hiển thị tab Home nếu là nhân viên
+                    if (isEmployee)
+                      NavigationDestination(
+                        icon: Icon(
+                          Icons.home_outlined,
+                          color: Colors.grey.shade600,
+                        ),
+                        selectedIcon: Icon(
+                          Icons.home_rounded,
+                          color: Colors.white,
+                        ),
+                        label: 'Trang chủ',
+                      ),
                     NavigationDestination(
                       icon: Icon(
-                        Icons.home_outlined,
+                        Icons.article_outlined,
+                        color: Colors.grey.shade600,
+                      ),
+                      selectedIcon: Icon(Icons.article, color: Colors.white),
+                      label: 'Tin tức',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(
+                        Icons.person_outline,
                         color: Colors.grey.shade600,
                       ),
                       selectedIcon: Icon(
-                        Icons.home_rounded,
+                        Icons.person_rounded,
                         color: Colors.white,
                       ),
-                      label: 'Trang chủ',
+                      label: 'Cá nhân',
                     ),
-                  NavigationDestination(
-                    icon: Icon(
-                      Icons.article_outlined,
-                      color: Colors.grey.shade600,
-                    ),
-                    selectedIcon: Icon(Icons.article, color: Colors.white),
-                    label: 'Tin tức',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(
-                      Icons.person_outline,
-                      color: Colors.grey.shade600,
-                    ),
-                    selectedIcon: Icon(
-                      Icons.person_rounded,
-                      color: Colors.white,
-                    ),
-                    label: 'Cá nhân',
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
+            );
           });
         },
       ),

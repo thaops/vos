@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
 import 'package:vos_flutter/feature/banner/presentation/controller/banner_controller.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/feature/profile/domain/models/user_profile.dart';
@@ -52,7 +53,7 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     loadUserProfile();
-    _loadGoogleUser();
+    _loadGoogleUserAsync();
     loadViagsStatus();
     loadEmployeeStatus();
   }
@@ -81,8 +82,15 @@ class ProfileController extends GetxController {
   Future<void> loadViagsStatus() async {
     try {
       final status = await checkViagsStatusUsecase.call();
-      isViagsLinked.value = status['isLinked'] as bool? ?? false;
-      viagsEmail.value = status['email'] as String? ?? '';
+      final isLinked = status['isLinked'] as bool? ?? false;
+      isViagsLinked.value = isLinked;
+
+      // ✅ Nếu không có liên kết, đảm bảo email bị xóa
+      if (!isLinked) {
+        viagsEmail.value = '';
+      } else {
+        viagsEmail.value = status['email'] as String? ?? '';
+      }
     } catch (e) {
       print('Error loading VIAGS status: $e');
       isViagsLinked.value = false;
@@ -113,19 +121,50 @@ class ProfileController extends GetxController {
     loadEmployeeStatus();
   }
 
-  void _loadGoogleUser() {
+  /// Load Google user async (check awaiting và tạo guest user nếu cần)
+  Future<void> _loadGoogleUserAsync() async {
     try {
       final box = Hive.box('google_user_box');
       final userData = box.get('current_user');
+
       if (userData != null) {
         googleUser.value = GoogleUserDto.fromJson(
           Map<String, dynamic>.from(userData),
         );
         print('✅ Loaded Google user: ${googleUser.value?.displayName}');
       } else {
-        // Storage đã xóa (sau logout) → clear reactive value
-        googleUser.value = null;
-        print('⚠️ No Google user found in Hive');
+        // ✅ Nếu không có Google user, check awaiting
+        // Nếu awaiting = true → tạo guest user
+        try {
+          final checkAwaitingService =
+              await CheckAwaitingServices.createCheckAwaitingServices();
+          final isAwaiting = await checkAwaitingService.getawaiting();
+
+          if (isAwaiting) {
+            // Tạo guest user với avatar mặc định và name "Người dùng khách"
+            final guestUser = GoogleUserDto(
+              uid: 'guest_${DateTime.now().millisecondsSinceEpoch}',
+              displayName: 'Người dùng khách',
+              email: null,
+              photoURL: null, // null để hiển thị placeholder icon
+              idToken: null,
+              createdAt: DateTime.now(),
+            );
+
+            // Lưu vào Hive để dùng lại
+            await box.put('current_user', guestUser.toJson());
+            googleUser.value = guestUser;
+            print('✅ Created guest user: ${guestUser.displayName}');
+          } else {
+            // Storage đã xóa (sau logout) → clear reactive value
+            googleUser.value = null;
+            print('⚠️ No Google user found in Hive');
+          }
+        } catch (e) {
+          // Nếu check awaiting lỗi → clear
+          googleUser.value = null;
+          print('⚠️ Error checking awaiting status: $e');
+        }
       }
     } catch (e) {
       print('❌ Error loading Google user: $e');
@@ -135,7 +174,7 @@ class ProfileController extends GetxController {
 
   /// Refresh Google user from Hive (call after login)
   void refreshGoogleUser() {
-    _loadGoogleUser();
+    _loadGoogleUserAsync();
   }
 
   /// Refresh tất cả data (gọi sau khi link/unlink VIAGS hoặc khi cần reload)
@@ -207,11 +246,13 @@ class ProfileController extends GetxController {
         isEmployee.value = true;
 
         // Cập nhật email trong GoogleUserModel nếu có email từ userProfile (KHÔNG xóa Google cache)
-        if (googleUser.value != null && userProfile.value?.email.isNotEmpty == true) {
+        if (googleUser.value != null &&
+            userProfile.value?.email.isNotEmpty == true) {
           try {
             final box = Hive.box('google_user_box');
             final googleUserData = googleUser.value!.toJson();
-            googleUserData['email'] = userProfile.value!.email; // Cập nhật email từ VIAGS profile
+            googleUserData['email'] =
+                userProfile.value!.email; // Cập nhật email từ VIAGS profile
             await box.put('current_user', googleUserData);
             // Cập nhật reactive value
             googleUser.value = GoogleUserDto.fromJson(googleUserData);
@@ -233,7 +274,9 @@ class ProfileController extends GetxController {
     } catch (e) {
       // Lưu error message từ exception
       final errorMsg = e.toString().replaceFirst('Exception: ', '');
-      linkViagsError.value = errorMsg.isNotEmpty ? errorMsg : 'Có lỗi xảy ra khi liên kết tài khoản';
+      linkViagsError.value = errorMsg.isNotEmpty
+          ? errorMsg
+          : 'Có lỗi xảy ra khi liên kết tài khoản';
       return false;
     } finally {
       isLoading.value = false;
@@ -267,7 +310,11 @@ class ProfileController extends GetxController {
         // Xóa userProfile
         userProfile.value = null;
 
-        // Reload VIAGS status
+        // ✅ Clear VIAGS status và email ngay lập tức
+        isViagsLinked.value = false;
+        viagsEmail.value = '';
+
+        // Reload VIAGS status để đảm bảo đồng bộ với storage
         await loadViagsStatus();
         // Employee status sẽ tự động update vì userProfile đã được xóa
         isEmployee.value = false;

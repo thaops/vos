@@ -8,6 +8,31 @@ import 'package:vos_flutter/feature/profile/presentation/widgets/logout_dialog.d
 import 'package:vos_flutter/feature/profile/presentation/widgets/not_logged_in_state.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/profile_content.dart';
 
+/// Wrapper widget để làm cho Obx trở thành PreferredSizeWidget
+class _ReactiveAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final ProfileController controller;
+
+  const _ReactiveAppBar({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => AppBarWidget(
+        title: 'Thông tin cá nhân',
+        isBack: false,
+        iconRightfirst: controller.isViagsLinked.value ? Icons.logout : null,
+        colorfirst: Colors.white,
+        functionfirst: controller.isViagsLinked.value
+            ? () => LogoutDialog.show(controller)
+            : null,
+      ),
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
 class ProfileScreen extends GetView<ProfileController> {
   const ProfileScreen({super.key});
 
@@ -20,13 +45,7 @@ class ProfileScreen extends GetView<ProfileController> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBarWidget(
-        title: 'Thông tin cá nhân',
-        isBack: false,
-        iconRightfirst: Icons.logout,
-        colorfirst: Colors.white,
-        functionfirst: () => LogoutDialog.show(controller),
-      ),
+      appBar: _ReactiveAppBar(controller: controller),
       body: Obx(() {
         final hasGoogleUser = controller.googleUser.value != null;
         final hasUserProfile = controller.userProfile.value != null;

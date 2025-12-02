@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:vos_flutter/common/img/img.dart';
 import 'package:vos_flutter/feature/profile/domain/models/user_profile.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
@@ -42,12 +43,13 @@ class ViagsAccountInfoCard extends StatelessWidget {
             ),
           ),
           SizedBox(height: 20.h),
-          _buildViagsInfoItem(
+          Obx(() => _buildViagsInfoItem(
             'Email',
-            controller.viagsEmail.value.isNotEmpty
+            controller.isViagsLinked.value &&
+                    controller.viagsEmail.value.isNotEmpty
                 ? controller.viagsEmail.value
                 : user.email,
-          ),
+          )),
           _buildViagsInfoItem(
             'Chức vụ',
             user.description.isNotEmpty ? user.description : 'Trưởng phòng',

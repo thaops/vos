@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/mixins/api_result_mixin.dart';
 import 'package:vos_flutter/feature/login/domain/models/user.dart';
@@ -47,6 +48,9 @@ class LoginController extends BaseController with ApiResultMixin {
         // Refresh ProfileController nếu có
         _refreshProfileController();
         
+        // ✅ Set flag để MainScreen mở tab Tin tức sau khi login
+        GetStorage().write('shouldOpenNewsTab', true);
+        
         // Tự động navigate về main, không cần hỏi nhân viên nữa
         Get.offAllNamed(AppRouter.main);
       },
@@ -65,6 +69,9 @@ class LoginController extends BaseController with ApiResultMixin {
           currentUser = user;
           // Refresh ProfileController nếu có
           _refreshProfileController();
+          
+          // ✅ Set flag để MainScreen mở tab Tin tức sau khi login
+          GetStorage().write('shouldOpenNewsTab', true);
           
           // Tự động navigate về main, không cần hỏi nhân viên nữa
           Get.offAllNamed(AppRouter.main);

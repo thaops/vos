@@ -104,15 +104,12 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
           ? image != null
                 ? Image.asset(image!, fit: BoxFit.contain, width: imageWidth)
                 : const SizedBox()
-          : FittedBox(
-              fit: BoxFit.scaleDown,
-              child: TextWidget(
-                text: title!,
-                fontSize: titleFontSize,
-                fontWeight: FontWeight.w700,
-                color: AppColors.white,
-                maxLines: 1,
-              ),
+          : TextWidget(
+              text: title!,
+              fontSize: titleFontSize,
+              fontWeight: FontWeight.w700,
+              color: AppColors.white,
+              maxLines: 1,
             ),
       titleSpacing: titleSpacing,
       actions: [

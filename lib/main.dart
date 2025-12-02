@@ -141,7 +141,7 @@ Future<void> _initializeNonCriticalServices() async {
       generateUUID(),
     ]);
 
-    // _lazyLoadCheckAwaitingApproval();
+    _lazyLoadCheckAwaitingApproval();
     _lazyLoadDateFormatting();
     _lazyCleanOldLogs();
   } catch (e) {
@@ -166,6 +166,7 @@ void _lazyLoadCheckAwaitingApproval() {
             udid: Uuid().v4(),
           )
           .timeout(const Duration(seconds: 3), onTimeout: () => false);
+      print('result: $result');
 
       await serviceCheckawaiting.saveawaiting(result);
     } catch (e) {

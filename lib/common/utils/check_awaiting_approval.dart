@@ -39,16 +39,18 @@ class CheckAwaitingApproval {
                 'X_APP_VERSION': appVersion,
                 'X_REQUEST_UDID': udid,
               },
-              receiveTimeout: const Duration(seconds: 3), // ✅ Timeout
+              receiveTimeout: const Duration(seconds: 3), 
               sendTimeout: const Duration(seconds: 3),
             ),
           )
           .timeout(
-            const Duration(seconds: 3), // ✅ Double timeout
+            const Duration(seconds: 3), 
             onTimeout: () {
               throw TimeoutException('Request timeout after 3 seconds');
             },
           );
+
+      print('response: ${response.data}');
 
       if (response.data['StatusCode'] == 200) {
         return response.data['Data']['IsWaitingApproval'];

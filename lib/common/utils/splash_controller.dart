@@ -1,10 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:uuid/uuid.dart';
 import 'package:vos_flutter/common/services/ota_update_service.dart';
 import 'package:vos_flutter/common/services/services.dart';
+import 'package:vos_flutter/common/utils/check_awaiting_approval.dart';
+import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/router/app_router.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
@@ -57,7 +63,53 @@ class SplashController extends GetxController {
   /// Check auth nhanh (chỉ đọc local storage)
   Future<bool> _checkAuthQuick() async {
     try {
-      // Check Google user từ Hive (nhanh)
+      // ✅ Bước 1: Check awaiting trước (nếu Apple đang duyệt → vào thẳng app)
+      // Gọi trực tiếp API để tránh race condition với _lazyLoadCheckAwaitingApproval()
+      try {
+        final checkAwaitingApproval = CheckAwaitingApproval();
+        final packageInfo = await PackageInfo.fromPlatform();
+        final isAwaiting = await checkAwaitingApproval
+            .checkAwaitingApproval(
+              platform: Platform.isIOS ? "iOS" : "Android",
+              appId: packageInfo.packageName,
+              appBuild: packageInfo.buildNumber,
+              appVersion: packageInfo.version,
+              udid: const Uuid().v4(),
+            )
+            .timeout(const Duration(seconds: 3), onTimeout: () => false);
+
+        // Lưu kết quả vào storage để dùng sau
+        final checkAwaitingService =
+            await CheckAwaitingServices.createCheckAwaitingServices();
+        await checkAwaitingService.saveawaiting(isAwaiting);
+
+        if (isAwaiting) {
+          if (kDebugMode) {
+            print('✅ Awaiting approval: true → Skip login, enter app as guest');
+          }
+          // ✅ Set flag để MainScreen mở tab Tin tức khi vào app với awaiting approval
+          GetStorage().write('shouldOpenNewsTab', true);
+          return true; // Coi như có auth, vào thẳng main
+        }
+      } catch (e) {
+        // Nếu API call fail, fallback về đọc từ storage
+        if (kDebugMode) {
+          print('⚠️ CheckAwaitingApproval API failed, fallback to storage: $e');
+        }
+        final checkAwaitingService =
+            await CheckAwaitingServices.createCheckAwaitingServices();
+        final isAwaiting = await checkAwaitingService.getawaiting();
+        if (isAwaiting) {
+          if (kDebugMode) {
+            print('✅ Awaiting approval (from storage): true → Skip login');
+          }
+          // ✅ Set flag để MainScreen mở tab Tin tức khi vào app với awaiting approval
+          GetStorage().write('shouldOpenNewsTab', true);
+          return true;
+        }
+      }
+
+      // ✅ Bước 2: Check Google user từ Hive (nhanh)
       final box = Hive.box('google_user_box');
       final userData = box.get('current_user');
       if (userData != null) {
@@ -67,11 +119,14 @@ class SplashController extends GetxController {
         }
       }
 
-      // Check token cũ (nhanh)
+      // ✅ Bước 3: Check token cũ (nhanh)
       final service = await Services.create();
       final token = await service.getAccessToken();
       return token.isNotEmpty;
     } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error in _checkAuthQuick: $e');
+      }
       return false;
     }
   }
@@ -81,11 +136,10 @@ class SplashController extends GetxController {
     Future.microtask(() async {
       try {
         isCheckingUpdate.value = true;
-        final updateResult = await _forceCheckAndUpdateSilent()
-            .timeout(
-              const Duration(seconds: 2),
-              onTimeout: () => false,
-            );
+        final updateResult = await _forceCheckAndUpdateSilent().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => false,
+        );
 
         if (updateResult) {
           // Có update → restart app sau khi user đã vào (delay 5s)
@@ -107,9 +161,12 @@ class SplashController extends GetxController {
       try {
         final currentUser = FirebaseAuth.instance.currentUser;
         if (currentUser != null) {
-          await currentUser.getIdToken(true).timeout(
+          await currentUser
+              .getIdToken(true)
+              .timeout(
                 const Duration(seconds: 3),
-                onTimeout: () => throw TimeoutException('Token refresh timeout'),
+                onTimeout: () =>
+                    throw TimeoutException('Token refresh timeout'),
               );
 
           // Update Hive nếu cần
