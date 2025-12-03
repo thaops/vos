@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
+import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/feature/news_detail/presentation/controller/news_detail_controller.dart';
@@ -58,18 +60,22 @@ class _AppNewsDetailScreenState extends State<_AppNewsDetailScreen> {
   @override
   void initState() {
     super.initState();
-    
-    // User agent phù hợp với platform
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     final userAgent = _getUserAgent();
-    
+
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted);
-    
+
     // setBackgroundColor không được hỗ trợ trên macOS
     if (!Platform.isMacOS) {
       _webViewController.setBackgroundColor(Colors.white);
     }
-    
+
     _webViewController.setUserAgent(userAgent);
 
     // Listen changes từ controller
@@ -86,6 +92,15 @@ class _AppNewsDetailScreenState extends State<_AppNewsDetailScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    super.dispose();
+  }
+
   void _loadContent(String htmlContent) {
     if (_lastHtmlContent != htmlContent) {
       _lastHtmlContent = htmlContent;
@@ -100,12 +115,10 @@ class _AppNewsDetailScreenState extends State<_AppNewsDetailScreen> {
   }
 
   void _reload() {
-    // Reload từ controller
     final id = widget.controller.id;
     if (id != null && id.isNotEmpty) {
       widget.controller.getArticleDetail(id);
     } else {
-      // Nếu không có id, reload WebView hiện tại
       if (_lastHtmlContent != null) {
         _webViewController.loadRequest(
           Uri.dataFromString(
@@ -177,11 +190,17 @@ class _WebViewScreenState extends State<_WebViewScreen> {
   late final WebViewController webViewController;
   late final Uri _initialUri;
   Map<String, String>? _requestHeaders;
+  bool _hasUnlinked = false;
 
   @override
   void initState() {
-    print('widget.token: ${widget.token}');
     super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
     _initialUri = Uri.parse(widget.url);
     _requestHeaders = (widget.token?.isNotEmpty ?? false)
         ? {'X-Token': widget.token!}
@@ -192,15 +211,58 @@ class _WebViewScreenState extends State<_WebViewScreen> {
 
     webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted);
-    
+
     // setBackgroundColor không được hỗ trợ trên macOS
     if (!Platform.isMacOS) {
       webViewController.setBackgroundColor(Colors.white);
     }
-    
+
     webViewController.setUserAgent(userAgent);
 
+    webViewController.setNavigationDelegate(
+      NavigationDelegate(
+        onPageStarted: (url) {
+          _checkErrorUrl(url);
+        },
+        onPageFinished: (url) {
+          _checkErrorUrl(url);
+        },
+      ),
+    );
+
     _loadInitialRequest();
+  }
+
+  void _checkErrorUrl(String url) {
+    if (_hasUnlinked) return;
+  final isErrorUrl = url.contains('https://share-web.viags.vn/Error') ||
+        url.contains('https://share-web.viags.vn/Error/Index');
+    if (isErrorUrl) {
+      _handleUnlinkViags();
+    }
+  }
+
+   Future<void> _handleUnlinkViags() async {
+    if (_hasUnlinked) return; // Tránh gọi nhiều lần
+    _hasUnlinked = true;
+
+    try {
+      // Lấy ProfileController từ GetX
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        await profileController.unlinkViagsAccount(context);
+      }
+    } catch (e) {
+    }
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    super.dispose();
   }
 
   void _reload() {

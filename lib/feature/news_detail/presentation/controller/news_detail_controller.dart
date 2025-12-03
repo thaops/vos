@@ -43,38 +43,28 @@ class NewsDetailController extends BaseController with ApiResultMixin {
       return _cachedProfileController;
     }
     if (!Get.isRegistered<ProfileController>()) {
-      print('⚠️ ProfileController chưa được register');
       return null;
     }
     try {
       _cachedProfileController = Get.find<ProfileController>();
-      print('✅ ProfileController found: ${_cachedProfileController != null}');
       if (_cachedProfileController != null) {
-        print(
-          '✅ userProfile.value: ${_cachedProfileController!.userProfile.value != null}',
-        );
+      
         final token = _cachedProfileController!.userProfile.value?.token;
         if (token != null && token.isNotEmpty) {
           final preview = token.length > 20 ? token.substring(0, 20) : token;
-          print('✅ token: $preview...');
         } else {
-          print('✅ token: null');
         }
       }
     } catch (e) {
-      print('❌ Error finding ProfileController: $e');
       return null;
     }
     return _cachedProfileController;
   }
 
   String? get vacsToken {
-    // Ưu tiên lấy từ ProfileController
     final profileToken = _profileController?.userProfile.value?.token;
     if (profileToken != null && profileToken.isNotEmpty) {
-      print(
-        '🔑 vacsToken từ ProfileController: ${profileToken.substring(0, profileToken.length > 20 ? 20 : profileToken.length)}...',
-      );
+    
       return profileToken;
     }
 
@@ -85,17 +75,13 @@ class NewsDetailController extends BaseController with ApiResultMixin {
       if (userProfileData != null && userProfileData is Map) {
         final token = userProfileData['Token'] as String?;
         if (token != null && token.isNotEmpty) {
-          print(
-            '🔑 vacsToken từ storage: ${token.substring(0, token.length > 20 ? 20 : token.length)}...',
-          );
+         
           return token;
         }
       }
     } catch (e) {
-      print('❌ Error reading token from storage: $e');
     }
 
-    print('⚠️ vacsToken: null (không tìm thấy token)');
     return null;
   }
 
@@ -118,7 +104,7 @@ class NewsDetailController extends BaseController with ApiResultMixin {
   @override
   void onInit() {
     super.onInit();
-    // Sử dụng args trực tiếp
+    
     if (args?.isAppType == true && id != null && id!.isNotEmpty) {
       getArticleDetail(id!);
     } else {
