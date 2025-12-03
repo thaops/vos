@@ -36,7 +36,7 @@ class GoogleUserInfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Thông tin tài khoản Google',
+            'Thông tin tài khoản',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w600,
