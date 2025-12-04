@@ -16,17 +16,16 @@ class _ReactiveAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => AppBarWidget(
+    return  AppBarWidget(
         title: 'Thông tin cá nhân',
         isBack: false,
-        iconRightfirst: controller.isViagsLinked.value ? Icons.logout : null,
-        colorfirst: Colors.white,
-        functionfirst: controller.isViagsLinked.value
-            ? () => LogoutDialog.show(controller)
-            : null,
-      ),
-    );
+        // iconRightfirst: controller.isViagsLinked.value ? Icons.logout : null,
+        // colorfirst: Colors.white,
+        // functionfirst: controller.isViagsLinked.value
+        //     ? () => LogoutDialog.show(controller)
+        //     : null,
+      );
+    
   }
 
   @override
