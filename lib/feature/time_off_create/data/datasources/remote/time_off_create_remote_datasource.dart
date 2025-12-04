@@ -1,5 +1,6 @@
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
 import 'package:vos_flutter/core/network/base_share_datasource.dart';
+import 'package:vos_flutter/core/network/share_Json_helper.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/leave_location_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/leave_type_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/status_dto.dart';
@@ -22,7 +23,8 @@ abstract class TimeOffCreateRemoteDataSource {
   Future<ApiResult<List<VacationReason>>> getAllVacationReasons();
   Future<ApiResult<List<WorkCode>>> getWorkCodes();
   Future<ApiResult<List<LeaveLocation>>> getLeaveLocations();
-  Future<ApiResult<void>> createTimeOff(TimeOffCreateRequestDto request);
+  Future<ApiResult<int>> createTimeOff(TimeOffCreateRequestDto request);
+  Future<ApiResult<int>> sendApproveRequest(int vRegId);
 }
 
 class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
@@ -33,7 +35,7 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
   Future<ApiResult<List<LeaveType>>> getLeaveTypes() async {
     return shareApiRepository.callShareGet<List<LeaveType>>(
       functionCode: 'CODE_JOB_VACATION',
-      token: getToken(), // Tự động lấy token từ base class
+      token: getToken(),
       data: {},
       parser: (json) {
         if (json is! List) return [];
@@ -62,35 +64,24 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       token: getToken(),
       data: {},
       parser: (json) {
-        print('🔍 [Status] Parser received: ${json.runtimeType}');
         if (json is! List) {
-          print('❌ [Status] Response is not a List: ${json.runtimeType}');
           return [];
         }
 
-        print('✅ [Status] Parsing ${json.length} items');
         final statuses = <Status>[];
         for (int i = 0; i < json.length; i++) {
           try {
             final item = json[i];
             if (item is! Map<String, dynamic>) {
-              print(
-                '⚠️ [Status] Item at index $i is not a Map: ${item.runtimeType}',
-              );
               continue;
             }
 
-            print('📝 [Status] Parsing item $i: $item');
             final dto = StatusDto.fromJson(item);
             statuses.add(dto.toDomain());
-            print('✅ [Status] Parsed: ${dto.code} - ${dto.nameVn}');
           } catch (e, stackTrace) {
-            print('❌ [Status] Error parsing item at index $i: $e');
-            print('Stack trace: $stackTrace');
             continue;
           }
         }
-        print('✅ [Status] Successfully parsed ${statuses.length} statuses');
         return statuses;
       },
     );
@@ -133,36 +124,24 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       data: {},
       parser: (json) {
         if (json is! List) {
-          print(
-            '⚠️ [VacationReason] Response is not a List: ${json.runtimeType}',
-          );
           return [];
         }
 
-        print('✅ [VacationReason] Parsing ${json.length} items');
         final reasons = <VacationReason>[];
         for (int i = 0; i < json.length; i++) {
           try {
             final item = json[i];
             if (item is! Map<String, dynamic>) {
-              print(
-                '⚠️ [VacationReason] Item at index $i is not a Map: ${item.runtimeType}',
-              );
               continue;
             }
 
             final dto = VacationReasonDto.fromJson(item);
             reasons.add(dto.toDomain());
-            print('✅ [VacationReason] Parsed: ${dto.code} - ${dto.nameVn}');
-          } catch (e, stackTrace) {
-            print('❌ [VacationReason] Error parsing item at index $i: $e');
-            print('Stack trace: $stackTrace');
+          } catch (e) {
             continue;
           }
         }
-        print(
-          '✅ [VacationReason] Successfully parsed ${reasons.length} reasons',
-        );
+
         return reasons;
       },
     );
@@ -202,50 +181,53 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       data: {},
       parser: (json) {
         if (json is! List) {
-          print(
-            '⚠️ [LeaveLocation] Response is not a List: ${json.runtimeType}',
-          );
           return [];
         }
 
-        print('✅ [LeaveLocation] Parsing ${json.length} items');
         final locations = <LeaveLocation>[];
         for (int i = 0; i < json.length; i++) {
           try {
             final item = json[i];
             if (item is! Map<String, dynamic>) {
-              print(
-                '⚠️ [LeaveLocation] Item at index $i is not a Map: ${item.runtimeType}',
-              );
               continue;
             }
 
             final dto = LeaveLocationDto.fromJson(item);
             locations.add(dto.toDomain());
-            print('✅ [LeaveLocation] Parsed: ${dto.code} - ${dto.nameVn}');
-          } catch (e, stackTrace) {
-            print('❌ [LeaveLocation] Error parsing item at index $i: $e');
-            print('Stack trace: $stackTrace');
+          } catch (e) {
             continue;
           }
         }
-        print(
-          '✅ [LeaveLocation] Successfully parsed ${locations.length} locations',
-        );
+
         return locations;
       },
     );
   }
 
   @override
-  Future<ApiResult<void>> createTimeOff(TimeOffCreateRequestDto request) async {
-    return shareApiRepository.callShareUpdate<void>(
+  Future<ApiResult<int>> createTimeOff(TimeOffCreateRequestDto request) async {
+    return shareApiRepository.callShareUpdate<int>(
       functionCode: 'Vacation_Register_Update',
       token: getToken(),
       data: request.toJson(),
       parser: (json) {
-        // Response không cần parse, chỉ cần check ResultCode
-        return;
+        final map = ShareJsonHelper.decode(json);
+        final vRegId = ShareJsonHelper.getInt(map, 'VReg_ID');
+        print('🔍 [createTimeOff] Parser data: $vRegId');
+        return vRegId;
+      },
+    );
+  }
+
+  @override
+  Future<ApiResult<int>> sendApproveRequest(int vRegId) async {
+    return shareApiRepository.callShareUpdateMix<int>(
+      functionCode: 'Vacation_Approve_Creator',
+      token: getToken(),
+      data: {'VReg_ID': vRegId, 'CreateAgain': 'YES'},
+      parser: (json) {
+        final map = ShareJsonHelper.decode(json);
+        return ShareJsonHelper.getInt(map, 'VReg_ID');
       },
     );
   }

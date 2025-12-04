@@ -7,12 +7,12 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/status.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/vacation_reason.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/work_code.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/repositories/time_off_create_repository.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/repositories/time_off_update_repository.dart';
 
-class TimeOffCreateRepositoryImpl implements TimeOffCreateRepository {
+class TimeOffUpdateRepositoryImpl implements TimeOffUpdateRepository {
   final TimeOffCreateRemoteDataSource remoteDataSource;
 
-  TimeOffCreateRepositoryImpl({required this.remoteDataSource});
+  TimeOffUpdateRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<ApiResult<List<LeaveType>>> getLeaveTypes() async {
@@ -51,13 +51,10 @@ class TimeOffCreateRepositoryImpl implements TimeOffCreateRepository {
   }
 
   @override
-  Future<ApiResult<int>> createTimeOff(TimeOffCreateRequest request) async {
+  Future<ApiResult<void>> updateTimeOff(TimeOffCreateRequest request) async {
+    // Tái sử dụng createTimeOff vì API giống nhau, chỉ khác VReg_ID
     final dto = TimeOffCreateRequestDto.fromDomain(request);
     return await remoteDataSource.createTimeOff(dto);
   }
-  
-  @override
-  Future<ApiResult<int>> sendApproveRequest(int vRegId) {
-    return remoteDataSource.sendApproveRequest(vRegId);
-  }
 }
+

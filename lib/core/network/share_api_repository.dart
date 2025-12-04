@@ -58,6 +58,21 @@ class ShareApiRepository {
     );
   }
 
+  Future<ApiResult<T>> callShareUpdateMix<T>({
+    required String functionCode,
+    String token = '',
+    Map<String, dynamic>? data,
+    T Function(dynamic json)? parser,
+  }) async {
+    return _callShareApi<T>(
+      endpoint: '/Share/Share_Update_Mix',
+      functionCode: functionCode,
+      token: token,
+      data: data,
+      parser: parser,
+    );
+  }
+
   /// Internal method để gọi Share API
   Future<ApiResult<T>> _callShareApi<T>({
     required String endpoint,
@@ -84,6 +99,7 @@ class ShareApiRepository {
       final requestData = {
         'FunctionCode': functionCode,
         'ls_Data': lsDataString,
+        'Email': 'phongdh@viags.vn',
       };
 
       // Log request

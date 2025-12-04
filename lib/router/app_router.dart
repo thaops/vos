@@ -14,6 +14,10 @@ import 'package:vos_flutter/feature/time_off/binding/time_off_binding.dart';
 import 'package:vos_flutter/feature/time_off/presentation/view/time_off_screen.dart';
 import 'package:vos_flutter/feature/time_off_create/binding/time_off_create_binding.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/view/time_off_create_screen.dart';
+import 'package:vos_flutter/feature/time_off_detail/binding/time_off_detail_binding.dart';
+import 'package:vos_flutter/feature/time_off_detail/presentation/view/time_off_detail_screen.dart';
+import 'package:vos_flutter/feature/time_off_update/binding/time_off_update_binding.dart';
+import 'package:vos_flutter/feature/time_off_update/presentation/view/time_off_update_screen.dart';
 import 'package:vos_flutter/router/bottom_navigation_main.dart';
 
 class AppRouter {
@@ -35,6 +39,8 @@ class AppRouter {
   // Time Off routes
   static const timeOff = '/time-off';
   static const timeOffCreate = '/time-off/create';
+  static const timeOffDetail = '/time-off/detail';
+  static const timeOffUpdate = '/time-off/update';
 
   static final List<GetPage> routes = [
     // Auth
@@ -79,6 +85,15 @@ class AppRouter {
       page: () => const TimeOffCreateScreen(),
       binding: TimeOffCreateBinding(),
     ),
+    GetPage(
+      name: timeOffDetail,
+      page: () => const TimeOffDetailScreen(),
+      binding: TimeOffDetailBinding(),
+    ),
+    GetPage(
+      name: timeOffUpdate,
+      page: () => const TimeOffUpdateScreen(),
+      binding: TimeOffUpdateBinding(),
+    ),
   ];
 }
-  

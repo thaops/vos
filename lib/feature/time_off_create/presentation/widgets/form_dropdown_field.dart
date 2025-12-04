@@ -8,7 +8,7 @@ class FormDropdownField extends StatelessWidget {
   final String label;
   final String hint;
   final RxList<String> options;
-  final String selectedId;
+  final RxString selectedId;
   final Function(String?) onChanged;
   final bool required;
 
@@ -51,8 +51,8 @@ class FormDropdownField extends StatelessWidget {
           () => CustomSelect(
             name: hint,
             selectList: options.map((e) => Item(id: e, name: e)).toList(),
-            selectedId: selectedId.isEmpty ? null : selectedId,
-            selectedName: selectedId.isEmpty ? null : selectedId,
+            selectedId: selectedId.value.isEmpty ? null : selectedId.value,
+            selectedName: selectedId.value.isEmpty ? null : selectedId.value,
             onProjectSelected: onChanged,
           ),
         ),
@@ -60,4 +60,3 @@ class FormDropdownField extends StatelessWidget {
     );
   }
 }
-

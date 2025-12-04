@@ -6,7 +6,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_creat
 import 'package:vos_flutter/feature/time_off_create/domain/models/vacation_reason.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/work_code.dart';
 
-abstract class TimeOffCreateRepository {
+abstract class TimeOffUpdateRepository {
   Future<ApiResult<List<LeaveType>>> getLeaveTypes();
   Future<ApiResult<List<Status>>> getStatuses();
   Future<ApiResult<List<VacationReason>>> getVacationReasons({
@@ -16,6 +16,6 @@ abstract class TimeOffCreateRepository {
   Future<ApiResult<List<VacationReason>>> getAllVacationReasons();
   Future<ApiResult<List<WorkCode>>> getWorkCodes();
   Future<ApiResult<List<LeaveLocation>>> getLeaveLocations();
-  Future<ApiResult<int>> createTimeOff(TimeOffCreateRequest request);
-  Future<ApiResult<int>> sendApproveRequest(int vRegId);
+  Future<ApiResult<void>> updateTimeOff(TimeOffCreateRequest request);
 }
+

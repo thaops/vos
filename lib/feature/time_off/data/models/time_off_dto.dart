@@ -24,6 +24,20 @@ class TimeOffDto {
   final String? lsDetail; // JSON string
   final String? lsProcess; // JSON string
 
+  // Thông tin bổ sung từ API
+  final int? depId;
+  final String? depCode;
+  final String? level2Code;
+  final String? level2Name;
+  final String? level3Code;
+  final String? level3Name;
+  final int? idJobTitle;
+  final String? codeJobTitle;
+  final int? idLevelTitle;
+  final String? nameLevelTitle;
+  final double? phepTon; // Tồn phép
+  final double? overtimeTon; // Tồn OT
+
   TimeOffDto({
     required this.vRegId,
     this.hrId,
@@ -46,6 +60,18 @@ class TimeOffDto {
     this.approveStatus,
     this.lsDetail,
     this.lsProcess,
+    this.depId,
+    this.depCode,
+    this.level2Code,
+    this.level2Name,
+    this.level3Code,
+    this.level3Name,
+    this.idJobTitle,
+    this.codeJobTitle,
+    this.idLevelTitle,
+    this.nameLevelTitle,
+    this.phepTon,
+    this.overtimeTon,
   });
 
   factory TimeOffDto.fromJson(Map<String, dynamic> json) {
@@ -71,6 +97,22 @@ class TimeOffDto {
       approveStatus: json['ApproveStatus'] as String?,
       lsDetail: json['ls_detail'] as String?,
       lsProcess: json['ls_process'] as String?,
+      depId: json['Dep_ID'] as int?,
+      depCode: json['Dep_Code'] as String?,
+      level2Code: json['Level_2_Code'] as String?,
+      level2Name: json['Level_2_Name'] as String?,
+      level3Code: json['Level_3_Code'] as String?,
+      level3Name: json['Level_3_Name'] as String?,
+      idJobTitle: json['ID_Job_Title'] as int?,
+      codeJobTitle: json['Code_Job_Title'] as String?,
+      idLevelTitle: json['ID_Level_Title'] as int?,
+      nameLevelTitle: json['Name_Level_Title'] as String?,
+      phepTon: json['PhepTon'] != null
+          ? (json['PhepTon'] as num).toDouble()
+          : null,
+      overtimeTon: json['OvertimeTon'] != null
+          ? (json['OvertimeTon'] as num).toDouble()
+          : null,
     );
   }
 
@@ -147,6 +189,18 @@ class TimeOffDto {
       approveStatus: approveStatus,
       details: details,
       processes: processes,
+      depId: depId,
+      depCode: depCode,
+      level2Code: level2Code,
+      level2Name: level2Name,
+      level3Code: level3Code,
+      level3Name: level3Name,
+      idJobTitle: idJobTitle,
+      codeJobTitle: codeJobTitle,
+      idLevelTitle: idLevelTitle,
+      nameLevelTitle: nameLevelTitle,
+      phepTon: phepTon,
+      overtimeTon: overtimeTon,
     );
   }
 }

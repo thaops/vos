@@ -23,6 +23,20 @@ class TimeOff {
   final List<TimeOffDetail>? details;
   final List<TimeOffProcess>? processes;
 
+  // Thông tin bổ sung từ API
+  final int? depId;
+  final String? depCode;
+  final String? level2Code;
+  final String? level2Name;
+  final String? level3Code;
+  final String? level3Name;
+  final int? idJobTitle;
+  final String? codeJobTitle;
+  final int? idLevelTitle;
+  final String? nameLevelTitle;
+  final double? phepTon; // Tồn phép
+  final double? overtimeTon; // Tồn OT
+
   const TimeOff({
     required this.vRegId,
     this.hrId,
@@ -45,13 +59,25 @@ class TimeOff {
     this.approveStatus,
     this.details,
     this.processes,
+    this.depId,
+    this.depCode,
+    this.level2Code,
+    this.level2Name,
+    this.level3Code,
+    this.level3Name,
+    this.idJobTitle,
+    this.codeJobTitle,
+    this.idLevelTitle,
+    this.nameLevelTitle,
+    this.phepTon,
+    this.overtimeTon,
   });
 
   // Helper để check có thể hủy không
   bool get canCancel {
-    return approveStatus != 'OK' && 
-           appoveProcessName != null && 
-           !appoveProcessName!.contains('Đã phê duyệt');
+    return approveStatus != 'OK' &&
+        appoveProcessName != null &&
+        !appoveProcessName!.contains('Đã phê duyệt');
   }
 
   // Helper để lấy status color
@@ -59,7 +85,7 @@ class TimeOff {
     if (approveStatus == 'OK' || statusName?.contains('Đã phê duyệt') == true) {
       return Colors.green.shade300; // Xanh nhạt - Đã phê duyệt
     }
-    if (appoveProcessName?.contains('đang duyệt') == true || 
+    if (appoveProcessName?.contains('đang duyệt') == true ||
         appoveProcessName?.contains('đang xử lý') == true) {
       return Colors.orange.shade300; // Vàng - Đang xử lý
     }
@@ -74,10 +100,10 @@ class TimeOff {
     if (processes == null || processes!.isEmpty) {
       return appoveProcessName ?? 'Chưa có thông tin';
     }
-    
+
     final approvedCount = processes!.where((p) => p.status == 'OK').length;
     final totalCount = processes!.length;
-    
+
     if (approvedCount < totalCount) {
       final currentApprover = processes!.firstWhere(
         (p) => p.status != 'OK' && p.status != 'XX',
@@ -85,7 +111,7 @@ class TimeOff {
       );
       return '$approvedCount/$totalCount: ${currentApprover.fullName} đang duyệt';
     }
-    
+
     return '$approvedCount/$totalCount: Đã phê duyệt';
   }
 }
@@ -132,11 +158,10 @@ class TimeOffProcess {
       approveNo: json['ApproveNo'] ?? 0,
       fullName: json['FullName'] ?? '',
       email: json['Email'] ?? '',
-      recdate: json['Recdate'] != null 
-          ? DateTime.tryParse(json['Recdate']) 
+      recdate: json['Recdate'] != null
+          ? DateTime.tryParse(json['Recdate'])
           : null,
       status: json['Status'] ?? '--',
     );
   }
 }
-

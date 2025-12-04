@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:vos_flutter/common/utils/date_utils.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
+import 'package:vos_flutter/feature/time_off_detail/domain/models/time_off_detail_args.dart';
+import 'package:vos_flutter/router/app_router.dart';
 
 class TimeOffCard extends StatelessWidget {
   final TimeOff timeOff;
@@ -26,14 +29,21 @@ class TimeOffCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: Thời gian nghỉ + Status chip
-            _buildHeader(),
-            SizedBox(height: 20.h),
+      child: InkWell(
+        onTap: () {
+          Get.toNamed(
+            AppRouter.timeOffDetail,
+            arguments: TimeOffDetailArgs(vRegId: timeOff.vRegId),
+          );
+        },
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: Thời gian nghỉ + Status chip
+              _buildHeader(),
+              SizedBox(height: 20.h),
 
             // Body: Thông tin chi tiết
             _buildInfoItem(
@@ -74,6 +84,7 @@ class TimeOffCard extends StatelessWidget {
               _buildCancelButton(),
             ],
           ],
+        ),
         ),
       ),
     );

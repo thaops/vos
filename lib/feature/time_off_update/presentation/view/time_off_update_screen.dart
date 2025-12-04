@@ -5,29 +5,25 @@ import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
 import 'package:vos_flutter/common/widgets/custom_button.dart';
 import 'package:vos_flutter/common/widgets/custom_text_field.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
-// import 'package:vos_flutter/feature/authorize_create/presentation/widgets/date_picker_field.dart';
-import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
-// import 'package:vos_flutter/feature/time_off_create/presentation/widgets/file_attachment_widget.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/form_dropdown_field.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/time_off_create_colors.dart';
-import 'package:vos_flutter/feature/time_off_create/presentation/widgets/user_info_block.dart';
-import 'package:vos_flutter/feature/time_off_create/presentation/widgets/work_code_list_widget.dart';
+import 'package:vos_flutter/feature/time_off_update/presentation/controller/time_off_update_controller.dart';
+import 'package:vos_flutter/feature/time_off_update/presentation/widgets/user_info_block.dart';
+import 'package:vos_flutter/feature/time_off_update/presentation/widgets/work_code_list_widget.dart';
 
-class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
-  const TimeOffCreateScreen({super.key});
+class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
+  const TimeOffUpdateScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: TimeOffCreateColors.bgColor,
-      appBar: AppBarWidget(title: 'Tạo mới'),
+      appBar: AppBarWidget(title: 'Cập nhật'),
       body: GestureDetector(
         onTap: () {
-          // Đóng keyboard khi tap ngoài
           FocusScope.of(context).unfocus();
         },
-        behavior:
-            HitTestBehavior.translucent, // Cho phép các widget con nhận tap
+        behavior: HitTestBehavior.translucent,
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
@@ -35,8 +31,6 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
             children: [
               const SizedBox(height: 12),
               const UserInfoBlock(),
-              // const SizedBox(height: 20),
-              // _buildDatePickerField(context), // Comment UI từ ngày
               const SizedBox(height: 20),
               FormDropdownField(
                 label: 'Loại phép',
@@ -74,8 +68,6 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                 onChanged: controller.onStatusChanged,
               ),
               const SizedBox(height: 20),
-              // const FileAttachmentWidget(),
-              // const SizedBox(height: 24),
               _buildActionButtons(),
               const SizedBox(height: 24),
             ],
@@ -84,29 +76,6 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
       ),
     );
   }
-
-  // Widget _buildDatePickerField(BuildContext context) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       TextWidget(
-  //         text: 'Từ ngày',
-  //         fontSize: 14,
-  //         color: TimeOffCreateColors.textSecondary,
-  //         fontWeight: FontWeight.w500,
-  //       ),
-  //       const SizedBox(height: 8),
-  //       Obx(
-  //         () => DatePickerField(
-  //           value: controller.formattedFromDate.isEmpty
-  //               ? null
-  //               : controller.formattedFromDate,
-  //           onTap: () => controller.selectFromDate(context),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   Widget _buildReasonTextArea() {
     return Column(
@@ -124,14 +93,14 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
           hintText: 'Nhập lý do nghỉ phép...',
           minLines: 5,
           maxLines: 6,
-          paddingVertical: 0, // Bỏ padding vertical bên ngoài
-          paddingHorizontal: 0, // Bỏ padding horizontal bên ngoài
+          paddingVertical: 0,
+          paddingHorizontal: 0,
           borderRadius: 8,
           fontSize: 14,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
             vertical: 12,
-          ), //
+          ),
         ),
       ],
     );
@@ -155,12 +124,12 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
             hintText: label,
             borderRadius: 8,
             fontSize: 14,
-            paddingVertical: 0, // Bỏ padding vertical bên ngoài
-            paddingHorizontal: 0, // Bỏ padding horizontal bên ngoài
+            paddingVertical: 0,
+            paddingHorizontal: 0,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 12,
-            ), // Giảm padding bên trong
+            ),
           ),
         ),
       ],
@@ -191,7 +160,7 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
             height: 50,
             width: double.infinity,
             fontSize: 14,
-            onPressed: controller.onSubmit,
+            onPressed: controller.onSaveDraft,
           ),
         ),
       ],

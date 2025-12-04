@@ -7,8 +7,7 @@ class CreateTimeOffUsecase {
 
   CreateTimeOffUsecase({required this.repository});
 
-  Future<ApiResult<void>> call(TimeOffCreateRequest request) async {
+  Future<ApiResult<int>> call(TimeOffCreateRequest request) async {
     return await repository.createTimeOff(request);
   }
 }
-

@@ -4,19 +4,24 @@ import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/repository_impl/time_off_create_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/repositories/time_off_create_repository.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/usecases/create_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_all_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_leave_locations_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_leave_types_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/usecases/send_approve_request_usecase.dart';
-import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
+import 'package:vos_flutter/feature/time_off_update/data/repository_impl/time_off_update_repository_impl.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/repositories/time_off_update_repository.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off_update/presentation/controller/time_off_update_controller.dart';
 
-class TimeOffCreateBinding extends Bindings {
+class TimeOffUpdateBinding extends Bindings {
   @override
   void dependencies() {
+    // Parse arguments tại đây
+    final args = Get.arguments as TimeOffUpdateArgs;
+
     // ShareApiRepository (singleton)
     if (!Get.isRegistered<ShareApiRepository>()) {
       Get.lazyPut<ShareApiRepository>(
@@ -24,18 +29,28 @@ class TimeOffCreateBinding extends Bindings {
       );
     }
 
+    // Tái sử dụng RemoteDataSource từ time_off_create
     Get.lazyPut<TimeOffCreateRemoteDataSource>(
       () => TimeOffCreateRemoteDataSourceImpl(
         shareApiRepository: Get.find<ShareApiRepository>(),
       ),
     );
 
+    // Tái sử dụng TimeOffCreateRepository cho các usecase get
     Get.lazyPut<TimeOffCreateRepository>(
       () => TimeOffCreateRepositoryImpl(
         remoteDataSource: Get.find<TimeOffCreateRemoteDataSource>(),
       ),
     );
 
+    // TimeOffUpdateRepository cho UpdateUsecase
+    Get.lazyPut<TimeOffUpdateRepository>(
+      () => TimeOffUpdateRepositoryImpl(
+        remoteDataSource: Get.find<TimeOffCreateRemoteDataSource>(),
+      ),
+    );
+
+    // Usecases - tái sử dụng từ create
     Get.lazyPut<GetLeaveTypesUsecase>(
       () =>
           GetLeaveTypesUsecase(repository: Get.find<TimeOffCreateRepository>()),
@@ -68,27 +83,23 @@ class TimeOffCreateBinding extends Bindings {
       ),
     );
 
-    Get.lazyPut<CreateTimeOffUsecase>(
+    // UpdateUsecase riêng
+    Get.lazyPut<UpdateTimeOffUsecase>(
       () =>
-          CreateTimeOffUsecase(repository: Get.find<TimeOffCreateRepository>()),
+          UpdateTimeOffUsecase(repository: Get.find<TimeOffUpdateRepository>()),
     );
 
-    Get.lazyPut<SendApproveRequestUsecase>(
-      () => SendApproveRequestUsecase(
-        repository: Get.find<TimeOffCreateRepository>(),
-      ),
-    );
-
-    Get.lazyPut<TimeOffCreateController>(
-      () => TimeOffCreateController(
+    // Controller với args
+    Get.lazyPut<TimeOffUpdateController>(
+      () => TimeOffUpdateController(
+        args: args,
         getLeaveTypesUsecase: Get.find<GetLeaveTypesUsecase>(),
         getStatusesUsecase: Get.find<GetStatusesUsecase>(),
         getVacationReasonsUsecase: Get.find<GetVacationReasonsUsecase>(),
         getAllVacationReasonsUsecase: Get.find<GetAllVacationReasonsUsecase>(),
         getWorkCodesUsecase: Get.find<GetWorkCodesUsecase>(),
         getLeaveLocationsUsecase: Get.find<GetLeaveLocationsUsecase>(),
-        createTimeOffUsecase: Get.find<CreateTimeOffUsecase>(),
-        sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(),
+        updateTimeOffUsecase: Get.find<UpdateTimeOffUsecase>(),
       ),
     );
   }
