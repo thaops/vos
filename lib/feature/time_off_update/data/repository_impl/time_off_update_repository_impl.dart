@@ -51,10 +51,14 @@ class TimeOffUpdateRepositoryImpl implements TimeOffUpdateRepository {
   }
 
   @override
-  Future<ApiResult<void>> updateTimeOff(TimeOffCreateRequest request) async {
-    // Tái sử dụng createTimeOff vì API giống nhau, chỉ khác VReg_ID
+  Future<ApiResult<int>> updateTimeOff(TimeOffCreateRequest request) async {
     final dto = TimeOffCreateRequestDto.fromDomain(request);
     return await remoteDataSource.createTimeOff(dto);
+  }
+  
+  @override
+  Future<ApiResult<int>> sendApproveRequest(int vRegId) {
+    return remoteDataSource.sendApproveRequest(vRegId);
   }
 }
 

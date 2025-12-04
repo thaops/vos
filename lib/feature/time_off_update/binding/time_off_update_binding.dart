@@ -13,6 +13,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_cod
 import 'package:vos_flutter/feature/time_off_update/data/repository_impl/time_off_update_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/repositories/time_off_update_repository.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/presentation/controller/time_off_update_controller.dart';
 
@@ -88,6 +89,11 @@ class TimeOffUpdateBinding extends Bindings {
       () =>
           UpdateTimeOffUsecase(repository: Get.find<TimeOffUpdateRepository>()),
     );
+    Get.lazyPut<SendApproveRequestUsecase>(
+      () => SendApproveRequestUsecase(
+        repository: Get.find<TimeOffUpdateRepository>(),
+      ),
+    );
 
     // Controller với args
     Get.lazyPut<TimeOffUpdateController>(
@@ -100,6 +106,7 @@ class TimeOffUpdateBinding extends Bindings {
         getWorkCodesUsecase: Get.find<GetWorkCodesUsecase>(),
         getLeaveLocationsUsecase: Get.find<GetLeaveLocationsUsecase>(),
         updateTimeOffUsecase: Get.find<UpdateTimeOffUsecase>(),
+        sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(),
       ),
     );
   }

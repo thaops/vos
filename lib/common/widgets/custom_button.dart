@@ -14,6 +14,8 @@ class CustomButton extends StatelessWidget {
   final double? verticalPadding;
   final int? fontSize;
   final Color? borderColor;
+  final bool isLoading;
+
   const CustomButton({
     Key? key,
     required this.text,
@@ -27,29 +29,45 @@ class CustomButton extends StatelessWidget {
     this.verticalPadding,
     this.fontSize,
     this.borderColor = Colors.transparent,
+    this.isLoading = false,
   }) : super(key: key);
+
+  bool get isDisabled => onPressed == null || isLoading;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        onPressed?.call();
-      },
-      child: Container(
-        width: width,
-        height: height,
-        alignment: Alignment.center,
-
-        decoration: BoxDecoration(
-          color: isOutlined ? Colors.transparent : color,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: borderColor ?? Colors.transparent),
-        ),
-        child: TextWidget(
-          text: text,
-          fontSize: fontSize?.toDouble() ?? 16,
-          fontWeight: FontWeight.w500,
-          color: textColor ?? Colors.white,
+      onTap: isDisabled ? null : () => onPressed?.call(),
+      child: Opacity(
+        opacity: isDisabled
+            ? 0.6
+            : 1.0, 
+        child: Container(
+          width: width,
+          height: height,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isOutlined ? Colors.transparent : color,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: borderColor ?? Colors.transparent),
+          ),
+          child: isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      textColor ?? Colors.white,
+                    ),
+                  ),
+                )
+              : TextWidget(
+                  text: text,
+                  fontSize: fontSize?.toDouble() ?? 16,
+                  fontWeight: FontWeight.w500,
+                  color: textColor ?? Colors.white,
+                ),
         ),
       ),
     );

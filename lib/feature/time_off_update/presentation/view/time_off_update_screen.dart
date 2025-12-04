@@ -137,33 +137,39 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: CustomButton(
-            text: 'Lưu & Gửi phê duyệt',
-            color: TimeOffCreateColors.success,
-            textColor: TimeOffCreateColors.white,
-            height: 50,
-            fontSize: 14,
-            width: double.infinity,
-            onPressed: controller.onSubmit,
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: CustomButton(
+              text: 'Lưu & Gửi phê duyệt',
+              color: TimeOffCreateColors.success,
+              textColor: TimeOffCreateColors.white,
+              height: 50,
+              fontSize: 14,
+              width: double.infinity,
+              isLoading:
+                  controller.isLoading, // ✅ Truyền isLoading từ controller
+              onPressed: controller.isLoading ? null : controller.onSubmit,
+            ),
           ),
-        ),
-        8.horizontalSpace,
-        Expanded(
-          child: CustomButton(
-            text: 'Lưu tạm',
-            isOutlined: true,
-            borderColor: TimeOffCreateColors.success,
-            textColor: TimeOffCreateColors.success,
-            height: 50,
-            width: double.infinity,
-            fontSize: 14,
-            onPressed: controller.onSaveDraft,
+          8.horizontalSpace,
+          Expanded(
+            child: CustomButton(
+              text: 'Lưu',
+              isOutlined: true,
+              borderColor: TimeOffCreateColors.success,
+              textColor: TimeOffCreateColors.success,
+              height: 50,
+              width: double.infinity,
+              fontSize: 14,
+              isLoading:
+                  controller.isLoading, // ✅ Truyền isLoading từ controller
+              onPressed: controller.isLoading ? null : controller.onSaveDraft,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

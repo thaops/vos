@@ -4,13 +4,20 @@ import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/mixins/api_result_mixin.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
 import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_list_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/work_code_detail.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
 
 class TimeOffController extends BaseController with ApiResultMixin {
   final GetTimeOffListUsecase getTimeOffListUsecase;
+  final UpdateTimeOffUsecase updateTimeOffUsecase;
 
   final RxList<TimeOff> timeOffList = <TimeOff>[].obs;
 
-  TimeOffController({required this.getTimeOffListUsecase});
+  TimeOffController({
+    required this.getTimeOffListUsecase,
+    required this.updateTimeOffUsecase,
+  });
 
   @override
   void onInit() {
@@ -51,18 +58,32 @@ class TimeOffController extends BaseController with ApiResultMixin {
     );
 
     if (confirmed == true) {
-      // TODO: Implement cancel API call
-      // final profile = profileController;
-      // if (profile != null && profile.userProfile.value != null) {
-      //   final token = profile.userProfile.value?.token ?? '';
-      //   await cancelTimeOffUsecase.call(token: token, vRegId: timeOff.vRegId);
-      //   await loadTimeOffList(); // Reload list
-      // }
-      Get.snackbar(
-        'Thông báo',
-        'Chức năng hủy đơn đang được phát triển',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      _cancelTimeOff(timeOff);
     }
   }
+
+void _cancelTimeOff(TimeOff timeOff) async {
+  final request = TimeOffCreateRequest(
+    vRegId: timeOff.vRegId,
+    fromDate: timeOff.fromDate ?? DateTime.now(), 
+    domInt: timeOff.domInt ?? '', 
+    description: timeOff.description ?? '', 
+    vacationReason: timeOff.vacationReason ?? '', 
+    contactPerson: timeOff.contactPerson ?? '', 
+    contactInfor: timeOff.contactInfor ?? '', 
+    status: 'XX', 
+    recUserID: timeOff.hrId ?? 0, 
+    lsDetail: timeOff.details?.map((detail) => WorkCodeDetail(
+      jobCode: detail.jobCode,
+      soLuong: detail.soLuong,
+    )).toList() ?? [], 
+  );
+
+  await handleApiCall<void>(
+    apiCall: () => updateTimeOffUsecase.call(request),
+    onSuccess: (id) {
+      loadTimeOffList();
+    },
+  );
+}
 }

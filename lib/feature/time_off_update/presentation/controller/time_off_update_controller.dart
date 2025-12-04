@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/mixins/api_result_mixin.dart';
-import 'package:vos_flutter/common/widgets/custom_snackbar.dart';
+import 'package:vos_flutter/common/widgets/success_dialog.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
@@ -20,6 +20,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
 
 class WorkCodeItem {
@@ -39,6 +40,7 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
   final GetWorkCodesUsecase getWorkCodesUsecase;
   final GetLeaveLocationsUsecase getLeaveLocationsUsecase;
   final UpdateTimeOffUsecase updateTimeOffUsecase;
+  final SendApproveRequestUsecase sendApproveRequestUsecase;
 
   late final TimeOff timeOff = args.timeOff;
   late final int vRegId = timeOff.vRegId;
@@ -92,6 +94,7 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     required this.getWorkCodesUsecase,
     required this.getLeaveLocationsUsecase,
     required this.updateTimeOffUsecase,
+    required this.sendApproveRequestUsecase,
   });
 
   String get formattedFromDate {
@@ -261,104 +264,65 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     }
   }
 
-  /// Pre-fill form data từ TimeOff
   void _prefillFormData() {
-    print('🔍 [Pre-fill] Starting pre-fill with data:');
-    print('   Vacation_Reason: ${timeOff.vacationReason}');
-    print('   Vacation_Reason_Name: ${timeOff.vacationReasonName}');
-    print('   Dom_Int: ${timeOff.domInt}');
-    print('   Dom_Int_Name: ${timeOff.domIntName}');
-    print('   Status: ${timeOff.status}');
-    print('   Status_Name: ${timeOff.statusName}');
-    print('   vacationReasons.length: ${vacationReasons.length}');
-    print('   leaveLocations.length: ${leaveLocations.length}');
-    print('   statuses.length: ${statuses.length}');
-
-    // Pre-fill từ ngày
     if (timeOff.fromDate != null) {
       fromDate.value = timeOff.fromDate;
     }
 
-    // Pre-fill loại phép - tìm theo code (Vacation_Reason)
     if (timeOff.vacationReason != null && timeOff.vacationReason!.isNotEmpty) {
       selectedLeaveTypeCode.value = timeOff.vacationReason!;
       selectedVacationReasonCode.value = timeOff.vacationReason!;
-      
-      // Tìm name từ code để hiển thị trong dropdown
+
       final vacationReason = vacationReasons.firstWhereOrNull(
         (vr) => vr.code == timeOff.vacationReason,
       );
       if (vacationReason != null) {
         selectedLeaveType.value = vacationReason.nameVn;
         selectedVacationReason.value = vacationReason.nameVn;
-        print('✅ [Pre-fill] Loại phép: ${vacationReason.code} -> ${vacationReason.nameVn}');
       } else if (timeOff.vacationReasonName != null &&
           timeOff.vacationReasonName!.isNotEmpty) {
         // Fallback: dùng name nếu không tìm thấy
         selectedLeaveType.value = timeOff.vacationReasonName!;
         selectedVacationReason.value = timeOff.vacationReasonName!;
-        print('⚠️ [Pre-fill] Loại phép: Fallback to name: ${timeOff.vacationReasonName}');
       }
     }
 
-    // Pre-fill nơi nghỉ - tìm theo code (Dom_Int)
     if (timeOff.domInt != null && timeOff.domInt!.isNotEmpty) {
       leaveLocationCode.value = timeOff.domInt!;
-      // Tìm name từ code để hiển thị trong dropdown
       final location = leaveLocations.firstWhereOrNull(
         (loc) => loc.code == timeOff.domInt,
       );
       if (location != null) {
         leaveLocation.value = location.nameVn;
-        print('✅ [Pre-fill] Nơi nghỉ: ${location.code} -> ${location.nameVn}');
-      } else if (timeOff.domIntName != null &&
-          timeOff.domIntName!.isNotEmpty) {
-        // Fallback: dùng name nếu không tìm thấy
+      } else if (timeOff.domIntName != null && timeOff.domIntName!.isNotEmpty) {
         leaveLocation.value = timeOff.domIntName!;
-        print('⚠️ [Pre-fill] Nơi nghỉ: Fallback to name: ${timeOff.domIntName}');
       }
     }
 
-    // Pre-fill lý do
     if (timeOff.description != null && timeOff.description!.isNotEmpty) {
       reasonController.text = timeOff.description!;
     }
 
-    // Pre-fill thông tin liên lạc
     if (timeOff.contactPerson != null && timeOff.contactPerson!.isNotEmpty) {
       contactInfoController.text = timeOff.contactPerson!;
     }
 
-    // Pre-fill địa chỉ
     if (timeOff.contactInfor != null && timeOff.contactInfor!.isNotEmpty) {
       addressController.text = timeOff.contactInfor!;
     }
 
-    // Pre-fill trạng thái - tìm theo code (Status)
     if (timeOff.status != null && timeOff.status!.isNotEmpty) {
       selectedStatusCode.value = timeOff.status!;
-      // Tìm name từ code để hiển thị trong dropdown
-      final status = statuses.firstWhereOrNull(
-        (s) => s.code == timeOff.status,
-      );
+      final status = statuses.firstWhereOrNull((s) => s.code == timeOff.status);
       if (status != null) {
         selectedStatus.value = status.nameVn;
-        print('✅ [Pre-fill] Trạng thái: ${status.code} -> ${status.nameVn}');
-      } else if (timeOff.statusName != null &&
-          timeOff.statusName!.isNotEmpty) {
+      } else if (timeOff.statusName != null && timeOff.statusName!.isNotEmpty) {
         // Fallback: dùng name nếu không tìm thấy
         selectedStatus.value = timeOff.statusName!;
-        print('⚠️ [Pre-fill] Trạng thái: Fallback to name: ${timeOff.statusName}');
       }
     }
-
-    print('🔍 [Pre-fill] Final values:');
-    print('   selectedLeaveType: ${selectedLeaveType.value}');
-    print('   leaveLocation: ${leaveLocation.value}');
-    print('   selectedStatus: ${selectedStatus.value}');
   }
 
-  /// Pre-fill work codes từ TimeOff details
   void _prefillWorkCodes() {
     if (timeOff.details != null && timeOff.details!.isNotEmpty) {
       for (final detail in timeOff.details!) {
@@ -507,30 +471,30 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
       fromDate.value = timeOff.fromDate ?? DateTime.now();
     }
 
-    if (selectedLeaveTypeCode.value.isEmpty) {
-      CustomSnackbar.show('Vui lòng chọn loại phép');
-      return;
-    }
-
-    if (workCodeList.where((item) => item.days > 0).isEmpty) {
-      CustomSnackbar.show('Vui lòng chọn ít nhất một mã công việc');
-      return;
-    }
-    if (leaveLocationCode.value.isEmpty) {
-      CustomSnackbar.show('Vui lòng chọn nơi nghỉ');
-      return;
-    }
-    if (selectedStatusCode.value.isEmpty) {
-      CustomSnackbar.show('Vui lòng chọn trạng thái');
-      return;
-    }
-
     final request = _buildRequestData();
 
-    await handleApiCallVoid(
+    await handleApiCall<int>(
       apiCall: () => updateTimeOffUsecase.call(request),
+      onSuccess: (id) {
+        _sendApproveRequest(id);
+      },
+    );
+  }
+
+  void _sendApproveRequest(int vRegId) async {
+    await handleApiCallVoid(
+      apiCall: () => sendApproveRequestUsecase.call(vRegId),
       onSuccess: () {
-        Get.back(result: true);
+        // Hiển thị dialog thành công trước khi quay lại
+        SuccessDialog.show(
+          context: Get.context!,
+          title: 'Thành công',
+          message: 'Gửi phê duyệt thành công',
+          buttonText: 'Đóng',
+          onClose: () {
+            Get.back(result: true);
+          },
+        );
       },
     );
   }
@@ -545,10 +509,16 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     await handleApiCallVoid(
       apiCall: () => updateTimeOffUsecase.call(request),
       onSuccess: () {
-        CustomSnackbar.show('Đã lưu tạm thành công');
-        Future.delayed(const Duration(milliseconds: 500), () {
-          Get.back(result: true);
-        });
+        // Hiển thị dialog thành công trước khi quay lại
+        SuccessDialog.show(
+          context: Get.context!,
+          title: 'Thành công',
+          message: 'Cập nhật thành công',
+          buttonText: 'Đóng',
+          onClose: () {
+            Get.back(result: true);
+          },
+        );
       },
     );
   }

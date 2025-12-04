@@ -102,7 +102,6 @@ class ShareApiRepository {
         'Email': 'phongdh@viags.vn',
       };
 
-      // Log request
       print('📤 [ShareAPI] Request:');
       print('   URL: ${Config.baseUrlVasc}$endpoint');
       print('   FunctionCode: $functionCode');

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/mixins/api_result_mixin.dart';
-import 'package:vos_flutter/common/widgets/custom_snackbar.dart';
+import 'package:vos_flutter/common/widgets/success_dialog.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dart';
@@ -431,7 +431,16 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     await handleApiCallVoid(
       apiCall: () => sendApproveRequestUsecase.call(vRegId),
       onSuccess: () {
-        Get.back(result: true);
+        // Hiển thị dialog thành công trước khi quay lại
+        SuccessDialog.show(
+          context: Get.context!,
+          title: 'Thành công',
+          message: 'Gửi phê duyệt thành công',
+          buttonText: 'Đóng',
+          onClose: () {
+            Get.back(result: true);
+          },
+        );
       },
     );
   }
@@ -446,7 +455,16 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     await handleApiCallVoid(
       apiCall: () => createTimeOffUsecase.call(request),
       onSuccess: () {
-        Get.back(result: true);
+        // Hiển thị dialog thành công trước khi quay lại
+        SuccessDialog.show(
+          context: Get.context!,
+          title: 'Thành công',
+          message: 'Lưu tạm thành công',
+          buttonText: 'Đóng',
+          onClose: () {
+            Get.back(result: true);
+          },
+        );
       },
     );
   }

@@ -16,6 +16,7 @@ abstract class TimeOffUpdateRepository {
   Future<ApiResult<List<VacationReason>>> getAllVacationReasons();
   Future<ApiResult<List<WorkCode>>> getWorkCodes();
   Future<ApiResult<List<LeaveLocation>>> getLeaveLocations();
-  Future<ApiResult<void>> updateTimeOff(TimeOffCreateRequest request);
+  Future<ApiResult<int>> updateTimeOff(TimeOffCreateRequest request);
+  Future<ApiResult<int>> sendApproveRequest(int vRegId);
 }
 
