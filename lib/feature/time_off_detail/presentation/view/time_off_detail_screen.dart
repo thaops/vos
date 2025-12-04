@@ -92,20 +92,20 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 16.h,
       children: [
-        _buildInfoRow(
-          label: 'Người tạo đơn',
-          value: timeOff.contactPerson ?? '',
-        ),
-        _buildInfoRow(label: 'Người nghỉ', value: timeOff.contactPerson ?? ''),
-        _buildInfoRow(label: 'Email', value: 'dev@namphuongso.com'),
-        _buildInfoRow(label: 'Số điện thoại', value: "0909090909"),
+        // _buildInfoRow(
+        //   label: 'Người tạo đơn',
+        //   value: timeOff.contactPerson ?? '',
+        // ),
+        // _buildInfoRow(label: 'Người nghỉ', value: timeOff.contactPerson ?? ''),
+        // _buildInfoRow(label: 'Email', value: 'dev@namphuongso.com'),
+        // _buildInfoRow(label: 'Số điện thoại', value: "0909090909"),
         _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
         _buildInfoRow(
           label: 'Cơ quan / Đơn vị',
           value: timeOff.level2Name ?? '',
         ),
         _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
-        _buildInfoRow(label: 'Đội / Tổ', value: 'chưa có'),
+        // _buildInfoRow(label: 'Đội / Tổ', value: 'chưa có'),
 
         _buildInfoRow(
           label: 'Thời gian nghỉ',
