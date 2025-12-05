@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:vos_flutter/feature/time_off_create/data/models/file_attachment_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
 
 class TimeOffCreateRequestDto {
@@ -12,6 +14,7 @@ class TimeOffCreateRequestDto {
   final String status;
   final int recUserID;
   final List<Map<String, dynamic>> lsDetail;
+  final String jsonAttachFiles;
 
   TimeOffCreateRequestDto({
     required this.vRegId,
@@ -24,9 +27,19 @@ class TimeOffCreateRequestDto {
     required this.status,
     required this.recUserID,
     required this.lsDetail,
+    this.jsonAttachFiles = '',
   });
 
   factory TimeOffCreateRequestDto.fromDomain(TimeOffCreateRequest request) {
+    // Convert FileAttachment list to JSON string
+    final attachFilesJson = request.jsonAttachFiles.isEmpty
+        ? ''
+        : json.encode(
+            request.jsonAttachFiles
+                .map((file) => FileAttachmentDto.fromDomain(file).toJson())
+                .toList(),
+          );
+
     return TimeOffCreateRequestDto(
       vRegId: request.vRegId,
       fromDate: DateFormat('yyyy-MM-dd').format(request.fromDate),
@@ -43,6 +56,7 @@ class TimeOffCreateRequestDto {
                 'SoLuong': detail.soLuong,
               })
           .toList(),
+      jsonAttachFiles: attachFilesJson,
     );
   }
 
@@ -55,6 +69,7 @@ class TimeOffCreateRequestDto {
       'Vacation_Reason': vacationReason,
       'ContactPerson': contactPerson,
       'ContactInfor': contactInfor,
+      'JsonAttachFiles': jsonAttachFiles,
       'Status': status,
       'RecUserID': recUserID,
       'ls_Detail': lsDetail,

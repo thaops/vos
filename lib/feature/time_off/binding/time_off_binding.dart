@@ -6,7 +6,7 @@ import 'package:vos_flutter/feature/time_off/data/repository_impl/time_off_repos
 import 'package:vos_flutter/feature/time_off/domain/repositories/time_off_repository.dart';
 import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_list_usecase.dart';
 import 'package:vos_flutter/feature/time_off/presentation/controller/time_off_controller.dart';
-import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
+import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/file_upload_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_update/data/repository_impl/time_off_update_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/repositories/time_off_update_repository.dart';
@@ -36,6 +36,11 @@ class TimeOffBinding extends Bindings {
       ),
     );
 
+    // ✅ Thêm FileUploadRemoteDataSource
+    Get.lazyPut<FileUploadRemoteDataSource>(
+      () => FileUploadRemoteDataSourceImpl(),
+    );
+
     // Repository cho TimeOff
     Get.lazyPut<TimeOffRepository>(
       () => TimeOffRepositoryImpl(
@@ -47,6 +52,7 @@ class TimeOffBinding extends Bindings {
     Get.lazyPut<TimeOffUpdateRepository>(
       () => TimeOffUpdateRepositoryImpl(
         remoteDataSource: Get.find<TimeOffCreateRemoteDataSource>(),
+        fileUploadDataSource: Get.find<FileUploadRemoteDataSource>(),
       ),
     );
 

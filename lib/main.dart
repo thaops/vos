@@ -32,6 +32,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:vos_flutter/router/one_signal_service.dart';
 import 'firebase_options.dart';
 
 Future<bool> _isIPad() async {
@@ -138,6 +139,7 @@ Future<void> _initializeNonCriticalServices() async {
         DeviceOrientation.portraitDown,
       ]),
       generateUUID(),
+      OneSignalService().init(),
     ]);
 
     _lazyLoadCheckAwaitingApproval();

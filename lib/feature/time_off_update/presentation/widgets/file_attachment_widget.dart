@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/custom_button.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
-import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/time_off_create_colors.dart';
+import 'package:vos_flutter/feature/time_off_update/presentation/controller/time_off_update_controller.dart';
 
-class FileAttachmentWidget extends GetView<TimeOffCreateController> {
+class FileAttachmentWidget extends GetView<TimeOffUpdateController> {
   const FileAttachmentWidget({super.key});
 
   Future<void> _pickFiles() async {

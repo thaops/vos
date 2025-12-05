@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
+import 'package:vos_flutter/feature/time_off_create/data/models/file_attachment_dto.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
 
 class TimeOffDto {
   final int vRegId;
@@ -23,6 +25,7 @@ class TimeOffDto {
   final String? approveStatus;
   final String? lsDetail; // JSON string
   final String? lsProcess; // JSON string
+  final String? jsonAttachFiles; // JSON string
 
   // Thông tin bổ sung từ API
   final int? depId;
@@ -60,6 +63,7 @@ class TimeOffDto {
     this.approveStatus,
     this.lsDetail,
     this.lsProcess,
+    this.jsonAttachFiles,
     this.depId,
     this.depCode,
     this.level2Code,
@@ -97,6 +101,7 @@ class TimeOffDto {
       approveStatus: json['ApproveStatus'] as String?,
       lsDetail: json['ls_detail'] as String?,
       lsProcess: json['ls_process'] as String?,
+      jsonAttachFiles: json['JsonAttachFiles'] as String?,
       depId: json['Dep_ID'] as int?,
       depCode: json['Dep_Code'] as String?,
       level2Code: json['Level_2_Code'] as String?,
@@ -161,6 +166,28 @@ class TimeOffDto {
       }
     }
 
+    // Parse jsonAttachFiles JSON string
+    List<FileAttachment>? attachFiles;
+    if (jsonAttachFiles != null && jsonAttachFiles!.isNotEmpty) {
+      try {
+        final cleanedString = jsonAttachFiles!
+            .replaceAll('\r\n', '')
+            .replaceAll('\r', '')
+            .replaceAll('\n', '')
+            .trim();
+        if (cleanedString.startsWith('[')) {
+          final jsonList = jsonDecode(cleanedString) as List;
+          attachFiles = jsonList
+              .map(
+                (item) => FileAttachmentDto.fromJson(item as Map<String, dynamic>).toDomain(),
+              )
+              .toList();
+        }
+      } catch (e) {
+        print('Error parsing jsonAttachFiles: $e');
+      }
+    }
+
     return TimeOff(
       vRegId: vRegId,
       hrId: hrId,
@@ -189,6 +216,7 @@ class TimeOffDto {
       approveStatus: approveStatus,
       details: details,
       processes: processes,
+      attachFiles: attachFiles,
       depId: depId,
       depCode: depCode,
       level2Code: level2Code,

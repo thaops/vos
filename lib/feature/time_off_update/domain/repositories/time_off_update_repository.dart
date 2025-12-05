@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/status.dart';
@@ -18,5 +20,6 @@ abstract class TimeOffUpdateRepository {
   Future<ApiResult<List<LeaveLocation>>> getLeaveLocations();
   Future<ApiResult<int>> updateTimeOff(TimeOffCreateRequest request);
   Future<ApiResult<int>> sendApproveRequest(int vRegId);
+  Future<ApiResult<List<FileAttachment>>> uploadFiles(List<File> files);
 }
 

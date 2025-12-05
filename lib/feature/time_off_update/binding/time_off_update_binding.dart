@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
 import 'package:vos_flutter/core/network/share_api_repository.dart';
+import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/file_upload_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/repository_impl/time_off_create_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/repositories/time_off_create_repository.dart';
@@ -15,6 +16,7 @@ import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_updat
 import 'package:vos_flutter/feature/time_off_update/domain/repositories/time_off_update_repository.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/usecases/upload_files_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/presentation/controller/time_off_update_controller.dart';
 
 class TimeOffUpdateBinding extends Bindings {
@@ -37,10 +39,15 @@ class TimeOffUpdateBinding extends Bindings {
       ),
     );
 
+    Get.lazyPut<FileUploadRemoteDataSource>(
+      () => FileUploadRemoteDataSourceImpl(),
+    );
+
     // Tái sử dụng TimeOffCreateRepository cho các usecase get
     Get.lazyPut<TimeOffCreateRepository>(
       () => TimeOffCreateRepositoryImpl(
         remoteDataSource: Get.find<TimeOffCreateRemoteDataSource>(),
+        fileUploadDataSource: Get.find<FileUploadRemoteDataSource>(),
       ),
     );
 
@@ -48,6 +55,7 @@ class TimeOffUpdateBinding extends Bindings {
     Get.lazyPut<TimeOffUpdateRepository>(
       () => TimeOffUpdateRepositoryImpl(
         remoteDataSource: Get.find<TimeOffCreateRemoteDataSource>(),
+        fileUploadDataSource: Get.find<FileUploadRemoteDataSource>(),
       ),
     );
 
@@ -95,6 +103,12 @@ class TimeOffUpdateBinding extends Bindings {
       ),
     );
 
+    Get.lazyPut<UploadFilesUsecase>(
+      () => UploadFilesUsecase(
+        repository: Get.find<TimeOffUpdateRepository>(),
+      ),
+    );
+
     // Controller với args
     Get.lazyPut<TimeOffUpdateController>(
       () => TimeOffUpdateController(
@@ -107,6 +121,7 @@ class TimeOffUpdateBinding extends Bindings {
         getLeaveLocationsUsecase: Get.find<GetLeaveLocationsUsecase>(),
         updateTimeOffUsecase: Get.find<UpdateTimeOffUsecase>(),
         sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(),
+        uploadFilesUsecase: Get.find<UploadFilesUsecase>(),
       ),
     );
   }

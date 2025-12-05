@@ -5,9 +5,8 @@ import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
 import 'package:vos_flutter/common/widgets/custom_button.dart';
 import 'package:vos_flutter/common/widgets/custom_text_field.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
-// import 'package:vos_flutter/feature/authorize_create/presentation/widgets/date_picker_field.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
-// import 'package:vos_flutter/feature/time_off_create/presentation/widgets/file_attachment_widget.dart';
+import 'package:vos_flutter/feature/time_off_create/presentation/widgets/file_attachment_widget.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/form_dropdown_field.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/time_off_create_colors.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/user_info_block.dart';
@@ -74,8 +73,8 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                 onChanged: controller.onStatusChanged,
               ),
               const SizedBox(height: 20),
-              // const FileAttachmentWidget(),
-              // const SizedBox(height: 24),
+              const FileAttachmentWidget(),
+              const SizedBox(height: 24),
               _buildActionButtons(),
               const SizedBox(height: 24),
             ],

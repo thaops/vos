@@ -8,6 +8,7 @@ import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
 import 'package:vos_flutter/feature/time_off_detail/presentation/controller/time_off_detail_controller.dart';
+import 'package:vos_flutter/feature/time_off_detail/presentation/widgets/file_attachments_section.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
@@ -74,6 +75,9 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildGeneralInfoSection(timeOff),
+                SizedBox(height: 20.h),
+                if (timeOff.attachFiles != null && timeOff.attachFiles!.isNotEmpty)
+                  FileAttachmentsSection(attachments: timeOff.attachFiles!),
                 SizedBox(height: 20.h),
                 _buildApprovalProcessSection(timeOff),
                 SizedBox(height: 20.h),

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -5,6 +6,7 @@ import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/mixins/api_result_mixin.dart';
 import 'package:vos_flutter/common/widgets/success_dialog.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/status.dart';
@@ -20,6 +22,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/send_approve_request_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/upload_files_usecase.dart';
 
 class WorkCodeItem {
   final String code;
@@ -38,6 +41,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   final GetLeaveLocationsUsecase getLeaveLocationsUsecase;
   final CreateTimeOffUsecase createTimeOffUsecase;
   final SendApproveRequestUsecase sendApproveRequestUsecase;
+  final UploadFilesUsecase uploadFilesUsecase;
 
   // User Info
   final RxString userName = ''.obs;
@@ -61,7 +65,9 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   final RxString selectedVacationReason = ''.obs;
   final RxString selectedVacationReasonCode = ''.obs;
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
-  final RxList<String> attachedFiles = <String>[].obs;
+  final RxList<File> attachedFiles = <File>[].obs;
+  final RxList<FileAttachment> uploadedFiles = <FileAttachment>[].obs;
+  final RxBool isUploading = false.obs;
 
   // TextEditingControllers
   final TextEditingController reasonController = TextEditingController();
@@ -88,6 +94,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     required this.getLeaveLocationsUsecase,
     required this.createTimeOffUsecase,
     required this.sendApproveRequestUsecase,
+    required this.uploadFilesUsecase,
   });
 
   String get formattedFromDate {
@@ -408,6 +415,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       status: selectedStatusCode.value,
       recUserID: userId,
       lsDetail: lsDetail,
+      jsonAttachFiles: uploadedFiles.toList(),
     );
   }
 
@@ -469,13 +477,51 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     );
   }
 
-  void onFileAttached(String filePath) {
-    attachedFiles.add(filePath);
+  // Add files to list (chưa upload)
+  void onFilesSelected(List<File> files) {
+    attachedFiles.addAll(files);
   }
 
+  // Remove file from list
   void removeFile(int index) {
     if (index < attachedFiles.length) {
       attachedFiles.removeAt(index);
     }
+  }
+
+  // Remove uploaded file
+  void removeUploadedFile(int index) {
+    if (index < uploadedFiles.length) {
+      uploadedFiles.removeAt(index);
+    }
+  }
+
+  // Upload files to server
+  Future<void> uploadFiles() async {
+    if (attachedFiles.isEmpty) return;
+
+    isUploading.value = true;
+    
+    await handleApiCall<List<FileAttachment>>(
+      apiCall: () => uploadFilesUsecase.call(attachedFiles.toList()),
+      onSuccess: (data) {
+        uploadedFiles.addAll(data);
+        attachedFiles.clear(); // Clear local files after upload
+        Get.snackbar(
+          'Thành công',
+          'Upload ${data.length} file thành công',
+          snackPosition: SnackPosition.TOP,
+        );
+      },
+      onError: (error) {
+        Get.snackbar(
+          'Lỗi',
+          'Upload file thất bại: $error',
+          snackPosition: SnackPosition.TOP,
+        );
+      },
+    );
+    
+    isUploading.value = false;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
 import 'package:vos_flutter/core/network/share_api_repository.dart';
+import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/file_upload_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/repository_impl/time_off_create_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/repositories/time_off_create_repository.dart';
@@ -12,6 +13,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/send_approve_request_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/upload_files_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
 
 class TimeOffCreateBinding extends Bindings {
@@ -30,9 +32,14 @@ class TimeOffCreateBinding extends Bindings {
       ),
     );
 
+    Get.lazyPut<FileUploadRemoteDataSource>(
+      () => FileUploadRemoteDataSourceImpl(),
+    );
+
     Get.lazyPut<TimeOffCreateRepository>(
       () => TimeOffCreateRepositoryImpl(
         remoteDataSource: Get.find<TimeOffCreateRemoteDataSource>(),
+        fileUploadDataSource: Get.find<FileUploadRemoteDataSource>(),
       ),
     );
 
@@ -79,6 +86,12 @@ class TimeOffCreateBinding extends Bindings {
       ),
     );
 
+    Get.lazyPut<UploadFilesUsecase>(
+      () => UploadFilesUsecase(
+        repository: Get.find<TimeOffCreateRepository>(),
+      ),
+    );
+
     Get.lazyPut<TimeOffCreateController>(
       () => TimeOffCreateController(
         getLeaveTypesUsecase: Get.find<GetLeaveTypesUsecase>(),
@@ -89,6 +102,7 @@ class TimeOffCreateBinding extends Bindings {
         getLeaveLocationsUsecase: Get.find<GetLeaveLocationsUsecase>(),
         createTimeOffUsecase: Get.find<CreateTimeOffUsecase>(),
         sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(),
+        uploadFilesUsecase: Get.find<UploadFilesUsecase>(),
       ),
     );
   }

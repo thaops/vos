@@ -8,6 +8,7 @@ import 'package:vos_flutter/common/widgets/text_widget.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/form_dropdown_field.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/time_off_create_colors.dart';
 import 'package:vos_flutter/feature/time_off_update/presentation/controller/time_off_update_controller.dart';
+import 'package:vos_flutter/feature/time_off_update/presentation/widgets/file_attachment_widget.dart';
 import 'package:vos_flutter/feature/time_off_update/presentation/widgets/user_info_block.dart';
 import 'package:vos_flutter/feature/time_off_update/presentation/widgets/work_code_list_widget.dart';
 
@@ -68,6 +69,8 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
                 onChanged: controller.onStatusChanged,
               ),
               const SizedBox(height: 20),
+              const FileAttachmentWidget(),
+              const SizedBox(height: 24),
               _buildActionButtons(),
               const SizedBox(height: 24),
             ],

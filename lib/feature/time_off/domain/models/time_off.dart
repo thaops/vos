@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
 
 class TimeOff {
   final int vRegId;
@@ -22,6 +23,7 @@ class TimeOff {
   final String? approveStatus;
   final List<TimeOffDetail>? details;
   final List<TimeOffProcess>? processes;
+  final List<FileAttachment>? attachFiles;
 
   // Thông tin bổ sung từ API
   final int? depId;
@@ -59,6 +61,7 @@ class TimeOff {
     this.approveStatus,
     this.details,
     this.processes,
+    this.attachFiles,
     this.depId,
     this.depCode,
     this.level2Code,

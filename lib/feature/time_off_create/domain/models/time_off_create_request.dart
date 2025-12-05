@@ -1,3 +1,4 @@
+import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/work_code_detail.dart';
 
 class TimeOffCreateRequest {
@@ -11,6 +12,7 @@ class TimeOffCreateRequest {
   final String status;
   final int recUserID;
   final List<WorkCodeDetail> lsDetail;
+  final List<FileAttachment> jsonAttachFiles;
 
   const TimeOffCreateRequest({
     required this.vRegId,
@@ -23,6 +25,7 @@ class TimeOffCreateRequest {
     required this.status,
     required this.recUserID,
     required this.lsDetail,
+    this.jsonAttachFiles = const [],
   });
 
   TimeOffCreateRequest copyWith({
@@ -36,6 +39,7 @@ class TimeOffCreateRequest {
     String? status,
     int? recUserID,
     List<WorkCodeDetail>? lsDetail,
+    List<FileAttachment>? jsonAttachFiles,
   }) {
     return TimeOffCreateRequest(
       vRegId: vRegId ?? this.vRegId,
@@ -48,6 +52,7 @@ class TimeOffCreateRequest {
       status: status ?? this.status,
       recUserID: recUserID ?? this.recUserID,
       lsDetail: lsDetail ?? this.lsDetail,
+      jsonAttachFiles: jsonAttachFiles ?? this.jsonAttachFiles,
     );
   }
 }
