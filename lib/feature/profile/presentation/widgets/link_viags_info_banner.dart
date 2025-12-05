@@ -26,7 +26,7 @@ class LinkViagsInfoBanner extends StatelessWidget {
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
-              'Tài khoản nội bộ sẽ được liên kết với tài khoản Google của bạn',
+              'Liên kết tài khoản đã xác minh',
               style: TextStyle(
                 fontSize: 12.sp,
                 color: Colors.blue.shade800,

@@ -25,7 +25,7 @@ class LinkViagsButton extends StatelessWidget {
         margin: EdgeInsets.symmetric(horizontal: 16.w),
         child: _buildActionButton(
           icon: Icons.link,
-          title: 'Liên kết tài khoản nội bộ',
+          title: 'Liên kết tài khoản đã xác minh',
           onTap: () => Get.toNamed(AppRouter.linkViags),
         ),
       );

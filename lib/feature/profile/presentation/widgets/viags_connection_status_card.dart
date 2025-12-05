@@ -20,7 +20,7 @@ class ViagsConnectionStatusCard extends StatelessWidget {
           SizedBox(width: 12.w),
           Expanded(
             child: Text(
-              'Đã kết nối tài khoản nội bộ',
+              'Đã kết nối tài khoản đã xác minh',
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,

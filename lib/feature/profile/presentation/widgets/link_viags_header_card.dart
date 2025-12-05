@@ -32,7 +32,7 @@ class LinkViagsHeaderCard extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Text(
-            'Liên kết tài khoản nội bộ',
+            'Liên kết tài khoản đã xác minh',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w600,
@@ -42,7 +42,7 @@ class LinkViagsHeaderCard extends StatelessWidget {
           ),
           SizedBox(height: 6.h),
           Text(
-            'Nhập thông tin tài khoản nội bộ của bạn',
+            'Nhập thông tin tài khoản đã xác minh của bạn',
             style: TextStyle(
               fontSize: 13.sp,
               color: Colors.grey[600],

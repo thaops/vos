@@ -28,7 +28,7 @@ class UnlinkViagsButton extends StatelessWidget {
               Icon(Icons.link_off, color: Colors.red, size: 20.sp),
               SizedBox(width: 12.w),
               Text(
-                'Hủy kết nối tài khoản nội bộ',
+                'Hủy kết nối tài khoản đã xác minh',
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
