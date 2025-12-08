@@ -68,7 +68,8 @@ class NewsController extends BaseController
 
   @override
   Future<void> fetchPage(int page) async {
-    await getNews(page: page, limit: pageSize);
+    // Nếu đang search, truyền keyword vào getNews
+    await getNews(page: page, limit: pageSize, keyword: searchQuery.value);
   }
 
   Future<void> onRefresh() async {
@@ -88,16 +89,22 @@ class NewsController extends BaseController
     searchQuery.value = query;
     if (query.isEmpty) {
       await onRefresh();
-
       return;
     }
 
-    await searchNews(query, page: 1, limit: pageSize);
+    // Sử dụng getNews với keyword để thống nhất API call
+    resetPagination();
+    await getNews(page: 1, limit: pageSize, keyword: query);
   }
 
-  Future<void> getNews({int page = 1, int limit = 10}) async {
+  Future<void> getNews({
+    int page = 1,
+    int limit = 10,
+    String keyword = '',
+  }) async {
     await handleApiCall<List<News>>(
-      apiCall: () => getNewsUsecase.call(page: page, limit: limit),
+      apiCall: () =>
+          getNewsUsecase.call(page: page, limit: limit, keyword: keyword),
       onSuccess: (data) {
         if (page == 1) {
           _replaceList(data);

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
@@ -18,6 +20,8 @@ class NewsScreen extends StatefulWidget {
 
 class _NewsScreenState extends State<NewsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -29,8 +33,28 @@ class _NewsScreenState extends State<NewsScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value, NewsController controller) {
+    controller.onSearchChanged(value);
+
+    // Cancel timer cũ nếu có
+    _debounceTimer?.cancel();
+
+    if (value.isEmpty) {
+      // Nếu rỗng, refresh ngay lập tức
+      controller.onRefresh();
+      return;
+    }
+
+    // Tạo timer mới với delay 600ms
+    _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+      controller.onSearch(value);
+    });
   }
 
   @override
@@ -47,44 +71,119 @@ class _NewsScreenState extends State<NewsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBarWidget(title: 'News', isBack: false),
-      body: Obx(() {
-        final data = controller.news;
-        if (data.isEmpty && controller.status == ControllerStatus.loading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (data.isEmpty) {
-          return const Center(child: Text('No data'));
-        }
-        return RefreshIndicator(
-          onRefresh: controller.onRefresh,
-          child: CustomScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final item = data[index];
-                      return NewsCard(
-                        newsItem: item.toNewsItemModel(),
-                        onTap: () {
-                          Get.toNamed(
-                            AppRouter.newsDetail,
-                            arguments: NewsDetailArgs(id: item.id, title: item.title),
-                          );
-                        },
-                      );
-                    },
-                    childCount: data.length,
-                  ),
+      body: Column(
+        children: [
+          // Search bar
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            color: Colors.white,
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => _onSearchChanged(value, controller),
+              onSubmitted: (value) {
+                // Cancel debounce timer khi submit
+                _debounceTimer?.cancel();
+                controller.onSearch(value);
+              },
+              decoration: InputDecoration(
+                hintText: 'Tìm kiếm tin tức...',
+                hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 20.sp,
+                  color: Colors.grey[600],
+                ),
+                suffixIcon: Obx(() {
+                  if (controller.searchQuery.value.isNotEmpty) {
+                    return IconButton(
+                      icon: Icon(
+                        Icons.clear,
+                        size: 20.sp,
+                        color: Colors.grey[600],
+                      ),
+                      onPressed: () {
+                        // Cancel debounce timer khi clear
+                        _debounceTimer?.cancel();
+                        _searchController.clear();
+                        controller.onSearchChanged('');
+                        controller.onRefresh();
+                      },
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.blue[300]!, width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 12.h,
                 ),
               ),
-            ],
+            ),
           ),
-        );
-      }),
+          // News list
+          Expanded(
+            child: Obx(() {
+              final data = controller.news;
+              if (data.isEmpty &&
+                  controller.status == ControllerStatus.loading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (data.isEmpty) {
+                return Center(
+                  child: Text(
+                    controller.searchQuery.value.isNotEmpty
+                        ? 'Không tìm thấy kết quả'
+                        : 'No data',
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                  ),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: controller.onRefresh,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final item = data[index];
+                          return NewsCard(
+                            newsItem: item.toNewsItemModel(),
+                            onTap: () {
+                              Get.toNamed(
+                                AppRouter.newsDetail,
+                                arguments: NewsDetailArgs(
+                                  id: item.id,
+                                  title: item.title,
+                                ),
+                              );
+                            },
+                          );
+                        }, childCount: data.length),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 }

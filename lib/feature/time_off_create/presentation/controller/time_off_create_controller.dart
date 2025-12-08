@@ -376,6 +376,8 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   TimeOffCreateRequest _buildRequestData() {
+    print('📝 [TimeOffCreate] _buildRequestData() - Bắt đầu build request');
+    
     // Lấy UserID từ ProfileController
     int userId = 0;
     if (Get.isRegistered<ProfileController>()) {
@@ -400,7 +402,18 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       vacationReasonCode = selectedLeaveTypeCode.value;
     }
 
-    return TimeOffCreateRequest(
+    print('📎 [TimeOffCreate] Files info:');
+    print('   - Attached files (chưa upload): ${attachedFiles.length}');
+    print('   - Uploaded files: ${uploadedFiles.length}');
+    
+    if (uploadedFiles.isNotEmpty) {
+      print('   - Uploaded files details:');
+      for (var file in uploadedFiles) {
+        print('     • ${file.fileName} - ${file.fileUrl}');
+      }
+    }
+
+    final request = TimeOffCreateRequest(
       vRegId: 0, // Create mới
       fromDate:
           fromDate.value ??
@@ -417,19 +430,32 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       lsDetail: lsDetail,
       jsonAttachFiles: uploadedFiles.toList(),
     );
+    
+    print('✅ [TimeOffCreate] Request built với ${uploadedFiles.length} file(s)');
+    return request;
   }
 
   Future<void> onSubmit() async {
+    print('🚀 [TimeOffCreate] onSubmit() - Bắt đầu submit');
+    
     // Tự động set ngày mai nếu chưa có
     if (fromDate.value == null) {
       fromDate.value = DateTime.now().add(const Duration(days: 1));
     }
 
+    // Kiểm tra và tự động upload files nếu có files chưa upload
+    if (attachedFiles.isNotEmpty) {
+      print('⚠️ [TimeOffCreate] Có ${attachedFiles.length} file(s) chưa upload, tự động upload...');
+      await uploadFiles();
+    }
+
     final request = _buildRequestData();
 
+    print('📤 [TimeOffCreate] Gửi request create time off...');
     await handleApiCall<int>(
       apiCall: () => createTimeOffUsecase.call(request),
       onSuccess: (id) {
+        print('✅ [TimeOffCreate] Create thành công với VReg_ID: $id');
         _sendApproveRequest(id);
       },
     );
@@ -454,15 +480,25 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   Future<void> onSaveDraft() async {
+    print('💾 [TimeOffCreate] onSaveDraft() - Bắt đầu lưu tạm');
+    
     if (fromDate.value == null) {
       fromDate.value = DateTime.now().add(const Duration(days: 1));
     }
 
+    // Kiểm tra và tự động upload files nếu có files chưa upload
+    if (attachedFiles.isNotEmpty) {
+      print('⚠️ [TimeOffCreate] Có ${attachedFiles.length} file(s) chưa upload, tự động upload...');
+      await uploadFiles();
+    }
+
     final request = _buildRequestData();
 
+    print('📤 [TimeOffCreate] Gửi request save draft...');
     await handleApiCallVoid(
       apiCall: () => createTimeOffUsecase.call(request),
       onSuccess: () {
+        print('✅ [TimeOffCreate] Save draft thành công');
         // Hiển thị dialog thành công trước khi quay lại
         SuccessDialog.show(
           context: Get.context!,
@@ -498,15 +534,21 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
 
   // Upload files to server
   Future<void> uploadFiles() async {
-    if (attachedFiles.isEmpty) return;
+    if (attachedFiles.isEmpty) {
+      print('ℹ️ [TimeOffCreate] uploadFiles() - Không có file để upload');
+      return;
+    }
 
+    print('📤 [TimeOffCreate] uploadFiles() - Bắt đầu upload ${attachedFiles.length} file(s)');
     isUploading.value = true;
     
     await handleApiCall<List<FileAttachment>>(
       apiCall: () => uploadFilesUsecase.call(attachedFiles.toList()),
       onSuccess: (data) {
+        print('✅ [TimeOffCreate] Upload thành công ${data.length} file(s)');
         uploadedFiles.addAll(data);
         attachedFiles.clear(); // Clear local files after upload
+        print('📊 [TimeOffCreate] Tổng số files đã upload: ${uploadedFiles.length}');
         Get.snackbar(
           'Thành công',
           'Upload ${data.length} file thành công',
@@ -514,6 +556,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
         );
       },
       onError: (error) {
+        print('❌ [TimeOffCreate] Upload thất bại: $error');
         Get.snackbar(
           'Lỗi',
           'Upload file thất bại: $error',

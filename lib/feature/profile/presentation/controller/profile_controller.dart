@@ -46,6 +46,9 @@ class ProfileController extends GetxController {
   // Flag để track trạng thái nhân viên (reactive)
   final RxBool isEmployee = false.obs;
 
+  // Flag để track trạng thái awaiting approval (reactive)
+  final RxBool isAwaitingApproval = false.obs;
+
   // Error message khi link VIAGS thất bại
   final RxString linkViagsError = ''.obs;
 
@@ -56,6 +59,7 @@ class ProfileController extends GetxController {
     _loadGoogleUserAsync();
     loadViagsStatus();
     loadEmployeeStatus();
+    loadAwaitingApprovalStatus();
   }
 
   /// Load user profile từ repository
@@ -119,6 +123,24 @@ class ProfileController extends GetxController {
   /// Reload trạng thái nhân viên từ storage (public method để gọi từ bên ngoài)
   void reloadEmployeeStatus() {
     loadEmployeeStatus();
+  }
+
+  /// Load trạng thái awaiting approval
+  Future<void> loadAwaitingApprovalStatus() async {
+    try {
+      final checkAwaitingService =
+          await CheckAwaitingServices.createCheckAwaitingServices();
+      final isAwaiting = await checkAwaitingService.getawaiting();
+      isAwaitingApproval.value = isAwaiting;
+    } catch (e) {
+      print('Error loading awaiting approval status: $e');
+      isAwaitingApproval.value = false;
+    }
+  }
+
+  /// Reload trạng thái awaiting approval từ storage (public method để gọi từ bên ngoài)
+  void reloadAwaitingApprovalStatus() {
+    loadAwaitingApprovalStatus();
   }
 
   /// Load Google user async (check awaiting và tạo guest user nếu cần)

@@ -25,29 +25,107 @@ class TimeOffScreen extends GetView<TimeOffController> {
           }
         },
       ),
-      body: Obx(() {
-        final data = controller.timeOffList;
-        if (data.isEmpty && controller.status == ControllerStatus.loading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (data.isEmpty) {
-          return const Center(child: Text('Không có dữ liệu'));
-        }
-        return RefreshIndicator(
-          onRefresh: controller.onRefresh,
-          child: ListView.builder(
-            padding: EdgeInsets.all(16.w),
-            itemCount: data.length,
-            itemBuilder: (context, index) {
-              final item = data[index];
-              return TimeOffCard(
-                timeOff: item,
-                onCancel: () => controller.cancelTimeOff(item),
-              );
-            },
+      body: Column(
+        children: [
+          // Filter bar
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            color: Colors.white,
+            child: Obx(
+              () => Row(
+                children: [
+                  // Dropdown năm (bên trái)
+                  Expanded(
+                    child: DropdownButton<int>(
+                      value: controller.selectedYear.value,
+                      isExpanded: true,
+                      underline: Container(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
+                      items: controller.yearList.map((year) {
+                        return DropdownMenuItem<int>(
+                          value: year,
+                          child: Text(
+                            year.toString(),
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: controller.onYearFilterChanged,
+                      icon: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Colors.black87,
+                        size: 20.sp,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  // Dropdown trạng thái (bên phải)
+                  Expanded(
+                    child: DropdownButton<String>(
+                      value: controller.selectedStatusCode.value,
+                      isExpanded: true,
+                      underline: Container(
+                        height: 1,
+                        color: Colors.grey.shade300,
+                      ),
+                      items: TimeOffController.statusFilterList.map((filter) {
+                        return DropdownMenuItem<String>(
+                          value: filter['code'],
+                          child: Text(
+                            filter['name']!,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: controller.onStatusFilterChanged,
+                      icon: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Colors.black87,
+                        size: 20.sp,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        );
-      }),
+          // List content
+          Expanded(
+            child: Obx(() {
+              final data = controller.timeOffList;
+              if (data.isEmpty &&
+                  controller.status == ControllerStatus.loading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (data.isEmpty) {
+                return const Center(child: Text('Không có dữ liệu'));
+              }
+              return RefreshIndicator(
+                onRefresh: controller.onRefresh,
+                child: ListView.builder(
+                  padding: EdgeInsets.all(16.w),
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    final item = data[index];
+                    return TimeOffCard(
+                      timeOff: item,
+                      onCancel: () => controller.cancelTimeOff(item),
+                    );
+                  },
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 }

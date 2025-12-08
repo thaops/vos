@@ -31,6 +31,9 @@ class TimeOffCreateRequestDto {
   });
 
   factory TimeOffCreateRequestDto.fromDomain(TimeOffCreateRequest request) {
+    print('📦 [TimeOffCreateDTO] fromDomain() - Bắt đầu convert');
+    print('   - Số lượng files: ${request.jsonAttachFiles.length}');
+    
     // Convert FileAttachment list to JSON string
     final attachFilesJson = request.jsonAttachFiles.isEmpty
         ? ''
@@ -39,6 +42,13 @@ class TimeOffCreateRequestDto {
                 .map((file) => FileAttachmentDto.fromDomain(file).toJson())
                 .toList(),
           );
+
+    print('   - JsonAttachFiles length: ${attachFilesJson.length}');
+    if (attachFilesJson.isNotEmpty) {
+      print('   - JsonAttachFiles preview: ${attachFilesJson.substring(0, attachFilesJson.length > 200 ? 200 : attachFilesJson.length)}...');
+    } else {
+      print('   ⚠️ JsonAttachFiles RỖNG!');
+    }
 
     return TimeOffCreateRequestDto(
       vRegId: request.vRegId,
@@ -61,7 +71,7 @@ class TimeOffCreateRequestDto {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final jsonData = {
       'VReg_ID': vRegId,
       'FromDate': fromDate,
       'Dom_Int': domInt,
@@ -74,6 +84,14 @@ class TimeOffCreateRequestDto {
       'RecUserID': recUserID,
       'ls_Detail': lsDetail,
     };
+    
+    print('📤 [TimeOffCreateDTO] toJson() - Final JSON:');
+    print('   - JsonAttachFiles: ${jsonAttachFiles.isEmpty ? "RỖNG" : "${jsonAttachFiles.length} chars"}');
+    if (jsonAttachFiles.isNotEmpty) {
+      print('   - JsonAttachFiles value: $jsonAttachFiles');
+    }
+    
+    return jsonData;
   }
 }
 

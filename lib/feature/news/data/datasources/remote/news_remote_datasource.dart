@@ -6,7 +6,11 @@ import 'package:vos_flutter/feature/news/domain/models/news.dart';
 import 'package:vos_flutter/core/network/api_endpoints.dart';
 
 abstract class NewsRemoteDataSource {
-  Future<ApiResult<List<News>>> getNews({int page = 1, int limit = 10});
+  Future<ApiResult<List<News>>> getNews({
+    int page = 1,
+    int limit = 10,
+    String keyword = '',
+  });
 
   Future<ApiResult<News>> getArticleDetail(String id);
 
@@ -33,9 +37,16 @@ class NewsRemoteDataSourceImpl implements NewsRemoteDataSource {
   NewsRemoteDataSourceImpl({required this.dioApi});
 
   @override
-  Future<ApiResult<List<News>>> getNews({int page = 1, int limit = 10}) async {
+  Future<ApiResult<List<News>>> getNews({
+    int page = 1,
+    int limit = 10,
+    String keyword = '',
+  }) async {
     try {
-      final response = await dioApi.post(_newsListUrl, data: {'Keyword': ''});
+      final response = await dioApi.post(
+        _newsListUrl,
+        data: {'Keyword': keyword},
+      );
 
       return _parseApiResponse(response);
     } catch (e) {

@@ -54,14 +54,14 @@ class FileAttachmentWidget extends GetView<TimeOffUpdateController> {
               text: 'Đính kèm file',
               fontSize: 14,
               color: TimeOffCreateColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
             Obx(
               () => controller.attachedFiles.isNotEmpty
                   ? CustomButton(
-                      text: 'Upload',
-                      height: 32,
-                      fontSize: 12,
+                      text: 'Upload tất cả',
+                      height: 36,
+                      fontSize: 13,
                       isLoading: controller.isUploading.value,
                       onPressed: controller.uploadFiles,
                     )
@@ -69,37 +69,67 @@ class FileAttachmentWidget extends GetView<TimeOffUpdateController> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         GestureDetector(
           onTap: _pickFiles,
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 24),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
             decoration: BoxDecoration(
-              color: TimeOffCreateColors.fileBg,
-              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  TimeOffCreateColors.fileBg,
+                  TimeOffCreateColors.fileBg.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: TimeOffCreateColors.fileBorder,
-                width: 1,
+                width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.cloud_upload_outlined,
-                  size: 32,
-                  color: TimeOffCreateColors.primary,
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: TimeOffCreateColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.cloud_upload_outlined,
+                    size: 48,
+                    color: TimeOffCreateColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextWidget(
+                  text: 'Nhấn để chọn file đính kèm',
+                  fontSize: 15,
+                  color: TimeOffCreateColors.textPrimary,
+                  fontWeight: FontWeight.w500,
                 ),
                 const SizedBox(height: 8),
                 TextWidget(
-                  text: 'Nhấn để chọn file đính kèm',
+                  text: 'Hỗ trợ: JPG, PNG, PDF, DOC, DOCX',
                   fontSize: 12,
                   color: TimeOffCreateColors.textPlaceholder,
                   fontWeight: FontWeight.w400,
                 ),
                 const SizedBox(height: 4),
                 TextWidget(
-                  text: 'Hỗ trợ: JPG, PNG, PDF, DOC, DOCX',
-                  fontSize: 10,
+                  text: 'Có thể chọn nhiều file cùng lúc',
+                  fontSize: 11,
                   color: TimeOffCreateColors.textPlaceholder,
                   fontWeight: FontWeight.w400,
                 ),
@@ -114,37 +144,72 @@ class FileAttachmentWidget extends GetView<TimeOffUpdateController> {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
-                    TextWidget(
-                      text: 'Chưa upload (${controller.attachedFiles.length})',
-                      fontSize: 12,
-                      color: TimeOffCreateColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.orange.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.pending_outlined,
+                            size: 16,
+                            color: Colors.orange.shade700,
+                          ),
+                          const SizedBox(width: 8),
+                          TextWidget(
+                            text: 'Chưa upload (${controller.attachedFiles.length})',
+                            fontSize: 13,
+                            color: Colors.orange.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     ...List.generate(
                       controller.attachedFiles.length,
                       (index) {
                         final file = controller.attachedFiles[index];
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: TimeOffCreateColors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: TimeOffCreateColors.borderColor,
-                              width: 1,
+                              width: 1.5,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.insert_drive_file,
-                                size: 20,
-                                color: TimeOffCreateColors.primary,
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: TimeOffCreateColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.insert_drive_file,
+                                  size: 24,
+                                  color: TimeOffCreateColors.primary,
+                                ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,23 +218,41 @@ class FileAttachmentWidget extends GetView<TimeOffUpdateController> {
                                       text: _getFileName(file),
                                       fontSize: 14,
                                       color: TimeOffCreateColors.textPrimary,
-                                      fontWeight: FontWeight.w400,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    TextWidget(
-                                      text: _getFileSize(file),
-                                      fontSize: 12,
-                                      color: TimeOffCreateColors.textSecondary,
-                                      fontWeight: FontWeight.w400,
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          size: 12,
+                                          color: TimeOffCreateColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        TextWidget(
+                                          text: _getFileSize(file),
+                                          fontSize: 12,
+                                          color: TimeOffCreateColors.textSecondary,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ),
                               GestureDetector(
                                 onTap: () => controller.removeFile(index),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 20,
-                                  color: TimeOffCreateColors.textPlaceholder,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade50,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Colors.red.shade700,
+                                  ),
                                 ),
                               ),
                             ],
@@ -187,65 +270,155 @@ class FileAttachmentWidget extends GetView<TimeOffUpdateController> {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
-                    TextWidget(
-                      text: 'Đã upload (${controller.uploadedFiles.length})',
-                      fontSize: 12,
-                      color: TimeOffCreateColors.success,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.green.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            size: 16,
+                            color: Colors.green.shade700,
+                          ),
+                          const SizedBox(width: 8),
+                          TextWidget(
+                            text: 'Đã upload thành công (${controller.uploadedFiles.length})',
+                            fontSize: 13,
+                            color: Colors.green.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     ...List.generate(
                       controller.uploadedFiles.length,
                       (index) {
                         final file = controller.uploadedFiles[index];
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: TimeOffCreateColors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: TimeOffCreateColors.success,
-                              width: 1,
+                              width: 1.5,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             children: [
-                              Icon(
-                                file.isImage
-                                    ? Icons.image
-                                    : Icons.insert_drive_file,
-                                size: 20,
-                                color: TimeOffCreateColors.success,
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: TimeOffCreateColors.success.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  file.isImage
+                                      ? Icons.image
+                                      : Icons.insert_drive_file,
+                                  size: 24,
+                                  color: TimeOffCreateColors.success,
+                                ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    TextWidget(
-                                      text: file.fileName,
-                                      fontSize: 14,
-                                      color: TimeOffCreateColors.textPrimary,
-                                      fontWeight: FontWeight.w400,
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: TextWidget(
+                                            text: file.fileName,
+                                            fontSize: 14,
+                                            color: TimeOffCreateColors.textPrimary,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green.shade100,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Icon(
+                                            Icons.check_circle,
+                                            size: 14,
+                                            color: Colors.green.shade700,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    TextWidget(
-                                      text: file.fileSize,
-                                      fontSize: 12,
-                                      color: TimeOffCreateColors.textSecondary,
-                                      fontWeight: FontWeight.w400,
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          size: 12,
+                                          color: TimeOffCreateColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        TextWidget(
+                                          text: file.fileSize,
+                                          fontSize: 12,
+                                          color: TimeOffCreateColors.textSecondary,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                        if (file.uploadBy.isNotEmpty) ...[
+                                          const SizedBox(width: 12),
+                                          Icon(
+                                            Icons.person_outline,
+                                            size: 12,
+                                            color: TimeOffCreateColors.textSecondary,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          TextWidget(
+                                            text: file.uploadBy,
+                                            fontSize: 11,
+                                            color: TimeOffCreateColors.textSecondary,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               GestureDetector(
                                 onTap: () =>
                                     controller.removeUploadedFile(index),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 20,
-                                  color: TimeOffCreateColors.textPlaceholder,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade50,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Colors.red.shade700,
+                                  ),
                                 ),
                               ),
                             ],

@@ -20,10 +20,15 @@ class NewsRepositoryImpl implements NewsRepository {
   });
 
   @override
-  Future<ApiResult<List<News>>> getNews({int page = 1, int limit = 10}) async {
+  Future<ApiResult<List<News>>> getNews({
+    int page = 1,
+    int limit = 10,
+    String keyword = '',
+  }) async {
     final remoteResult = await remoteDataSource.getNews(
       page: page,
       limit: limit,
+      keyword: keyword,
     );
 
     if (remoteResult.isSuccess && remoteResult.data != null) {
@@ -115,8 +120,7 @@ class NewsRepositoryImpl implements NewsRepository {
           return ApiResult.success(paginatedList);
         }
       }
-    } catch (e) {
-    }
+    } catch (e) {}
 
     return remoteResult;
   }

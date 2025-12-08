@@ -134,7 +134,7 @@ Future<void> _initializeCriticalServices() async {
 Future<void> _initializeNonCriticalServices() async {
   try {
     await Future.wait([
-     SystemChrome.setPreferredOrientations([
+      SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
       ]),

@@ -2,8 +2,11 @@ import 'package:get/get.dart';
 import 'package:vos_flutter/feature/login/binding/login_binding.dart';
 import 'package:vos_flutter/feature/login/presentation/view/login_screen.dart';
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
-import 'package:vos_flutter/feature/profile/presentation/view/profile_screen.dart';
+import 'package:vos_flutter/feature/profile/presentation/view/about_screen.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/link_viags_screen.dart';
+import 'package:vos_flutter/feature/profile/presentation/view/privacy_policy_screen.dart';
+import 'package:vos_flutter/feature/profile/presentation/view/profile_screen.dart';
+import 'package:vos_flutter/feature/profile/presentation/view/terms_of_service_screen.dart';
 import 'package:vos_flutter/feature/news_detail/binding/news_detail_binding.dart';
 import 'package:vos_flutter/feature/news_detail/presentation/view/news_detail_screen.dart';
 import 'package:vos_flutter/feature/authorize/binding/authorize_binding.dart';
@@ -25,6 +28,9 @@ class AppRouter {
   static const main = '/main';
   static const profile = '/profile';
   static const linkViags = '/profile/link-viags';
+  static const privacyPolicy = '/profile/privacy-policy';
+  static const termsOfService = '/profile/terms-of-service';
+  static const about = '/profile/about';
 
   // Route con cho auth
   static const login = '/auth/login';
@@ -59,6 +65,18 @@ class AppRouter {
       name: linkViags,
       page: () => const LinkViagsScreen(),
       binding: ProfileBinding(),
+    ),
+    GetPage(
+      name: privacyPolicy,
+      page: () => const PrivacyPolicyScreen(),
+    ),
+    GetPage(
+      name: termsOfService,
+      page: () => const TermsOfServiceScreen(),
+    ),
+    GetPage(
+      name: about,
+      page: () => const AboutScreen(),
     ),
     GetPage(
       name: newsDetail,

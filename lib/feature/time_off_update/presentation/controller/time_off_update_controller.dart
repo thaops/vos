@@ -436,6 +436,8 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
   }
 
   TimeOffCreateRequest _buildRequestData() {
+    print('📝 [TimeOffUpdate] _buildRequestData() - Bắt đầu build request');
+    
     int userId = 0;
     if (Get.isRegistered<ProfileController>()) {
       final profileController = Get.find<ProfileController>();
@@ -457,7 +459,18 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
       vacationReasonCode = selectedLeaveTypeCode.value;
     }
 
-    return TimeOffCreateRequest(
+    print('📎 [TimeOffUpdate] Files info:');
+    print('   - Attached files (chưa upload): ${attachedFiles.length}');
+    print('   - Uploaded files: ${uploadedFiles.length}');
+    
+    if (uploadedFiles.isNotEmpty) {
+      print('   - Uploaded files details:');
+      for (var file in uploadedFiles) {
+        print('     • ${file.fileName} - ${file.fileUrl}');
+      }
+    }
+
+    final request = TimeOffCreateRequest(
       vRegId: vRegId, // Update: dùng VReg_ID của đơn đó
       fromDate: fromDate.value ?? timeOff.fromDate ?? DateTime.now(),
       domInt: leaveLocationCode.value,
@@ -472,18 +485,31 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
       lsDetail: lsDetail,
       jsonAttachFiles: uploadedFiles.toList(),
     );
+    
+    print('✅ [TimeOffUpdate] Request built với ${uploadedFiles.length} file(s)');
+    return request;
   }
 
   Future<void> onSubmit() async {
+    print('🚀 [TimeOffUpdate] onSubmit() - Bắt đầu submit');
+    
     if (fromDate.value == null) {
       fromDate.value = timeOff.fromDate ?? DateTime.now();
     }
 
+    // Kiểm tra và tự động upload files nếu có files chưa upload
+    if (attachedFiles.isNotEmpty) {
+      print('⚠️ [TimeOffUpdate] Có ${attachedFiles.length} file(s) chưa upload, tự động upload...');
+      await uploadFiles();
+    }
+
     final request = _buildRequestData();
 
+    print('📤 [TimeOffUpdate] Gửi request update time off...');
     await handleApiCall<int>(
       apiCall: () => updateTimeOffUsecase.call(request),
       onSuccess: (id) {
+        print('✅ [TimeOffUpdate] Update thành công với VReg_ID: $id');
         _sendApproveRequest(id);
       },
     );
@@ -508,15 +534,25 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
   }
 
   Future<void> onSaveDraft() async {
+    print('💾 [TimeOffUpdate] onSaveDraft() - Bắt đầu lưu tạm');
+    
     if (fromDate.value == null) {
       fromDate.value = timeOff.fromDate ?? DateTime.now();
     }
 
+    // Kiểm tra và tự động upload files nếu có files chưa upload
+    if (attachedFiles.isNotEmpty) {
+      print('⚠️ [TimeOffUpdate] Có ${attachedFiles.length} file(s) chưa upload, tự động upload...');
+      await uploadFiles();
+    }
+
     final request = _buildRequestData();
 
+    print('📤 [TimeOffUpdate] Gửi request save draft...');
     await handleApiCallVoid(
       apiCall: () => updateTimeOffUsecase.call(request),
       onSuccess: () {
+        print('✅ [TimeOffUpdate] Save draft thành công');
         // Hiển thị dialog thành công trước khi quay lại
         SuccessDialog.show(
           context: Get.context!,
@@ -552,15 +588,21 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
 
   // Upload files to server
   Future<void> uploadFiles() async {
-    if (attachedFiles.isEmpty) return;
+    if (attachedFiles.isEmpty) {
+      print('ℹ️ [TimeOffUpdate] uploadFiles() - Không có file để upload');
+      return;
+    }
 
+    print('📤 [TimeOffUpdate] uploadFiles() - Bắt đầu upload ${attachedFiles.length} file(s)');
     isUploading.value = true;
     
     await handleApiCall<List<FileAttachment>>(
       apiCall: () => uploadFilesUsecase.call(attachedFiles.toList()),
       onSuccess: (data) {
+        print('✅ [TimeOffUpdate] Upload thành công ${data.length} file(s)');
         uploadedFiles.addAll(data);
         attachedFiles.clear(); // Clear local files after upload
+        print('📊 [TimeOffUpdate] Tổng số files đã upload: ${uploadedFiles.length}');
         Get.snackbar(
           'Thành công',
           'Upload ${data.length} file thành công',
@@ -568,6 +610,7 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
         );
       },
       onError: (error) {
+        print('❌ [TimeOffUpdate] Upload thất bại: $error');
         Get.snackbar(
           'Lỗi',
           'Upload file thất bại: $error',

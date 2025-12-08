@@ -7,7 +7,11 @@ class GetNewsUsecase {
 
   GetNewsUsecase({required this.repository});
 
-  Future<ApiResult<List<News>>> call({int page = 1, int limit = 10}) async {
-    return await repository.getNews(page: page, limit: limit);
+  Future<ApiResult<List<News>>> call({
+    int page = 1,
+    int limit = 10,
+    String keyword = '',
+  }) async {
+    return await repository.getNews(page: page, limit: limit, keyword: keyword);
   }
 }

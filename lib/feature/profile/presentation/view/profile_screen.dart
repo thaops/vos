@@ -4,7 +4,6 @@ import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/google_user_content.dart';
-import 'package:vos_flutter/feature/profile/presentation/widgets/logout_dialog.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/not_logged_in_state.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/profile_content.dart';
 
