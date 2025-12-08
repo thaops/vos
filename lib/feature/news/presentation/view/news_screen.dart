@@ -61,7 +61,7 @@ class _NewsScreenState extends State<NewsScreen> {
   Widget build(BuildContext context) {
     if (!Get.isRegistered<NewsController>()) {
       return Scaffold(
-        appBar: AppBarWidget(title: 'News', isBack: false),
+        appBar: AppBarWidget(title: 'VĂN HÓA - TIN TỨC', isBack: false),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -70,7 +70,7 @@ class _NewsScreenState extends State<NewsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBarWidget(title: 'News', isBack: false),
+      appBar: AppBarWidget(title: 'VĂN HÓA - TIN TỨC', isBack: false),
       body: Column(
         children: [
           // Search bar

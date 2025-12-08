@@ -20,7 +20,6 @@ class GoogleUserContent extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
-          GoogleUserHeaderCard(user: googleUser, controller: controller),
           SizedBox(height: 24.h),
           Obx(() {
             // Nếu awaiting approval = true → ẩn nút liên kết VIAGS và thông tin tài khoản
@@ -29,6 +28,9 @@ class GoogleUserContent extends StatelessWidget {
             }
             return Column(
               children: [
+                          GoogleUserHeaderCard(user: googleUser, controller: controller),
+              SizedBox(height: 24.h),
+
                 LinkViagsButton(controller: controller),
                 SizedBox(height: 24.h),
                 GoogleUserInfoCard(user: googleUser, controller: controller),
@@ -50,7 +52,7 @@ class GoogleUserContent extends StatelessWidget {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
-            'Thông tin',
+            'Thông tin và chính sách',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,

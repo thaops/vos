@@ -16,7 +16,7 @@ class _ReactiveAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return  AppBarWidget(
-        title: 'Thông tin cá nhân',
+        title: 'Thông tin',
         isBack: false,
         // iconRightfirst: controller.isViagsLinked.value ? Icons.logout : null,
         // colorfirst: Colors.white,
