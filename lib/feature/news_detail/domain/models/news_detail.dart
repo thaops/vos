@@ -10,6 +10,7 @@ class NewsDetail {
   final int? totalLike;
   final int? totalComment;
   final bool? isLiked;
+  final String? categoryCode;
 
   const NewsDetail({
     required this.id,
@@ -23,6 +24,7 @@ class NewsDetail {
     this.totalLike,
     this.totalComment,
     this.isLiked,
+    this.categoryCode,
   });
 
   NewsDetail copyWith({
@@ -37,6 +39,7 @@ class NewsDetail {
     int? totalLike,
     int? totalComment,
     bool? isLiked,
+    String? categoryCode,
   }) {
     return NewsDetail(
       id: id ?? this.id,
@@ -50,6 +53,7 @@ class NewsDetail {
       totalLike: totalLike ?? this.totalLike,
       totalComment: totalComment ?? this.totalComment,
       isLiked: isLiked ?? this.isLiked,
+      categoryCode: categoryCode ?? this.categoryCode,
     );
   }
 }

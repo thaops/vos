@@ -15,6 +15,7 @@ class News {
   final int? totalViewed;
   final int? totalComment;
   final String? creator;
+  final String? categoryCode;
 
   const News({
     required this.id,
@@ -33,6 +34,7 @@ class News {
     this.totalViewed,
     this.totalComment,
     this.creator,
+    this.categoryCode,
   });
 
   News copyWith({
@@ -52,6 +54,7 @@ class News {
     int? totalViewed,
     int? totalComment,
     String? creator,
+    String? categoryCode,
   }) {
     return News(
       id: id ?? this.id,
@@ -70,6 +73,7 @@ class News {
       totalViewed: totalViewed ?? this.totalViewed,
       totalComment: totalComment ?? this.totalComment,
       creator: creator ?? this.creator,
+      categoryCode: categoryCode ?? this.categoryCode,
     );
   }
 }

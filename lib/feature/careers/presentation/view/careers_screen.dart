@@ -4,21 +4,21 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
-import 'package:vos_flutter/feature/news/binding/news_binding.dart';
+import 'package:vos_flutter/feature/careers/binding/careers_binding.dart';
 import 'package:vos_flutter/feature/news/domain/models/news_extension.dart';
-import 'package:vos_flutter/feature/news/presentation/controller/news_controller.dart';
+import 'package:vos_flutter/feature/careers/presentation/controller/careers_controller.dart';
 import 'package:vos_flutter/feature/news_detail/domain/models/news_detail_args.dart';
 import 'package:vos_flutter/feature/news/presentation/widgets/news_card.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
-class NewsScreen extends StatefulWidget {
-  const NewsScreen({super.key});
+class CareersScreen extends StatefulWidget {
+  const CareersScreen({super.key});
 
   @override
-  State<NewsScreen> createState() => _NewsScreenState();
+  State<CareersScreen> createState() => _CareersScreenState();
 }
 
-class _NewsScreenState extends State<NewsScreen> {
+class _CareersScreenState extends State<CareersScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounceTimer;
@@ -26,8 +26,8 @@ class _NewsScreenState extends State<NewsScreen> {
   @override
   void initState() {
     super.initState();
-    if (!Get.isRegistered<NewsController>()) {
-      NewsBinding().dependencies();
+    if (!Get.isRegistered<CareersController>()) {
+      CareersBinding().dependencies();
     }
   }
 
@@ -39,19 +39,16 @@ class _NewsScreenState extends State<NewsScreen> {
     super.dispose();
   }
 
-  void _onSearchChanged(String value, NewsController controller) {
+  void _onSearchChanged(String value, CareersController controller) {
     controller.onSearchChanged(value);
 
-    // Cancel timer cũ nếu có
     _debounceTimer?.cancel();
 
     if (value.isEmpty) {
-      // Nếu rỗng, refresh ngay lập tức
       controller.onRefresh();
       return;
     }
 
-    // Tạo timer mới với delay 600ms
     _debounceTimer = Timer(const Duration(milliseconds: 600), () {
       controller.onSearch(value);
     });
@@ -59,21 +56,20 @@ class _NewsScreenState extends State<NewsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<NewsController>()) {
+    if (!Get.isRegistered<CareersController>()) {
       return Scaffold(
-        appBar: AppBarWidget(title: 'News', isBack: false),
+        appBar: AppBarWidget(title: 'Tuyển dụng', isBack: false),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    final controller = Get.find<NewsController>();
+    final controller = Get.find<CareersController>();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBarWidget(title: 'News', isBack: false),
+      appBar: AppBarWidget(title: 'Tuyển dụng', isBack: false),
       body: Column(
         children: [
-          // Search bar
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             color: Colors.white,
@@ -81,12 +77,11 @@ class _NewsScreenState extends State<NewsScreen> {
               controller: _searchController,
               onChanged: (value) => _onSearchChanged(value, controller),
               onSubmitted: (value) {
-                // Cancel debounce timer khi submit
                 _debounceTimer?.cancel();
                 controller.onSearch(value);
               },
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm tin tức...',
+                hintText: 'Tìm kiếm tin tuyển dụng...',
                 hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                 prefixIcon: Icon(
                   Icons.search,
@@ -102,7 +97,6 @@ class _NewsScreenState extends State<NewsScreen> {
                         color: Colors.grey[600],
                       ),
                       onPressed: () {
-                        // Cancel debounce timer khi clear
                         _debounceTimer?.cancel();
                         _searchController.clear();
                         controller.onSearchChanged('');
@@ -133,10 +127,9 @@ class _NewsScreenState extends State<NewsScreen> {
               ),
             ),
           ),
-          // News list
           Expanded(
             child: Obx(() {
-              final data = controller.news;
+              final data = controller.careers;
               if (data.isEmpty &&
                   controller.status == ControllerStatus.loading) {
                 return const Center(child: CircularProgressIndicator());
@@ -146,7 +139,7 @@ class _NewsScreenState extends State<NewsScreen> {
                   child: Text(
                     controller.searchQuery.value.isNotEmpty
                         ? 'Không tìm thấy kết quả'
-                        : 'No data',
+                        : 'Chưa có tin tuyển dụng',
                     style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                   ),
                 );

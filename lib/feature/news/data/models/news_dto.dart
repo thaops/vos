@@ -17,6 +17,7 @@ class NewsDto {
   final int? totalViewed;
   final int? totalComment;
   final String? creator;
+  final String? categoryCode;
 
   NewsDto({
     required this.id,
@@ -35,6 +36,7 @@ class NewsDto {
     this.totalViewed,
     this.totalComment,
     this.creator,
+    this.categoryCode,
   });
 
   factory NewsDto.fromJson(Map<String, dynamic> json) {
@@ -85,6 +87,7 @@ class NewsDto {
       totalViewed: json['TotalViewed'] ?? json['totalViewed'] as int?,
       totalComment: json['TotalComment'] ?? json['totalComment'] as int?,
       creator: json['Creator'] ?? json['creator'] as String?,
+      categoryCode: json['CategoryCode'] ?? json['categoryCode'] as String?,
     );
   }
 
@@ -106,6 +109,7 @@ class NewsDto {
       totalViewed: entity.totalViewed,
       totalComment: entity.totalComment,
       creator: entity.creator,
+      categoryCode: entity.categoryCode,
     );
   }
 
@@ -148,6 +152,7 @@ class NewsDto {
       totalViewed: totalViewed,
       totalComment: totalComment,
       creator: creator,
+      categoryCode: categoryCode,
     );
   }
 }

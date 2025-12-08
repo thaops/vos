@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
 import 'package:vos_flutter/feature/profile/controllers/profile_controller.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -155,8 +158,174 @@ class _AppNewsDetailScreenState extends State<_AppNewsDetailScreen> {
         }
 
         // Content sẽ được load tự động qua ever() listener
-        return WebViewWidget(controller: _webViewController);
+        return Column(
+          children: [
+            Expanded(child: WebViewWidget(controller: _webViewController)),
+            // Careers section nếu categoryCode == "Careers"
+            if (newsDetail.categoryCode == 'Careers')
+              _buildCareersSection(newsDetail),
+          ],
+        );
       }),
+    );
+  }
+
+  Widget _buildCareersSection(newsDetail) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Link tìm hiểu thêm
+          _buildInfoCard(
+            icon: Icons.info_outline,
+            title: 'Tìm hiểu thông tin thêm',
+            subtitle: 'Xem thêm thông tin tuyển dụng tại VIAGS',
+            onTap: () async {
+              try {
+                final url = Uri.parse('https://www.viags.vn/tuyen-dung');
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Không thể mở link')),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
+                }
+              }
+            },
+          ),
+          SizedBox(height: 12.h),
+
+          // Nút ứng tuyển qua email
+          _buildActionButton(
+            icon: Icons.email,
+            label: 'Ứng tuyển qua email',
+            color: Colors.blue[700]!,
+            onTap: () async {
+              try {
+                final Email email = Email(
+                  body:
+                      'Kính gửi Ban Tuyển dụng VIAGS,\n\n'
+                      'Tôi quan tâm đến vị trí: ${newsDetail.title ?? "Vị trí tuyển dụng"}\n\n'
+                      'ID bài viết: ${newsDetail.id}\n\n'
+                      'Trân trọng,',
+                  subject:
+                      'Ứng tuyển: ${newsDetail.title ?? "Vị trí tuyển dụng"}',
+                  recipients: ['daotaoviagsnba@viags.vn'],
+                  isHTML: false,
+                );
+
+                await FlutterEmailSender.send(email);
+              } catch (e) {
+                // Xử lý lỗi nếu không thể mở email client
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Không thể mở email client. Lỗi: $e'),
+                      duration: const Duration(seconds: 3),
+                      action: SnackBarAction(label: 'OK', onPressed: () {}),
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8.r),
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(8.r),
+          border: Border.all(color: Colors.blue[200]!),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.blue[700], size: 24.sp),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue[900],
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.blue[700]),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: Colors.blue[700], size: 16.sp),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 20.sp),
+        label: Text(
+          label,
+          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(vertical: 14.h),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          elevation: 2,
+        ),
+      ),
     );
   }
 
@@ -235,14 +404,15 @@ class _WebViewScreenState extends State<_WebViewScreen> {
 
   void _checkErrorUrl(String url) {
     if (_hasUnlinked) return;
-  final isErrorUrl = url.contains('https://share-web.viags.vn/Error') ||
+    final isErrorUrl =
+        url.contains('https://share-web.viags.vn/Error') ||
         url.contains('https://share-web.viags.vn/Error/Index');
     if (isErrorUrl) {
       _handleUnlinkViags();
     }
   }
 
-   Future<void> _handleUnlinkViags() async {
+  Future<void> _handleUnlinkViags() async {
     if (_hasUnlinked) return; // Tránh gọi nhiều lần
     _hasUnlinked = true;
 
@@ -252,8 +422,7 @@ class _WebViewScreenState extends State<_WebViewScreen> {
         final profileController = Get.find<ProfileController>();
         await profileController.unlinkViagsAccount(context);
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   @override

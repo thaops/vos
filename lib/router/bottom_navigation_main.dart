@@ -9,6 +9,9 @@ import 'package:vos_flutter/feature/home/view/home_tab.dart';
 import 'package:vos_flutter/feature/news/presentation/view/news_screen.dart';
 import 'package:vos_flutter/feature/news/binding/news_binding.dart';
 import 'package:vos_flutter/feature/news/presentation/controller/news_controller.dart';
+import 'package:vos_flutter/feature/careers/presentation/view/careers_screen.dart';
+import 'package:vos_flutter/feature/careers/binding/careers_binding.dart';
+import 'package:vos_flutter/feature/careers/presentation/controller/careers_controller.dart';
 // import 'package:vos_flutter/common/services/navigation_service.dart'; // DISABLED: Module deleted
 
 class MainScreen extends StatefulWidget {
@@ -32,6 +35,11 @@ class _MainScreenState extends State<MainScreen> {
     // Khởi tạo NewsBinding để đăng ký NewsController
     if (!Get.isRegistered<NewsController>()) {
       NewsBinding().dependencies();
+    }
+
+    // Khởi tạo CareersBinding để đăng ký CareersController
+    if (!Get.isRegistered<CareersController>()) {
+      CareersBinding().dependencies();
     }
 
     // Khởi tạo _selectedIndex dựa trên isEmployee
@@ -66,12 +74,12 @@ class _MainScreenState extends State<MainScreen> {
         final profileController = Get.find<ProfileController>();
         if (profileController.isLoggingOut) {
           // Đang logout → không trả về HomeTab để tránh rebuild
-          return [const NewsScreen(), ProfileScreen()];
+          return [const NewsScreen(), const CareersScreen(), ProfileScreen()];
         }
       }
     } catch (e) {
       // Controller không tồn tại → có thể đang logout
-      return [const NewsScreen(), ProfileScreen()];
+      return [const NewsScreen(), const CareersScreen(), ProfileScreen()];
     }
 
     // Kiểm tra từ ProfileController nếu có
@@ -90,44 +98,23 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     if (isEmployee) {
-      return [const HomeTab(), const NewsScreen(), ProfileScreen()];
+      return [
+        const HomeTab(),
+        const NewsScreen(),
+        const CareersScreen(),
+        ProfileScreen(),
+      ];
     } else {
-      return [const NewsScreen(), ProfileScreen()];
+      return [const NewsScreen(), const CareersScreen(), ProfileScreen()];
     }
   }
 
   // Lấy index thực tế dựa trên isEmployee
   int _getActualIndex() {
-    // Kiểm tra từ ProfileController nếu có
-    bool isEmployee = false;
-    try {
-      if (Get.isRegistered<ProfileController>()) {
-        final profileController = Get.find<ProfileController>();
-        isEmployee = profileController.isEmployee.value;
-      } else {
-        // Fallback: check profile từ storage
-        final profile = _storage.read('user_profile_data');
-        isEmployee = profile != null;
-      }
-    } catch (e) {
-      isEmployee = false;
-    }
-
-    if (isEmployee) {
-      return _selectedIndex;
-    } else {
-      // Nếu không phải nhân viên:
-      // _selectedIndex 0 (home) → _actualIndex 0 (webview)
-      // _selectedIndex 1 (webview) → _actualIndex 0 (webview)
-      // _selectedIndex 2 (profile) → _actualIndex 1 (profile)
-      if (_selectedIndex == 0) {
-        return 0; // Home → WebView (index 0)
-      } else if (_selectedIndex == 1) {
-        return 0; // WebView → WebView (index 0)
-      } else {
-        return 1; // Profile → Profile (index 1)
-      }
-    }
+    // Với cả employee và non-employee, index trực tiếp đều đúng
+    // Employee: [HomeTab, NewsScreen, CareersScreen, ProfileScreen]
+    // Non-employee: [NewsScreen, CareersScreen, ProfileScreen]
+    return _selectedIndex;
   }
 
   void _onTabTapped(int index) {
@@ -152,9 +139,10 @@ class _MainScreenState extends State<MainScreen> {
         _selectedIndex = index;
       } else {
         // Không phải nhân viên:
-        // index 0 (webview) → _selectedIndex 1
-        // index 1 (profile) → _selectedIndex 2
-        _selectedIndex = index + 1;
+        // index 0 (news) → _selectedIndex 0
+        // index 1 (careers) → _selectedIndex 1
+        // index 2 (profile) → _selectedIndex 2
+        _selectedIndex = index;
       }
     });
   }
@@ -210,9 +198,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
                 child: NavigationBar(
-                  selectedIndex: isEmployee
-                      ? _selectedIndex
-                      : (_selectedIndex == 0 ? 0 : _selectedIndex - 1),
+                  selectedIndex: _selectedIndex.clamp(0, isEmployee ? 3 : 2),
                   onDestinationSelected: _onTabTapped,
                   backgroundColor: Colors.white,
                   surfaceTintColor: Colors.white,
@@ -239,6 +225,14 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       selectedIcon: Icon(Icons.article, color: Colors.white),
                       label: 'Tin tức',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(
+                        Icons.work_outline,
+                        color: Colors.grey.shade600,
+                      ),
+                      selectedIcon: Icon(Icons.work, color: Colors.white),
+                      label: 'Tuyển dụng',
                     ),
                     NavigationDestination(
                       icon: Icon(

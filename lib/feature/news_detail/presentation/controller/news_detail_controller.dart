@@ -152,7 +152,11 @@ class NewsDetailController extends BaseController with ApiResultMixin {
     await handleApiCall<NewsDetail>(
       apiCall: () => getArticleDetailUsecase.call(id),
       onSuccess: (data) {
-        selectedNewsDetail.value = data;
+        // Nếu API không trả về categoryCode, dùng categoryCode từ args
+        final finalData = data.categoryCode == null && args?.categoryCode != null
+            ? data.copyWith(categoryCode: args!.categoryCode)
+            : data;
+        selectedNewsDetail.value = finalData;
       },
     );
   }

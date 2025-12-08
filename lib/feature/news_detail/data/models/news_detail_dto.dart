@@ -12,6 +12,7 @@ class NewsDetailDto {
   final int? totalLike;
   final int? totalComment;
   final bool? isLiked;
+  final String? categoryCode;
 
   NewsDetailDto({
     required this.id,
@@ -25,6 +26,7 @@ class NewsDetailDto {
     this.totalLike,
     this.totalComment,
     this.isLiked,
+    this.categoryCode,
   });
 
   factory NewsDetailDto.fromJson(Map<String, dynamic> json) {
@@ -75,6 +77,7 @@ class NewsDetailDto {
       totalLike: json['TotalLike'] ?? json['totalLike'] as int?,
       totalComment: json['TotalComment'] ?? json['totalComment'] as int?,
       isLiked: json['IsLiked'] ?? json['isLiked'] as bool?,
+      categoryCode: json['CategoryCode'] ?? json['categoryCode'] as String?,
     );
   }
 
@@ -91,6 +94,7 @@ class NewsDetailDto {
       totalLike: entity.totalLike,
       totalComment: entity.totalComment,
       isLiked: entity.isLiked,
+      categoryCode: entity.categoryCode,
     );
   }
 
@@ -118,6 +122,7 @@ class NewsDetailDto {
       totalLike: totalLike,
       totalComment: totalComment,
       isLiked: isLiked,
+      categoryCode: categoryCode,
     );
   }
 }
