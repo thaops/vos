@@ -58,6 +58,7 @@ NewsController.getNews() -> bắt đầu sự kiện load news hiên thị state
 
                 V0S@2025!
                 storePassword=V0S@2025!
+                VOS@2025!
 keyPassword=V0S@2025!
 keyAlias=vos-upload
 storeFile=C:\\Flutter-dev\\vos_flutter\\android\\vos-upload-keystore.jks
