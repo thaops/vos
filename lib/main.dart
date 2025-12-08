@@ -71,6 +71,9 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // ✅ Đợi critical services init TRƯỚC KHI render app
+  await _initializeCriticalServices();
+
   runApp(
     CalendarControllerProvider(
       controller: EventController(),
@@ -78,7 +81,8 @@ void main() async {
     ),
   );
 
-  _initializeServicesInBackground();
+  // ✅ Non-critical services chạy background
+  _initializeNonCriticalServices();
 }
 
 void _setupErrorHandlers() {
@@ -328,15 +332,27 @@ Future<void> generateUUID() async {
   deviceUdid.saveUdid(uuid.v4());
 }
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   final Uri? initialDeepLink;
 
   const SplashScreen({super.key, this.initialDeepLink});
 
   @override
-  Widget build(BuildContext context) {
-    Get.put(SplashController());
+  State<SplashScreen> createState() => _SplashScreenState();
+}
 
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // ✅ Tạo controller trong initState, chỉ 1 lần
+    if (!Get.isRegistered<SplashController>()) {
+      Get.put(SplashController());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SplashScreenWidget(onComplete: () {});
   }
 }

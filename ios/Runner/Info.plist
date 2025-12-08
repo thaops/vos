@@ -22,34 +22,6 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSUserNotificationsUsageDescription</key>
-	<string>VOS Viags cần gửi thông báo để thông báo về các công việc mới, nhắc nhở deadline và cập nhật trạng thái dự án.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>VOS Viags cần truy cập camera để chụp ảnh đính kèm cho các công việc và báo cáo.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>VOS Viags cần truy cập thư viện ảnh để chọn và đính kèm hình ảnh cho các công việc.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>VOS Viags cần truy cập microphone để ghi âm ghi chú và báo cáo bằng giọng nói.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>VOS Viags cần truy cập vị trí để đánh dấu địa điểm làm việc và báo cáo hiện trường.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>VOS Viags cần truy cập danh bạ để chia sẻ thông tin dự án với đồng nghiệp.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>VOS Viags sử dụng Face ID để bảo mật đăng nhập và bảo vệ thông tin nhạy cảm.</string>
-	<key>NSCalendarsUsageDescription</key>
-	<string>VOS Viags cần truy cập lịch để đồng bộ hóa deadline và lịch trình dự án.</string>
-	<key>NSRemindersUsageDescription</key>
-	<string>VOS Viags cần truy cập nhắc nhở để tạo lịch nhắc nhở công việc và deadline.</string>
-	<key>NSDocumentsFolderUsageDescription</key>
-	<string>VOS Viags cần truy cập thư mục tài liệu để lưu trữ và quản lý file dự án.</string>
-	<key>NSDownloadsFolderUsageDescription</key>
-	<string>VOS Viags cần truy cập thư mục tải xuống để lưu trữ tài liệu và báo cáo.</string>
-	<key>GIDClientID</key>
-	<string>119692400826-usibe069lubg2rq3j0lsnn38mobtrso6.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -61,8 +33,40 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GIDClientID</key>
+	<string>119692400826-usibe069lubg2rq3j0lsnn38mobtrso6.apps.googleusercontent.com</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>VOS Viags cần truy cập lịch để đồng bộ hóa deadline và lịch trình dự án.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>VOS Viags cần truy cập camera để chụp ảnh đính kèm cho các công việc và báo cáo.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>VOS Viags cần truy cập danh bạ để chia sẻ thông tin dự án với đồng nghiệp.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>VOS Viags cần truy cập thư mục tài liệu để lưu trữ và quản lý file dự án.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>VOS Viags cần truy cập thư mục tải xuống để lưu trữ tài liệu và báo cáo.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>VOS Viags sử dụng Face ID để bảo mật đăng nhập và bảo vệ thông tin nhạy cảm.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>VOS Viags cần truy cập vị trí để đánh dấu địa điểm làm việc và báo cáo hiện trường.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>VOS Viags cần truy cập microphone để ghi âm ghi chú và báo cáo bằng giọng nói.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>VOS Viags cần truy cập thư viện ảnh để chọn và đính kèm hình ảnh cho các công việc.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>VOS Viags cần truy cập nhắc nhở để tạo lịch nhắc nhở công việc và deadline.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>VOS Viags cần gửi thông báo để thông báo về các công việc mới, nhắc nhở deadline và cập nhật trạng thái dự án.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

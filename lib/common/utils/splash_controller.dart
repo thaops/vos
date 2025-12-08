@@ -63,6 +63,16 @@ class SplashController extends GetxController {
   /// Check auth nhanh (chỉ đọc local storage)
   Future<bool> _checkAuthQuick() async {
     try {
+      // ✅ Đảm bảo GetStorage đã init (idempotent - gọi nhiều lần cũng OK)
+      try {
+        await GetStorage.init();
+      } catch (e) {
+        // GetStorage đã init rồi hoặc có lỗi, tiếp tục
+        if (kDebugMode) {
+          print('⚠️ GetStorage.init() warning: $e');
+        }
+      }
+
       // ✅ Bước 1: Check awaiting trước (nếu Apple đang duyệt → vào thẳng app)
       // Gọi trực tiếp API để tránh race condition với _lazyLoadCheckAwaitingApproval()
       try {
