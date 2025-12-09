@@ -13,6 +13,7 @@ class TimeOffCreateRequest {
   final int recUserID;
   final List<WorkCodeDetail> lsDetail;
   final List<FileAttachment> jsonAttachFiles;
+  final String? approveStatus;
 
   const TimeOffCreateRequest({
     required this.vRegId,
@@ -26,6 +27,7 @@ class TimeOffCreateRequest {
     required this.recUserID,
     required this.lsDetail,
     this.jsonAttachFiles = const [],
+    this.approveStatus,
   });
 
   TimeOffCreateRequest copyWith({
@@ -40,6 +42,7 @@ class TimeOffCreateRequest {
     int? recUserID,
     List<WorkCodeDetail>? lsDetail,
     List<FileAttachment>? jsonAttachFiles,
+    String? approveStatus,
   }) {
     return TimeOffCreateRequest(
       vRegId: vRegId ?? this.vRegId,
@@ -53,6 +56,7 @@ class TimeOffCreateRequest {
       recUserID: recUserID ?? this.recUserID,
       lsDetail: lsDetail ?? this.lsDetail,
       jsonAttachFiles: jsonAttachFiles ?? this.jsonAttachFiles,
+      approveStatus: approveStatus ?? this.approveStatus,
     );
   }
 }

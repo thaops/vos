@@ -15,6 +15,7 @@ class TimeOffCreateRequestDto {
   final int recUserID;
   final List<Map<String, dynamic>> lsDetail;
   final String jsonAttachFiles;
+  final String? approveStatus;
 
   TimeOffCreateRequestDto({
     required this.vRegId,
@@ -28,6 +29,7 @@ class TimeOffCreateRequestDto {
     required this.recUserID,
     required this.lsDetail,
     this.jsonAttachFiles = '',
+    this.approveStatus,
   });
 
   factory TimeOffCreateRequestDto.fromDomain(TimeOffCreateRequest request) {
@@ -67,11 +69,12 @@ class TimeOffCreateRequestDto {
               })
           .toList(),
       jsonAttachFiles: attachFilesJson,
+      approveStatus: request.approveStatus,
     );
   }
 
   Map<String, dynamic> toJson() {
-    final jsonData = {
+    final jsonData = <String, dynamic>{
       'VReg_ID': vRegId,
       'FromDate': fromDate,
       'Dom_Int': domInt,
@@ -85,10 +88,18 @@ class TimeOffCreateRequestDto {
       'ls_Detail': lsDetail,
     };
     
+    // Thêm ApproveStatus nếu có
+    if (approveStatus != null) {
+      jsonData['ApproveStatus'] = approveStatus!;
+    }
+    
     print('📤 [TimeOffCreateDTO] toJson() - Final JSON:');
     print('   - JsonAttachFiles: ${jsonAttachFiles.isEmpty ? "RỖNG" : "${jsonAttachFiles.length} chars"}');
     if (jsonAttachFiles.isNotEmpty) {
       print('   - JsonAttachFiles value: $jsonAttachFiles');
+    }
+    if (approveStatus != null) {
+      print('   - ApproveStatus: $approveStatus');
     }
     
     return jsonData;

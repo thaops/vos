@@ -3,6 +3,7 @@ import 'package:vos_flutter/common/utils/api_response_handler.dart';
 import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/file_upload_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/time_off_create_request_dto.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dart';
@@ -71,5 +72,13 @@ class TimeOffCreateRepositoryImpl implements TimeOffCreateRepository {
   @override
   Future<ApiResult<List<FileAttachment>>> uploadFiles(List<File> files) async {
     return await fileUploadDataSource.uploadFiles(files);
+  }
+
+  @override
+  Future<ApiResult<void>> createAflVos({
+    required CreateAflVosRequest request,
+    required String email,
+  }) {
+    return remoteDataSource.createAflVos(request: request, email: email);
   }
 }

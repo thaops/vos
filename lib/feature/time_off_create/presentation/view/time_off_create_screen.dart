@@ -22,11 +22,10 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
       appBar: AppBarWidget(title: 'Tạo mới'),
       body: GestureDetector(
         onTap: () {
-          // Đóng keyboard khi tap ngoài
           FocusScope.of(context).unfocus();
         },
         behavior:
-            HitTestBehavior.translucent, // Cho phép các widget con nhận tap
+            HitTestBehavior.translucent, 
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(

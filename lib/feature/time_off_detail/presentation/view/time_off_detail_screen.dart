@@ -76,7 +76,8 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
               children: [
                 _buildGeneralInfoSection(timeOff),
                 SizedBox(height: 20.h),
-                if (timeOff.attachFiles != null && timeOff.attachFiles!.isNotEmpty)
+                if (timeOff.attachFiles != null &&
+                    timeOff.attachFiles!.isNotEmpty)
                   FileAttachmentsSection(attachments: timeOff.attachFiles!),
                 SizedBox(height: 20.h),
                 _buildApprovalProcessSection(timeOff),
@@ -109,8 +110,8 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           value: timeOff.level2Name ?? '',
         ),
         _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
-        // _buildInfoRow(label: 'Đội / Tổ', value: 'chưa có'),
 
+        // _buildInfoRow(label: 'Đội / Tổ', value: 'chưa có'),
         _buildInfoRow(
           label: 'Thời gian nghỉ',
           value: _formatDateRange(timeOff),

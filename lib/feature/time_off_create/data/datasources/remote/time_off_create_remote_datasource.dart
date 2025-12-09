@@ -1,5 +1,8 @@
+import 'package:dio/dio.dart' as dioLib;
+import 'package:get/get.dart';
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
 import 'package:vos_flutter/core/network/base_share_datasource.dart';
+import 'package:vos_flutter/core/network/dio_api.dart';
 import 'package:vos_flutter/core/network/share_Json_helper.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/leave_location_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/leave_type_dto.dart';
@@ -7,6 +10,7 @@ import 'package:vos_flutter/feature/time_off_create/data/models/status_dto.dart'
 import 'package:vos_flutter/feature/time_off_create/data/models/time_off_create_request_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/vacation_reason_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/work_code_dto.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/status.dart';
@@ -25,6 +29,10 @@ abstract class TimeOffCreateRemoteDataSource {
   Future<ApiResult<List<LeaveLocation>>> getLeaveLocations();
   Future<ApiResult<int>> createTimeOff(TimeOffCreateRequestDto request);
   Future<ApiResult<int>> sendApproveRequest(int vRegId);
+  Future<ApiResult<void>> createAflVos({
+    required CreateAflVosRequest request,
+    required String email,
+  });
 }
 
 class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
@@ -230,5 +238,49 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
         return ShareJsonHelper.getInt(map, 'VReg_ID');
       },
     );
+  }
+
+  @override
+  Future<ApiResult<void>> createAflVos({
+    required CreateAflVosRequest request,
+    required String email,
+  }) async {
+    try {
+      final dioApi = Get.find<DioApi>();
+
+      // URL với email encoded
+      final emailWithDefault = email ?? 'phongdh@viags.vn';
+      final encodedEmail = Uri.encodeComponent(emailWithDefault);
+      final url =
+          'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos/createafl_vos/$encodedEmail';
+
+      // Headers theo yêu cầu
+      final headers = {
+        'accept': '*/*',
+        'Content-Type': 'application/json',
+        'X-API-KEY':
+            '8492f144615571ac043b943e58471ba3bc37d7a59d065b1e6ff2d0106c1a1dc2',
+        'Cookie':
+            'ARRAffinity=a6e48b9e9d2653435be7b61998d8624b44115214104213d6c8b8c526cc56dc70; ARRAffinitySameSite=a6e48b9e9d2653435be7b61998d8624b44115214104213d6c8b8c526cc56dc70',
+      };
+      print("CreateNPP request: ${request.toJson()}");
+      print("CreateNPP url: $url");
+      print("CreateNPP headers: $headers");
+
+      final response = await dioApi.post(
+        url,
+        data: request.toJson(),
+        options: dioLib.Options(headers: headers),
+      );
+      print("CreateNPP response: ${response.data}");
+
+      if (response.statusCode == 200) {
+        return ApiResult.success(null);
+      } else {
+        return ApiResult.error(response.statusMessage ?? 'Unknown error');
+      }
+    } catch (e) {
+      return ApiResult.error(e.toString());
+    }
   }
 }

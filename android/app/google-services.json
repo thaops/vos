@@ -58,6 +58,30 @@
       },
       "oauth_client": [
         {
+          "client_id": "119692400826-2gdio5u7e9rlh69kg30ucfla2qeqvao2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.viags.vosapp",
+            "certificate_hash": "adc0508c3ae833a1ee1cd6d076cadc2b2b6e2f5f"
+          }
+        },
+        {
+          "client_id": "119692400826-82c2gf0egbh9gah11g8povhhumsatkpq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.viags.vosapp",
+            "certificate_hash": "13938d07bdde96bd2835c59251005aabaf5d3e88"
+          }
+        },
+        {
+          "client_id": "119692400826-a78k08msd59odbqgvvbk33bl6h7jcu7r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.viags.vosapp",
+            "certificate_hash": "a7dba2a7f49f9d5187026641c81309fa53b77cdc"
+          }
+        },
+        {
           "client_id": "119692400826-n08nbj7nus0g39ivs2d524dijc91tpsl.apps.googleusercontent.com",
           "client_type": 3
         }

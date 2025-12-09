@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
+import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 
 class Item {
   final String id;
@@ -52,6 +53,7 @@ class CustomSelect extends StatefulWidget {
 class _SelectState extends State<CustomSelect> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  final GlobalKey _fieldKey = GlobalKey();
   String? _selectedId;
 
   @override
@@ -104,6 +106,71 @@ class _SelectState extends State<CustomSelect> {
         _controller.text = widget.selectedName!;
       });
     }
+  }
+
+  void _showDropdownMenu(BuildContext context) {
+    if (widget.selectList == null || widget.selectList!.isEmpty) return;
+
+    final RenderBox? renderBox =
+        _fieldKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final position = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy + size.height, // Menu hiển thị bên dưới field
+        position.dx + size.width,
+        position.dy + size.height + 300.h, // Chiều cao tối đa
+      ),
+      constraints: BoxConstraints(
+        minWidth: size.width,
+        maxWidth: size.width,
+        maxHeight: 300.h,
+      ),
+      items: widget.selectList!
+          .map(
+            (item) => PopupMenuItem<String>(
+              value: item.id,
+              child: Container(
+                width: size.width,
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: Text(
+                  item.name,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontFamily: 'Inter',
+                    color: _selectedId == item.id
+                        ? AppColors.primary
+                        : Colors.black,
+                    fontWeight: _selectedId == item.id
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+          )
+          .toList(),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      elevation: 8,
+      color: Colors.white,
+    ).then((selectedId) {
+      if (selectedId != null) {
+        final selectedItem = widget.selectList!.firstWhere(
+          (e) => e.id == selectedId,
+          orElse: () => Item(id: '', name: ''),
+        );
+        setState(() {
+          _selectedId = selectedItem.id;
+          _controller.text = selectedItem.name;
+        });
+        widget.onProjectSelected?.call(selectedItem.id);
+      }
+    });
   }
 
   @override
@@ -345,75 +412,73 @@ class _SelectState extends State<CustomSelect> {
               ),
             )
           else
-            DropdownButtonFormField<String>(
-              value: _selectedId?.isNotEmpty == true ? _selectedId : null,
-              items: (widget.selectList ?? [])
-                  .map(
-                    (item) => DropdownMenuItem<String>(
-                      value: item.id,
-                      child: Text(
-                        item.name,
-                        style: TextStyle(fontSize: 14.sp, fontFamily: 'Inter'),
+            Builder(
+              builder: (context) {
+                return TextFormField(
+                  key: _fieldKey,
+                  controller: _controller,
+                  readOnly: true,
+                  enabled: isEnabledEffective,
+                  onTap:
+                      isEnabledEffective && (widget.selectList ?? []).isNotEmpty
+                      ? () {
+                          _showDropdownMenu(context);
+                        }
+                      : null,
+                  decoration: InputDecoration(
+                    hintText: widget.name ?? 'Chọn một tùy chọn',
+                    hintStyle: TextStyle(
+                      color: Colors.black.withOpacity(0.8),
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14.sp,
+                      fontFamily: 'Inter',
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(
+                        color: widget.errorText != null
+                            ? Colors.red
+                            : Colors.grey.shade400,
                       ),
                     ),
-                  )
-                  .toList(),
-              onChanged: isEnabledEffective
-                  ? (val) {
-                      final selectedItem = (widget.selectList ?? []).firstWhere(
-                        (e) => e.id == val,
-                        orElse: () => Item(id: '', name: ''),
-                      );
-                      setState(() {
-                        _selectedId = selectedItem.id;
-                        _controller.text = selectedItem.name;
-                      });
-                      widget.onProjectSelected?.call(selectedItem.id);
-                    }
-                  : null,
-              // Thiết lập chiều cao tối đa cho dropdown menu
-              menuMaxHeight: 300.h,
-              // Đảm bảo dropdown hiển thị trên nền trắng
-              dropdownColor: Colors.white,
-              // Điều chỉnh icon để rõ ràng hơn
-              icon: Icon(
-                Icons.keyboard_arrow_down,
-                color: isEnabledEffective
-                    ? Colors.black.withOpacity(0.6)
-                    : Colors.grey.shade400,
-                size: 20.sp,
-              ),
-              decoration: InputDecoration(
-                hintText: widget.name ?? 'Chọn một tùy chọn',
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 8.h,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(
-                    color: widget.errorText != null
-                        ? Colors.red
-                        : Colors.grey.shade400,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(
+                        color: widget.errorText != null
+                            ? Colors.red
+                            : Colors.grey.shade400,
+                      ),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    filled: true,
+                    fillColor: isEnabledEffective
+                        ? Colors.white
+                        : Colors.grey.shade100,
+                    suffixIcon: isEnabledEffective
+                        ? Icon(
+                            widget.icon ?? Icons.keyboard_arrow_down_rounded,
+                            color: isEnabledEffective
+                                ? widget.colorIcon ?? Colors.black
+                                : Colors.grey.shade400,
+                            size: 20.sp,
+                          )
+                        : null,
                   ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(
-                    color: widget.errorText != null
-                        ? Colors.red
-                        : Colors.grey.shade400,
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14.sp,
+                    fontFamily: 'Inter',
                   ),
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
-                ),
-                filled: true,
-                fillColor: isEnabledEffective
-                    ? Colors.white
-                    : Colors.grey.shade100,
-              ),
+                );
+              },
             ),
           if (widget.errorText != null) ...[
             SizedBox(height: 4.h),
@@ -430,15 +495,3 @@ class _SelectState extends State<CustomSelect> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-

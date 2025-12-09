@@ -8,10 +8,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachmen
 class FileAttachmentsSection extends StatelessWidget {
   final List<FileAttachment> attachments;
 
-  const FileAttachmentsSection({
-    super.key,
-    required this.attachments,
-  });
+  const FileAttachmentsSection({super.key, required this.attachments});
 
   Future<void> _openFile(String url) async {
     final uri = Uri.parse(url);
@@ -24,33 +21,18 @@ class FileAttachmentsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (attachments.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextWidget(
-            text: 'File đính kèm (${attachments.length})',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          SizedBox(height: 12.h),
-          ...attachments.map((file) => _buildFileItem(file)),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextWidget(
+          text: 'File đính kèm (${attachments.length})',
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ),
+        SizedBox(height: 12.h),
+        ...attachments.map((file) => _buildFileItem(file)),
+      ],
     );
   }
 
@@ -141,15 +123,10 @@ class FileAttachmentsSection extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.download,
-              size: 20.sp,
-              color: Colors.blue.shade700,
-            ),
+            Icon(Icons.download, size: 20.sp, color: Colors.blue.shade700),
           ],
         ),
       ),
     );
   }
 }
-

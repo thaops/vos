@@ -14,10 +14,15 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_cod
 import 'package:vos_flutter/feature/time_off_update/data/repository_impl/time_off_update_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/repositories/time_off_update_repository.dart';
+import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/upload_files_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/presentation/controller/time_off_update_controller.dart';
+import 'package:vos_flutter/feature/time_off_detail/data/datasources/remote/time_off_detail_remote_datasource.dart';
+import 'package:vos_flutter/feature/time_off_detail/data/repository_impl/time_off_detail_repository_impl.dart';
+import 'package:vos_flutter/feature/time_off_detail/domain/repositories/time_off_detail_repository.dart';
 
 class TimeOffUpdateBinding extends Bindings {
   @override
@@ -109,6 +114,32 @@ class TimeOffUpdateBinding extends Bindings {
       ),
     );
 
+    // ✅ Thêm CreateAflVosUsecase
+    Get.lazyPut<CreateAflVosUsecase>(
+      () => CreateAflVosUsecase(
+        repository: Get.find<TimeOffCreateRepository>(),
+      ),
+    );
+
+    // ✅ Thêm TimeOffDetailRepository và UseCase
+    Get.lazyPut<TimeOffDetailRemoteDataSource>(
+      () => TimeOffDetailRemoteDataSourceImpl(
+        shareApiRepository: Get.find<ShareApiRepository>(),
+      ),
+    );
+
+    Get.lazyPut<TimeOffDetailRepository>(
+      () => TimeOffDetailRepositoryImpl(
+        remoteDataSource: Get.find<TimeOffDetailRemoteDataSource>(),
+      ),
+    );
+
+    Get.lazyPut<GetTimeOffDetailUsecase>(
+      () => GetTimeOffDetailUsecase(
+        repository: Get.find<TimeOffDetailRepository>(),
+      ),
+    );
+
     // Controller với args
     Get.lazyPut<TimeOffUpdateController>(
       () => TimeOffUpdateController(
@@ -122,6 +153,8 @@ class TimeOffUpdateBinding extends Bindings {
         updateTimeOffUsecase: Get.find<UpdateTimeOffUsecase>(),
         sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(),
         uploadFilesUsecase: Get.find<UploadFilesUsecase>(),
+        createAflVosUsecase: Get.find<CreateAflVosUsecase>(),
+        getTimeOffDetailUsecase: Get.find<GetTimeOffDetailUsecase>(),
       ),
     );
   }

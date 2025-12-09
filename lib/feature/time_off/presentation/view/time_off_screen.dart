@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
+import 'package:vos_flutter/common/widgets/custom_select.dart';
 import 'package:vos_flutter/feature/time_off/presentation/controller/time_off_controller.dart';
 import 'package:vos_flutter/feature/time_off/presentation/widgets/time_off_card.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
@@ -34,63 +35,56 @@ class TimeOffScreen extends GetView<TimeOffController> {
             child: Obx(
               () => Row(
                 children: [
-                  // Dropdown năm (bên trái)
+                  // Dropdown năm (flex: 1)
                   Expanded(
-                    child: DropdownButton<int>(
-                      value: controller.selectedYear.value,
-                      isExpanded: true,
-                      underline: Container(
-                        height: 1,
-                        color: Colors.grey.shade300,
-                      ),
-                      items: controller.yearList.map((year) {
-                        return DropdownMenuItem<int>(
-                          value: year,
-                          child: Text(
-                            year.toString(),
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Colors.black87,
+                    flex: 1,
+                    child: CustomSelect(
+                      name: controller.selectedYearId.value.isEmpty
+                          ? 'Chọn năm'
+                          : controller.selectedYearId.value,
+                      selectList: controller.yearList
+                          .map(
+                            (year) => Item(
+                              id: year.toString(),
+                              name: year.toString(),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: controller.onYearFilterChanged,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        color: Colors.black87,
-                        size: 20.sp,
-                      ),
+                          )
+                          .toList(),
+                      selectedId: controller.selectedYearId.value.isEmpty
+                          ? null
+                          : controller.selectedYearId.value,
+                      selectedName: controller.selectedYearId.value.isEmpty
+                          ? null
+                          : controller.selectedYearId.value,
+                      onProjectSelected: controller.onYearFilterChanged,
+                      searchable: false,
                     ),
                   ),
                   SizedBox(width: 12.w),
-                  // Dropdown trạng thái (bên phải)
+                  // Dropdown trạng thái (flex: 2)
                   Expanded(
-                    child: DropdownButton<String>(
-                      value: controller.selectedStatusCode.value,
-                      isExpanded: true,
-                      underline: Container(
-                        height: 1,
-                        color: Colors.grey.shade300,
-                      ),
-                      items: TimeOffController.statusFilterList.map((filter) {
-                        return DropdownMenuItem<String>(
-                          value: filter['code'],
-                          child: Text(
-                            filter['name']!,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Colors.black87,
+                    flex: 2,
+                    child: CustomSelect(
+                      name: controller.selectedStatusFilter.value.isEmpty
+                          ? 'Chọn trạng thái'
+                          : controller.selectedStatusFilter.value,
+                      selectList: TimeOffController.statusFilterList
+                          .map(
+                            (filter) => Item(
+                              id: filter['code']!,
+                              name: filter['name']!,
                             ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: controller.onStatusFilterChanged,
-                      icon: Icon(
-                        Icons.keyboard_arrow_down,
-                        color: Colors.black87,
-                        size: 20.sp,
-                      ),
+                          )
+                          .toList(),
+                      selectedId: controller.selectedStatusCode.value.isEmpty
+                          ? null
+                          : controller.selectedStatusCode.value,
+                      selectedName:
+                          controller.selectedStatusFilter.value.isEmpty
+                          ? null
+                          : controller.selectedStatusFilter.value,
+                      onProjectSelected: controller.onStatusFilterChanged,
+                      searchable: false,
                     ),
                   ),
                 ],
@@ -117,7 +111,18 @@ class TimeOffScreen extends GetView<TimeOffController> {
                     final item = data[index];
                     return TimeOffCard(
                       timeOff: item,
-                      onCancel: () => controller.cancelTimeOff(item),
+                      onCancel: controller.canCancel(item)
+                          ? () => controller.cancelTimeOff(item)
+                          : null,
+                      onRecall: controller.isDraft(item)
+                          ? () => controller.recallTimeOff(item)
+                          : null,
+                      onSendApprove: controller.isDraft(item)
+                          ? () => controller.sendApproveRequest(item)
+                          : null,
+                      onEdit: controller.isDraft(item)
+                          ? () => controller.navigateToUpdate(item)
+                          : null,
                     );
                   },
                 ),

@@ -12,9 +12,14 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_leave_ty
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
+import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/upload_files_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
+import 'package:vos_flutter/feature/time_off_detail/data/datasources/remote/time_off_detail_remote_datasource.dart';
+import 'package:vos_flutter/feature/time_off_detail/data/repository_impl/time_off_detail_repository_impl.dart';
+import 'package:vos_flutter/feature/time_off_detail/domain/repositories/time_off_detail_repository.dart';
 
 class TimeOffCreateBinding extends Bindings {
   @override
@@ -80,15 +85,42 @@ class TimeOffCreateBinding extends Bindings {
           CreateTimeOffUsecase(repository: Get.find<TimeOffCreateRepository>()),
     );
 
-    Get.lazyPut<SendApproveRequestUsecase>(
-      () => SendApproveRequestUsecase(
-        repository: Get.find<TimeOffCreateRepository>(),
+    // Register SendApproveRequestUsecase từ time_off_create với tag riêng
+    if (!Get.isRegistered<SendApproveRequestUsecase>(tag: 'time_off_create')) {
+      Get.lazyPut<SendApproveRequestUsecase>(
+        () => SendApproveRequestUsecase(
+          repository: Get.find<TimeOffCreateRepository>(),
+        ),
+        tag: 'time_off_create',
+      );
+    }
+
+    Get.lazyPut<UploadFilesUsecase>(
+      () => UploadFilesUsecase(repository: Get.find<TimeOffCreateRepository>()),
+    );
+
+    // ✅ Thêm CreateAflVosUsecase
+    Get.lazyPut<CreateAflVosUsecase>(
+      () =>
+          CreateAflVosUsecase(repository: Get.find<TimeOffCreateRepository>()),
+    );
+
+    // ✅ Thêm TimeOffDetailRepository và UseCase
+    Get.lazyPut<TimeOffDetailRemoteDataSource>(
+      () => TimeOffDetailRemoteDataSourceImpl(
+        shareApiRepository: Get.find<ShareApiRepository>(),
       ),
     );
 
-    Get.lazyPut<UploadFilesUsecase>(
-      () => UploadFilesUsecase(
-        repository: Get.find<TimeOffCreateRepository>(),
+    Get.lazyPut<TimeOffDetailRepository>(
+      () => TimeOffDetailRepositoryImpl(
+        remoteDataSource: Get.find<TimeOffDetailRemoteDataSource>(),
+      ),
+    );
+
+    Get.lazyPut<GetTimeOffDetailUsecase>(
+      () => GetTimeOffDetailUsecase(
+        repository: Get.find<TimeOffDetailRepository>(),
       ),
     );
 
@@ -101,8 +133,12 @@ class TimeOffCreateBinding extends Bindings {
         getWorkCodesUsecase: Get.find<GetWorkCodesUsecase>(),
         getLeaveLocationsUsecase: Get.find<GetLeaveLocationsUsecase>(),
         createTimeOffUsecase: Get.find<CreateTimeOffUsecase>(),
-        sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(),
+        sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(
+          tag: 'time_off_create',
+        ),
         uploadFilesUsecase: Get.find<UploadFilesUsecase>(),
+        createAflVosUsecase: Get.find<CreateAflVosUsecase>(),
+        getTimeOffDetailUsecase: Get.find<GetTimeOffDetailUsecase>(),
       ),
     );
   }

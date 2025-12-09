@@ -21,6 +21,9 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_leave_ty
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
+import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
@@ -45,6 +48,8 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
   final UpdateTimeOffUsecase updateTimeOffUsecase;
   final SendApproveRequestUsecase sendApproveRequestUsecase;
   final UploadFilesUsecase uploadFilesUsecase;
+  final CreateAflVosUsecase createAflVosUsecase;
+  final GetTimeOffDetailUsecase getTimeOffDetailUsecase;
 
   late final TimeOff timeOff = args.timeOff;
   late final int vRegId = timeOff.vRegId;
@@ -102,6 +107,8 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     required this.updateTimeOffUsecase,
     required this.sendApproveRequestUsecase,
     required this.uploadFilesUsecase,
+    required this.createAflVosUsecase,
+    required this.getTimeOffDetailUsecase,
   });
 
   String get formattedFromDate {
@@ -328,6 +335,14 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
         selectedStatus.value = timeOff.statusName!;
       }
     }
+
+    // Load file attachments từ timeOff vào uploadedFiles
+    if (timeOff.attachFiles != null && timeOff.attachFiles!.isNotEmpty) {
+      uploadedFiles.assignAll(timeOff.attachFiles!);
+      print(
+        '✅ [TimeOffUpdate] Đã load ${uploadedFiles.length} file(s) từ timeOff.attachFiles',
+      );
+    }
   }
 
   void _prefillWorkCodes() {
@@ -437,7 +452,7 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
 
   TimeOffCreateRequest _buildRequestData() {
     print('📝 [TimeOffUpdate] _buildRequestData() - Bắt đầu build request');
-    
+
     int userId = 0;
     if (Get.isRegistered<ProfileController>()) {
       final profileController = Get.find<ProfileController>();
@@ -462,7 +477,7 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     print('📎 [TimeOffUpdate] Files info:');
     print('   - Attached files (chưa upload): ${attachedFiles.length}');
     print('   - Uploaded files: ${uploadedFiles.length}');
-    
+
     if (uploadedFiles.isNotEmpty) {
       print('   - Uploaded files details:');
       for (var file in uploadedFiles) {
@@ -485,21 +500,25 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
       lsDetail: lsDetail,
       jsonAttachFiles: uploadedFiles.toList(),
     );
-    
-    print('✅ [TimeOffUpdate] Request built với ${uploadedFiles.length} file(s)');
+
+    print(
+      '✅ [TimeOffUpdate] Request built với ${uploadedFiles.length} file(s)',
+    );
     return request;
   }
 
   Future<void> onSubmit() async {
     print('🚀 [TimeOffUpdate] onSubmit() - Bắt đầu submit');
-    
+
     if (fromDate.value == null) {
       fromDate.value = timeOff.fromDate ?? DateTime.now();
     }
 
     // Kiểm tra và tự động upload files nếu có files chưa upload
     if (attachedFiles.isNotEmpty) {
-      print('⚠️ [TimeOffUpdate] Có ${attachedFiles.length} file(s) chưa upload, tự động upload...');
+      print(
+        '⚠️ [TimeOffUpdate] Có ${attachedFiles.length} file(s) chưa upload, tự động upload...',
+      );
       await uploadFiles();
     }
 
@@ -518,7 +537,10 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
   void _sendApproveRequest(int vRegId) async {
     await handleApiCallVoid(
       apiCall: () => sendApproveRequestUsecase.call(vRegId),
-      onSuccess: () {
+      onSuccess: () async {
+        // ✅ Gọi API mới sau khi thành công
+        await _callCreateAflVos(vRegId);
+
         // Hiển thị dialog thành công trước khi quay lại
         SuccessDialog.show(
           context: Get.context!,
@@ -533,16 +555,67 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     );
   }
 
+  Future<void> _callCreateAflVos(int vRegId) async {
+    try {
+      // Lấy email từ ProfileController
+      String? email;
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        email = profileController.userProfile.value?.email;
+      }
+
+      // Dùng email mặc định nếu null
+      final emailWithDefault = email ?? 'phongdh@viags.vn';
+
+      // Load TimeOff detail để lấy đầy đủ thông tin (processes, attachFiles)
+      final detailResult = await getTimeOffDetailUsecase.call(vRegId: vRegId);
+      if (!detailResult.isSuccess || detailResult.data == null) {
+        print('⚠️ [CreateAflVos] Không load được detail, bỏ qua');
+        return;
+      }
+
+      final timeOff = detailResult.data!;
+      final processes = timeOff.processes ?? [];
+      if (processes.isEmpty) {
+        print('⚠️ [CreateAflVos] Không có processes, bỏ qua');
+        return;
+      }
+
+      // Map data
+      final request = CreateAflVosRequest.fromTimeOff(
+        timeOff: timeOff,
+        processes: processes,
+      );
+
+      // Call API
+      await handleApiCallVoid(
+        apiCall: () =>
+            createAflVosUsecase.call(request: request, email: emailWithDefault),
+        onSuccess: () {
+          print('✅ [CreateAflVos] Gửi thành công');
+        },
+        onError: (error) {
+          print('❌ [CreateAflVos] Lỗi: $error');
+          // Không hiển thị lỗi cho user, chỉ log
+        },
+      );
+    } catch (e) {
+      print('❌ [CreateAflVos] Exception: $e');
+    }
+  }
+
   Future<void> onSaveDraft() async {
     print('💾 [TimeOffUpdate] onSaveDraft() - Bắt đầu lưu tạm');
-    
+
     if (fromDate.value == null) {
       fromDate.value = timeOff.fromDate ?? DateTime.now();
     }
 
     // Kiểm tra và tự động upload files nếu có files chưa upload
     if (attachedFiles.isNotEmpty) {
-      print('⚠️ [TimeOffUpdate] Có ${attachedFiles.length} file(s) chưa upload, tự động upload...');
+      print(
+        '⚠️ [TimeOffUpdate] Có ${attachedFiles.length} file(s) chưa upload, tự động upload...',
+      );
       await uploadFiles();
     }
 
@@ -593,16 +666,20 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
       return;
     }
 
-    print('📤 [TimeOffUpdate] uploadFiles() - Bắt đầu upload ${attachedFiles.length} file(s)');
+    print(
+      '📤 [TimeOffUpdate] uploadFiles() - Bắt đầu upload ${attachedFiles.length} file(s)',
+    );
     isUploading.value = true;
-    
+
     await handleApiCall<List<FileAttachment>>(
       apiCall: () => uploadFilesUsecase.call(attachedFiles.toList()),
       onSuccess: (data) {
         print('✅ [TimeOffUpdate] Upload thành công ${data.length} file(s)');
         uploadedFiles.addAll(data);
         attachedFiles.clear(); // Clear local files after upload
-        print('📊 [TimeOffUpdate] Tổng số files đã upload: ${uploadedFiles.length}');
+        print(
+          '📊 [TimeOffUpdate] Tổng số files đã upload: ${uploadedFiles.length}',
+        );
         Get.snackbar(
           'Thành công',
           'Upload ${data.length} file thành công',
@@ -618,7 +695,7 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
         );
       },
     );
-    
+
     isUploading.value = false;
   }
 }

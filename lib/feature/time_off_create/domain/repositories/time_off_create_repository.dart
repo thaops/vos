@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dart';
@@ -21,4 +22,8 @@ abstract class TimeOffCreateRepository {
   Future<ApiResult<int>> createTimeOff(TimeOffCreateRequest request);
   Future<ApiResult<int>> sendApproveRequest(int vRegId);
   Future<ApiResult<List<FileAttachment>>> uploadFiles(List<File> files);
+  Future<ApiResult<void>> createAflVos({
+    required CreateAflVosRequest request,
+    required String email,
+  });
 }

@@ -54,6 +54,7 @@ class FormDropdownField extends StatelessWidget {
             selectedId: selectedId.value.isEmpty ? null : selectedId.value,
             selectedName: selectedId.value.isEmpty ? null : selectedId.value,
             onProjectSelected: onChanged,
+            searchable: false, // Tắt chức năng search, chỉ xổ xuống bình thường
           ),
         ),
       ],

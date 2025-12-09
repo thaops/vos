@@ -10,8 +10,52 @@ import 'package:vos_flutter/router/app_router.dart';
 class TimeOffCard extends StatelessWidget {
   final TimeOff timeOff;
   final VoidCallback? onCancel;
+  final VoidCallback? onRecall;
+  final VoidCallback? onSendApprove;
+  final VoidCallback? onEdit;
 
-  const TimeOffCard({super.key, required this.timeOff, this.onCancel});
+  const TimeOffCard({
+    super.key,
+    required this.timeOff,
+    this.onCancel,
+    this.onRecall,
+    this.onSendApprove,
+    this.onEdit,
+  });
+
+  // Map approveStatus với text và màu sắc
+  static const Map<String, Map<String, dynamic>> approveStatusMap = {
+    '-': {
+      'text': 'Chưa chuyển phê duyệt',
+      'bgColor': Color(0xFFF5F5F5),
+      'textColor': Color(0xFF666666),
+    },
+    'IN': {
+      'text': 'Trong quá trình phê duyệt',
+      'bgColor': Color(0xFFFFF3E0),
+      'textColor': Color(0xFFF57C00),
+    },
+    'RJ': {
+      'text': 'Từ chối',
+      'bgColor': Color(0xFFFFEBEE),
+      'textColor': Color(0xFFD32F2F),
+    },
+    'FN': {
+      'text': 'Đồng ý hoàn toàn',
+      'bgColor': Color(0xFFE0FFF3),
+      'textColor': Color(0xFF00B894),
+    },
+    'HF': {
+      'text': 'Đồng ý 1 phần',
+      'bgColor': Color(0xFFE3F2FD),
+      'textColor': Color(0xFF1976D2),
+    },
+    'BK': {
+      'text': 'Thu hồi',
+      'bgColor': Color(0xFFFFF3E0),
+      'textColor': Color(0xFFE65100),
+    },
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -45,60 +89,55 @@ class TimeOffCard extends StatelessWidget {
               _buildHeader(),
               SizedBox(height: 20.h),
 
-            // Body: Thông tin chi tiết
-            _buildInfoItem(
-              icon: Icons.calendar_today,
-              label: 'Ngày đăng ký',
-              value: _formatDateTime(timeOff.dateReg),
-            ),
-            SizedBox(height: 12.h),
-            _buildInfoItem(
-              icon: Icons.description,
-              label: 'Phê duyệt',
-              value: timeOff.approvalProgressText,
-            ),
-            SizedBox(height: 8.h),
-            Divider(color: AppColors.grey, thickness: 1),
-            SizedBox(height: 8.h),
-            _buildInfoItem(
-              icon: Icons.note,
-              label: 'Lý do',
-              value: timeOff.description ?? 'Không có',
-            ),
-            SizedBox(height: 12.h),
-            _buildInfoItem(
-              icon: Icons.label_outline,
-              label: 'Loại',
-              value: _formatVacationType(),
-            ),
-            SizedBox(height: 12.h),
-            _buildInfoItem(
-              icon: Icons.location_on,
-              label: 'Nơi nghỉ',
-              value: timeOff.domIntName ?? 'Không có',
-            ),
+              // Body: Thông tin chi tiết
+              _buildInfoItem(
+                icon: Icons.calendar_today,
+                label: 'Ngày đăng ký',
+                value: _formatDateTime(timeOff.dateReg),
+              ),
+              SizedBox(height: 12.h),
+              _buildInfoItem(
+                icon: Icons.description,
+                label: 'Phê duyệt',
+                value: timeOff.approvalProgressText,
+              ),
+              SizedBox(height: 8.h),
+              Divider(color: AppColors.grey, thickness: 1),
+              SizedBox(height: 8.h),
+              _buildInfoItem(
+                icon: Icons.note,
+                label: 'Lý do',
+                value: timeOff.description ?? 'Không có',
+              ),
+              SizedBox(height: 12.h),
+              _buildInfoItem(
+                icon: Icons.label_outline,
+                label: 'Loại',
+                value: _formatVacationType(),
+              ),
+              SizedBox(height: 12.h),
+              _buildInfoItem(
+                icon: Icons.location_on,
+                label: 'Nơi nghỉ',
+                value: timeOff.domIntName ?? 'Không có',
+              ),
 
-            // Footer: Nút Hủy đơn
-            if (timeOff.canCancel) ...[
+              // Footer: Action buttons
               SizedBox(height: 16.h),
-              _buildCancelButton(),
+              _buildActionButtons(),
             ],
-          ],
-        ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    final isActive =
-        timeOff.approveStatus == 'OK' ||
-        timeOff.statusName?.contains('Đã phê duyệt') == true;
-
     return Row(
       children: [
         // Date range
         Expanded(
+          flex: 2,
           child: Text(
             _formatDateRange(),
             style: TextStyle(
@@ -112,22 +151,25 @@ class TimeOffCard extends StatelessWidget {
         ),
         SizedBox(width: 12.w),
         // Status chip
-        _buildStatusChip(isActive),
+        Expanded(flex: 1, child: _buildStatusChip()),
       ],
     );
   }
 
-  Widget _buildStatusChip(bool isActive) {
-    final statusText =
-        timeOff.statusName ??
-        (timeOff.approveStatus == 'OK' ? 'Đã phê duyệt' : 'Đang xử lý');
+  Widget _buildStatusChip() {
+    final approveStatus = timeOff.approveStatus ?? '-';
+    final statusInfo =
+        approveStatusMap[approveStatus] ??
+        approveStatusMap['-']!; // Fallback về '-' nếu không tìm thấy
+
+    final statusText = statusInfo['text'] as String;
+    final bgColor = statusInfo['bgColor'] as Color;
+    final textColor = statusInfo['textColor'] as Color;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: isActive
-            ? const Color(0xFFE0FFF3)
-            : Colors.grey.withOpacity(0.1),
+        color: bgColor,
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Text(
@@ -135,8 +177,10 @@ class TimeOffCard extends StatelessWidget {
         style: TextStyle(
           fontSize: 12.sp,
           fontWeight: FontWeight.w600,
-          color: isActive ? const Color(0xFF00B894) : Colors.grey[700],
+          color: textColor,
+          overflow: TextOverflow.ellipsis,
         ),
+        maxLines: 1,
       ),
     );
   }
@@ -183,28 +227,128 @@ class TimeOffCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCancelButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: onCancel,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.red.shade300, width: 1.5),
-          padding: EdgeInsets.symmetric(vertical: 12.h),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.r),
+  Widget _buildActionButtons() {
+    final approveStatus = timeOff.approveStatus ?? '-';
+    final approveProcessName = timeOff.appoveProcessName ?? '';
+    print('approveStatus: $approveStatus');
+
+    // Kiểm tra đơn "Soạn thảo"
+    final isDraft =
+        approveStatus == '--' ||
+        approveProcessName.toLowerCase().contains(
+          'Chưa chuyển cho cán bộ phê duyệt',
+        );
+
+    // Kiểm tra đơn có thể hủy (Chờ phê duyệt, Đã phê duyệt)
+    final canCancel =
+        approveStatus == 'IN' || approveStatus == 'FN' || approveStatus == 'HF';
+
+    // Đơn "Soạn thảo": Gửi phê duyệt, Chỉnh sửa, Thu hồi (3 nút cùng hàng)
+    if (isDraft) {
+      return Row(
+        children: [
+          // Gửi phê duyệt
+          if (onSendApprove != null) ...[
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onSendApprove,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Gửi phê duyệt',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (onSendApprove != null && onEdit != null) SizedBox(width: 8.w),
+          // Chỉnh sửa
+          if (onEdit != null) ...[
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onEdit,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.orange.shade300, width: 1.5),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+                child: Text(
+                  'Chỉnh sửa',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (onEdit != null && onRecall != null) SizedBox(width: 8.w),
+          // Thu hồi
+          if (onRecall != null) ...[
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onRecall,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.red.shade300, width: 1.5),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+                child: Text(
+                  'Thu hồi',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red.shade700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    // Đơn "Chờ phê duyệt", "Đã phê duyệt": Hủy
+    if (canCancel && onCancel != null) {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: onCancel,
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.red.shade300, width: 1.5),
+            padding: EdgeInsets.symmetric(vertical: 12.h),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+          ),
+          child: Text(
+            'Hủy',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.red.shade600,
+            ),
           ),
         ),
-        child: Text(
-          'Hủy đơn',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.red.shade600,
-          ),
-        ),
-      ),
-    );
+      );
+    }
+
+    return const SizedBox();
   }
 
   String _formatDateRange() {
