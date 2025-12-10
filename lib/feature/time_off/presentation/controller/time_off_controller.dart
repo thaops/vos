@@ -12,6 +12,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/work_code_deta
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/usecases/recall_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
@@ -19,6 +20,7 @@ class TimeOffController extends BaseController with ApiResultMixin {
   final GetTimeOffListUsecase getTimeOffListUsecase;
   final UpdateTimeOffUsecase updateTimeOffUsecase;
   final SendApproveRequestUsecase sendApproveRequestUsecase;
+  final RecallTimeOffUsecase recallTimeOffUsecase;
   final CreateAflVosUsecase createAflVosUsecase;
 
   final RxList<TimeOff> timeOffList = <TimeOff>[].obs;
@@ -55,6 +57,7 @@ class TimeOffController extends BaseController with ApiResultMixin {
     required this.getTimeOffListUsecase,
     required this.updateTimeOffUsecase,
     required this.sendApproveRequestUsecase,
+    required this.recallTimeOffUsecase,
     required this.createAflVosUsecase,
   });
 
@@ -174,32 +177,9 @@ class TimeOffController extends BaseController with ApiResultMixin {
   }
 
   void _recallTimeOff(TimeOff timeOff) async {
-    final request = TimeOffCreateRequest(
-      vRegId: timeOff.vRegId,
-      fromDate: timeOff.fromDate ?? DateTime.now(),
-      domInt: timeOff.domInt ?? '',
-      description: timeOff.description ?? '',
-      vacationReason: timeOff.vacationReason ?? '',
-      contactPerson: timeOff.contactPerson ?? '',
-      contactInfor: timeOff.contactInfor ?? '',
-      status: timeOff.status ?? '',
-      recUserID: timeOff.hrId ?? 0,
-      lsDetail:
-          timeOff.details
-              ?.map(
-                (detail) => WorkCodeDetail(
-                  jobCode: detail.jobCode,
-                  soLuong: detail.soLuong,
-                ),
-              )
-              .toList() ??
-          [],
-      approveStatus: 'BK',
-    );
-
     await handleApiCall<void>(
-      apiCall: () => updateTimeOffUsecase.call(request),
-      onSuccess: (id) {
+      apiCall: () => recallTimeOffUsecase.call(timeOff.vRegId),
+      onSuccess: (_) {
         loadTimeOffList();
       },
     );

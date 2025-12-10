@@ -180,6 +180,7 @@ class TimeOffCard extends StatelessWidget {
           color: textColor,
           overflow: TextOverflow.ellipsis,
         ),
+        textAlign: TextAlign.center,
         maxLines: 1,
       ),
     );
@@ -230,7 +231,7 @@ class TimeOffCard extends StatelessWidget {
   Widget _buildActionButtons() {
     final approveStatus = timeOff.approveStatus ?? '-';
     final approveProcessName = timeOff.appoveProcessName ?? '';
-    print('approveStatus: $approveStatus');
+    final statusCode = timeOff.status ?? '';
 
     // Kiểm tra đơn "Soạn thảo"
     final isDraft =
@@ -239,11 +240,13 @@ class TimeOffCard extends StatelessWidget {
           'Chưa chuyển cho cán bộ phê duyệt',
         );
 
-    // Kiểm tra đơn có thể hủy (Chờ phê duyệt, Đã phê duyệt)
-    final canCancel =
+    // Kiểm tra đơn có thể thu hồi (Chờ phê duyệt, Đã phê duyệt)
+    final canRecall =
         approveStatus == 'IN' || approveStatus == 'FN' || approveStatus == 'HF';
+    final statusXX = statusCode == 'XX' || statusCode == 'RJ';
+    final StatusBK = statusCode == 'BK';
 
-    // Đơn "Soạn thảo": Gửi phê duyệt, Chỉnh sửa, Thu hồi (3 nút cùng hàng)
+    // Đơn "Soạn thảo": Gửi phê duyệt, Chỉnh sửa, Hủy (3 nút cùng hàng)
     if (isDraft) {
       return Row(
         children: [
@@ -295,12 +298,12 @@ class TimeOffCard extends StatelessWidget {
               ),
             ),
           ],
-          if (onEdit != null && onRecall != null) SizedBox(width: 8.w),
-          // Thu hồi
-          if (onRecall != null) ...[
+          if (onEdit != null && onCancel != null) SizedBox(width: 8.w),
+          // Hủy
+          if (onCancel != null && !statusXX) ...[
             Expanded(
               child: OutlinedButton(
-                onPressed: onRecall,
+                onPressed: onCancel,
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: Colors.red.shade300, width: 1.5),
                   padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -309,7 +312,7 @@ class TimeOffCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Thu hồi',
+                  'Hủy',
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
@@ -323,12 +326,12 @@ class TimeOffCard extends StatelessWidget {
       );
     }
 
-    // Đơn "Chờ phê duyệt", "Đã phê duyệt": Hủy
-    if (canCancel && onCancel != null) {
+    // Đơn "Chờ phê duyệt", "Đã phê duyệt": Thu hồi
+    if (canRecall && onRecall != null && !StatusBK) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton(
-          onPressed: onCancel,
+          onPressed: onRecall,
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: Colors.red.shade300, width: 1.5),
             padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -337,7 +340,8 @@ class TimeOffCard extends StatelessWidget {
             ),
           ),
           child: Text(
-            'Hủy',
+            'Thu hồi',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart' as dioLib;
+import 'package:get_storage/get_storage.dart';
 import 'package:vos_flutter/common/services/config.dart';
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
 
@@ -99,7 +100,7 @@ class ShareApiRepository {
       final requestData = {
         'FunctionCode': functionCode,
         'ls_Data': lsDataString,
-        'Email': 'phongdh@viags.vn',
+        'Email': _getEmailFromCache(),
       };
 
       print('📤 [ShareAPI] Request:');
@@ -107,6 +108,7 @@ class ShareApiRepository {
       print('   FunctionCode: $functionCode');
       print('   ls_Data: $lsDataString');
       print('   Headers: ${headers.keys.join(", ")}');
+      print('   Email: ${_getEmailFromCache()}');
 
       // 3. Call API
       final response = await dio.request(
@@ -272,11 +274,38 @@ class ShareApiRepository {
         }
       }
 
-      // Trả về raw data nếu không có parser
-      print('   ✅ Returning raw data');
       return ApiResult.success(parsedData as T, message);
     } catch (e) {
       return ApiResult.error('Response parsing failed: ${e.toString()}');
     }
+  }
+
+  String _getEmailFromCache() {
+    try {
+      final userProfileData = GetStorage().read('user_profile_data');
+      if (userProfileData != null && userProfileData is Map) {
+        final email = userProfileData['Email'] as String?;
+        if (_isValidEmail(email)) {
+          return email!;
+        }
+      }
+
+      final viagsEmail = GetStorage().read<String>('viags_email');
+      if (_isValidEmail(viagsEmail)) {
+        return viagsEmail!;
+      }
+
+      return 'phongdh@viags.vn';
+    } catch (e) {
+      return 'phongdh@viags.vn';
+    }
+  }
+
+  bool _isValidEmail(String? email) {
+    if (email == null || email.isEmpty) {
+      return false;
+    }
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return emailRegex.hasMatch(email.trim());
   }
 }

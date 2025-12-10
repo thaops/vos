@@ -69,6 +69,11 @@ class TimeOffUpdateRepositoryImpl implements TimeOffUpdateRepository {
   }
 
   @override
+  Future<ApiResult<void>> recallTimeOff(int vRegId) {
+    return remoteDataSource.recallTimeOff(vRegId);
+  }
+
+  @override
   Future<ApiResult<List<FileAttachment>>> uploadFiles(List<File> files) async {
     return await fileUploadDataSource.uploadFiles(files);
   }

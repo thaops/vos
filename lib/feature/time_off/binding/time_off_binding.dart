@@ -19,6 +19,7 @@ import 'package:vos_flutter/feature/time_off_detail/data/repository_impl/time_of
 import 'package:vos_flutter/feature/time_off_detail/domain/repositories/time_off_detail_repository.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off_update/domain/usecases/recall_time_off_usecase.dart';
 
 class TimeOffBinding extends Bindings {
   @override
@@ -112,12 +113,19 @@ class TimeOffBinding extends Bindings {
       ),
     );
 
+    Get.lazyPut<RecallTimeOffUsecase>(
+      () => RecallTimeOffUsecase(
+        repository: Get.find<TimeOffUpdateRepository>(),
+      ),
+    );
+
     // Controller
     Get.lazyPut<TimeOffController>(
       () => TimeOffController(
         getTimeOffListUsecase: Get.find<GetTimeOffListUsecase>(),
         updateTimeOffUsecase: Get.find<UpdateTimeOffUsecase>(),
         sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(),
+        recallTimeOffUsecase: Get.find<RecallTimeOffUsecase>(),
         createAflVosUsecase: Get.find<CreateAflVosUsecase>(),
       ),
     );

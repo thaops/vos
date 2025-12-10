@@ -111,10 +111,10 @@ class TimeOffScreen extends GetView<TimeOffController> {
                     final item = data[index];
                     return TimeOffCard(
                       timeOff: item,
-                      onCancel: controller.canCancel(item)
+                      onCancel: controller.isDraft(item)
                           ? () => controller.cancelTimeOff(item)
                           : null,
-                      onRecall: controller.isDraft(item)
+                      onRecall: controller.canCancel(item)
                           ? () => controller.recallTimeOff(item)
                           : null,
                       onSendApprove: controller.isDraft(item)

@@ -20,6 +20,7 @@ abstract class TimeOffUpdateRepository {
   Future<ApiResult<List<LeaveLocation>>> getLeaveLocations();
   Future<ApiResult<int>> updateTimeOff(TimeOffCreateRequest request);
   Future<ApiResult<int>> sendApproveRequest(int vRegId);
+  Future<ApiResult<void>> recallTimeOff(int vRegId);
   Future<ApiResult<List<FileAttachment>>> uploadFiles(List<File> files);
 }
 

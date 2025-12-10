@@ -178,7 +178,7 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
               fontSize: 14,
               width: double.infinity,
               isLoading:
-                  controller.isLoading, // ✅ Truyền isLoading từ controller
+                  controller.isLoading, 
               onPressed: controller.isLoading ? null : controller.onSubmit,
             ),
           ),
@@ -193,7 +193,7 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
               width: double.infinity,
               fontSize: 14,
               isLoading:
-                  controller.isLoading, // ✅ Truyền isLoading từ controller
+                  controller.isLoading, 
               onPressed: controller.isLoading ? null : controller.onSaveDraft,
             ),
           ),

@@ -30,20 +30,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       appBar: AppBarWidget(
         title: 'Chi tiết',
         backgroundColor: AppColors.primary,
-        iconRightfirst: Icons.edit,
-        functionfirst: () {
-          final timeOff = controller.timeOffDetail.value;
-          if (timeOff != null) {
-            Get.toNamed(
-              AppRouter.timeOffUpdate,
-              arguments: TimeOffUpdateArgs(timeOff: timeOff),
-            )?.then((result) {
-              if (result == true) {
-                controller.loadTimeOffDetail();
-              }
-            });
-          }
-        },
       ),
       body: Obx(() {
         if (controller.status == ControllerStatus.loading) {

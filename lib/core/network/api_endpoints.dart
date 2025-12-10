@@ -11,4 +11,10 @@ class ApiEndpoints {
       '8492f144615571ac043b943e58471ba3bc37d7a59d065b1e6ff2d0106c1a1dc2';
   static const String fileUploadCookie =
       'ARRAffinity=a6e48b9e9d2653435be7b61998d8624b44115214104213d6c8b8c526cc56dc70; ARRAffinitySameSite=a6e48b9e9d2653435be7b61998d8624b44115214104213d6c8b8c526cc56dc70';
+
+  // CreateAflVos API (dùng chung API key và Cookie với File Upload)
+  static const String createAflVosBaseUrl =
+      'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos/createafl_vos';
+  static const String vosApiKey = fileUploadApiKey;
+  static const String vosCookie = fileUploadCookie;
 }

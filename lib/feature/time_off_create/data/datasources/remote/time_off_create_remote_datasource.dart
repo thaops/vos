@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
+import 'package:vos_flutter/core/network/api_endpoints.dart';
 import 'package:vos_flutter/core/network/base_share_datasource.dart';
 import 'package:vos_flutter/core/network/dio_api.dart';
 import 'package:vos_flutter/core/network/share_Json_helper.dart';
@@ -29,6 +31,7 @@ abstract class TimeOffCreateRemoteDataSource {
   Future<ApiResult<List<LeaveLocation>>> getLeaveLocations();
   Future<ApiResult<int>> createTimeOff(TimeOffCreateRequestDto request);
   Future<ApiResult<int>> sendApproveRequest(int vRegId);
+  Future<ApiResult<void>> recallTimeOff(int vRegId);
   Future<ApiResult<void>> createAflVos({
     required CreateAflVosRequest request,
     required String email,
@@ -221,7 +224,6 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       parser: (json) {
         final map = ShareJsonHelper.decode(json);
         final vRegId = ShareJsonHelper.getInt(map, 'VReg_ID');
-        print('🔍 [createTimeOff] Parser data: $vRegId');
         return vRegId;
       },
     );
@@ -241,6 +243,16 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
   }
 
   @override
+  Future<ApiResult<void>> recallTimeOff(int vRegId) async {
+    return shareApiRepository.callShareUpdate<void>(
+      functionCode: 'Vacation_Approve_Status_Update',
+      token: getToken(),
+      data: {'VReg_ID': vRegId, 'ApproveStatus': 'BK'},
+      parser: (json) => null, // void return
+    );
+  }
+
+  @override
   Future<ApiResult<void>> createAflVos({
     required CreateAflVosRequest request,
     required String email,
@@ -248,20 +260,24 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
     try {
       final dioApi = Get.find<DioApi>();
 
-      // URL với email encoded
-      final emailWithDefault = email ?? 'phongdh@viags.vn';
-      final encodedEmail = Uri.encodeComponent(emailWithDefault);
-      final url =
-          'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos/createafl_vos/$encodedEmail';
+      // Lấy email từ cache trước - đảm bảo có giá trị
+      final emailWithDefault = _getEmailFromCache();
 
-      // Headers theo yêu cầu
+      // Validate email trước khi dùng
+      if (emailWithDefault.isEmpty) {
+        return ApiResult.error('Email không được tìm thấy trong cache');
+      }
+
+      // Sau đó mới encode và gắn vào URL
+      final encodedEmail = Uri.encodeComponent(emailWithDefault);
+      final url = '${ApiEndpoints.createAflVosBaseUrl}/$encodedEmail';
+
+      // Headers theo yêu cầu - dùng constants từ ApiEndpoints
       final headers = {
         'accept': '*/*',
         'Content-Type': 'application/json',
-        'X-API-KEY':
-            '8492f144615571ac043b943e58471ba3bc37d7a59d065b1e6ff2d0106c1a1dc2',
-        'Cookie':
-            'ARRAffinity=a6e48b9e9d2653435be7b61998d8624b44115214104213d6c8b8c526cc56dc70; ARRAffinitySameSite=a6e48b9e9d2653435be7b61998d8624b44115214104213d6c8b8c526cc56dc70',
+        'X-API-KEY': ApiEndpoints.vosApiKey,
+        'Cookie': ApiEndpoints.vosCookie,
       };
       print("CreateNPP request: ${request.toJson()}");
       print("CreateNPP url: $url");
@@ -282,5 +298,34 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
     } catch (e) {
       return ApiResult.error(e.toString());
     }
+  }
+
+  String _getEmailFromCache() {
+    try {
+      final userProfileData = GetStorage().read('user_profile_data');
+      if (userProfileData != null && userProfileData is Map) {
+        final email = userProfileData['Email'] as String?;
+        if (_isValidEmail(email)) {
+          return email!;
+        }
+      }
+
+      final viagsEmail = GetStorage().read<String>('viags_email');
+      if (_isValidEmail(viagsEmail)) {
+        return viagsEmail!;
+      }
+
+      return 'phongdh@viags.vn';
+    } catch (e) {
+      return 'phongdh@viags.vn';
+    }
+  }
+
+  bool _isValidEmail(String? email) {
+    if (email == null || email.isEmpty) {
+      return false;
+    }
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return emailRegex.hasMatch(email.trim());
   }
 }
