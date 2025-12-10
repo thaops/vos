@@ -1,36 +1,29 @@
-import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:io';
-import 'package:vos_flutter/firebase_options.dart';
-import 'package:vos_flutter/feature/login/presentation/controller/login_controller.dart';
-import 'package:vos_flutter/feature/login/data/datasources/remote/login_remote_datasource.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get/get.dart';
 import 'package:vos_flutter/feature/login/data/datasources/local/login_local_datasource.dart';
+import 'package:vos_flutter/feature/login/data/datasources/remote/google_sign_in_adapter.dart';
+import 'package:vos_flutter/feature/login/data/datasources/remote/login_remote_datasource.dart';
 import 'package:vos_flutter/feature/login/data/repository_impl/login_repository_impl.dart';
 import 'package:vos_flutter/feature/login/domain/repositories/login_repository.dart';
-import 'package:vos_flutter/feature/login/domain/usecases/sign_in_with_google_usecase.dart';
 import 'package:vos_flutter/feature/login/domain/usecases/check_auth_state_usecase.dart';
+import 'package:vos_flutter/feature/login/domain/usecases/sign_in_with_google_usecase.dart';
 import 'package:vos_flutter/feature/login/domain/usecases/sign_out_usecase.dart';
+import 'package:vos_flutter/feature/login/presentation/controller/login_controller.dart';
 
 class LoginBinding extends Bindings {
   @override
   void dependencies() {
-    // 1. Tạo GoogleSignIn instance với cấu hình cho từng platform
-    final googleSignIn = Platform.isIOS
-        ? GoogleSignIn(
-            scopes: ['email', 'profile'],
-            serverClientId: DefaultFirebaseOptions.ios.iosClientId,
-          )
-        : Platform.isMacOS
-            ? GoogleSignIn(
-                scopes: ['email', 'profile'],
-                clientId: DefaultFirebaseOptions.macos.iosClientId, // Client ID cho macOS
-                serverClientId: DefaultFirebaseOptions.macos.iosClientId, // Server Client ID
-              )
-            : GoogleSignIn(scopes: ['email', 'profile']);
+    final macDesktopClientId = dotenv.env['MACOS_GOOGLE_DESKTOP_CLIENT_ID'];
+
+    final googleAdapter = createGoogleAdapter(
+      macDesktopClientId: Platform.isMacOS ? macDesktopClientId : null,
+    );
 
     // 2. Data Sources (Remote & Local)
     Get.lazyPut<LoginRemoteDataSource>(
-      () => LoginRemoteDataSourceImpl(googleSignIn: googleSignIn),
+      () => LoginRemoteDataSourceImpl(googleAdapter: googleAdapter),
     );
 
     Get.lazyPut<LoginLocalDataSource>(() => LoginLocalDataSourceImpl());

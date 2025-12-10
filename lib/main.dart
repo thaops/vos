@@ -17,7 +17,6 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:intl/date_symbol_data_local.dart';
 // import 'package:shorebird_code_push/shorebird_code_push.dart';
 import 'package:vos_flutter/common/Services/device_udid.dart';
-import 'package:vos_flutter/common/services/keychain_test_service.dart';
 import 'package:vos_flutter/common/shared/auth/sign_out_clear.dart';
 import 'package:vos_flutter/common/utils/check_awaiting_approval.dart';
 import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
@@ -146,9 +145,6 @@ Future<void> _initializeNonCriticalServices() async {
       generateUUID(),
       OneSignalService().init(),
     ]);
-
-    // Test và print Keychain info (chỉ print, không ảnh hưởng logic)
-    KeychainTestService().testAndPrintKeychainInfo();
 
     _lazyLoadCheckAwaitingApproval();
     _lazyLoadDateFormatting();
