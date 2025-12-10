@@ -303,11 +303,35 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
+    final isDesktop =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
+
     return GetMaterialApp(
+      builder: (context, child) {
+        if (!isDesktop) return child ?? const SizedBox.shrink();
+
+        final mediaQuery = MediaQuery.of(context);
+        final scaledChild = MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaleFactor: mediaQuery.textScaleFactor * 1.05,
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: scaledChild,
+            ),
+          ),
+        );
+      },
       home: SplashScreen(initialDeepLink: widget.initialDeepLink),
       getPages: AppRouter.routes,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+      theme: isDesktop ? AppTheme.desktopLightTheme : AppTheme.lightTheme,
       navigatorKey: NavigationUtils.navigatorKey,
       onUnknownRoute: (settings) {
         WidgetsBinding.instance.addPostFrameCallback((_) {

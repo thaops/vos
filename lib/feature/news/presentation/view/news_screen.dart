@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
@@ -67,6 +69,8 @@ class _NewsScreenState extends State<NewsScreen> {
     }
 
     final controller = Get.find<NewsController>();
+    final isDesktop =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
@@ -158,25 +162,58 @@ class _NewsScreenState extends State<NewsScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final item = data[index];
-                          return NewsCard(
-                            newsItem: item.toNewsItemModel(),
-                            onTap: () {
-                              Get.toNamed(
-                                AppRouter.newsDetail,
-                                arguments: NewsDetailArgs(
-                                  id: item.id,
-                                  title: item.title,
-                                  categoryCode: item.categoryCode,
-                                ),
-                              );
-                            },
-                          );
-                        }, childCount: data.length),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 8.h,
+                        horizontal: isDesktop ? 12.w : 0,
                       ),
+                      sliver: isDesktop
+                          ? SliverGrid(
+                              gridDelegate:
+                                  SliverGridDelegateWithMaxCrossAxisExtent(
+                                // Responsive: thêm cột khi đủ rộng, tối đa ~420px mỗi item
+                                maxCrossAxisExtent: 420,
+                                mainAxisSpacing: 12.h,
+                                crossAxisSpacing: 12.w,
+                                childAspectRatio: 1.05,
+                              ),
+                              delegate:
+                                  SliverChildBuilderDelegate((context, index) {
+                                final item = data[index];
+                                return NewsCard(
+                                  newsItem: item.toNewsItemModel(),
+                                  isCompact: true,
+                                  onTap: () {
+                                    Get.toNamed(
+                                      AppRouter.newsDetail,
+                                      arguments: NewsDetailArgs(
+                                        id: item.id,
+                                        title: item.title,
+                                        categoryCode: item.categoryCode,
+                                      ),
+                                    );
+                                  },
+                                );
+                              }, childCount: data.length),
+                            )
+                          : SliverList(
+                              delegate:
+                                  SliverChildBuilderDelegate((context, index) {
+                                final item = data[index];
+                                return NewsCard(
+                                  newsItem: item.toNewsItemModel(),
+                                  onTap: () {
+                                    Get.toNamed(
+                                      AppRouter.newsDetail,
+                                      arguments: NewsDetailArgs(
+                                        id: item.id,
+                                        title: item.title,
+                                        categoryCode: item.categoryCode,
+                                      ),
+                                    );
+                                  },
+                                );
+                              }, childCount: data.length),
+                            ),
                     ),
                   ],
                 ),

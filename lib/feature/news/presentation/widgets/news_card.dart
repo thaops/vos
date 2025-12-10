@@ -5,13 +5,22 @@ import 'package:vos_flutter/feature/news/data/models/news_item_model.dart';
 class NewsCard extends StatelessWidget {
   final NewsItemModel newsItem;
   final VoidCallback? onTap;
+  final bool isCompact;
 
-  const NewsCard({super.key, required this.newsItem, this.onTap});
+  const NewsCard({
+    super.key,
+    required this.newsItem,
+    this.onTap,
+    this.isCompact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final marginH = isCompact ? 8.0 : 16.0;
+    final marginV = isCompact ? 6.0 : 8.0;
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: marginH, vertical: marginV),
       elevation: 2,
       color: Colors.white,
       shadowColor: Colors.black.withOpacity(0.1),
@@ -29,10 +38,11 @@ class NewsCard extends StatelessWidget {
 
   Widget _buildBannerImage() {
     final hasImage = newsItem.bannerImageUrl.isNotEmpty;
+    final imageHeight = isCompact ? 140.0 : 180.0;
 
     return Container(
       width: double.infinity,
-      height: 180,
+      height: imageHeight,
 
       decoration: BoxDecoration(
         color: Colors.grey.shade700,
@@ -57,7 +67,7 @@ class NewsCard extends StatelessWidget {
             ? CachedNetworkImage(
                 imageUrl: newsItem.bannerImageUrl,
                 width: double.infinity,
-                height: 180,
+                height: imageHeight,
                 fit: BoxFit.cover,
 
                 // ⚡ TỐI ƯU QUAN TRỌNG
@@ -125,12 +135,15 @@ class NewsCard extends StatelessWidget {
   }
 
   Widget _buildTitle() {
+    final padding = isCompact ? 12.0 : 16.0;
+    final titleSize = isCompact ? 15.0 : 16.0;
+
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(padding),
       child: Text(
         newsItem.title.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 16,
+        style: TextStyle(
+          fontSize: titleSize,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
           height: 1.4,
@@ -142,8 +155,11 @@ class NewsCard extends StatelessWidget {
   }
 
   Widget _buildMetadataBar() {
+    final paddingH = isCompact ? 12.0 : 16.0;
+    final paddingB = isCompact ? 12.0 : 16.0;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: EdgeInsets.fromLTRB(paddingH, 0, paddingH, paddingB),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [

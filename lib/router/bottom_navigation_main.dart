@@ -1,9 +1,12 @@
+import 'dart:io' show Platform;
+
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:vos_flutter/feature/profile/presentation/view/profile_screen.dart';
 import 'package:vos_flutter/feature/home/view/home_tab.dart';
 import 'package:vos_flutter/feature/news/presentation/view/news_screen.dart';
@@ -121,7 +124,15 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = !kIsWeb && Platform.isMacOS;
+
     return Scaffold(
+      appBar: isDesktop
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(78),
+              child: _buildNavigationBar(isTop: true),
+            )
+          : null,
       body: Builder(
         builder: (context) {
           // Reactive với isEmployee để đảm bảo đồng bộ
@@ -145,17 +156,8 @@ class _MainScreenState extends State<MainScreen> {
             // Non-employee: [NewsScreen(0), ProfileScreen(1)]
             int actualIndex;
             if (isEmployee) {
-              // Nếu là employee, index trực tiếp
-              // _selectedIndex = 0 → HomeTab (index 0)
-              // _selectedIndex = 1 → NewsScreen (index 1)
-              // _selectedIndex = 2 → ProfileScreen (index 2)
               actualIndex = _selectedIndex.clamp(0, screens.length - 1);
             } else {
-              // Nếu không phải employee:
-              // NavigationBar chỉ có 2 tab: News(0) và Profile(1)
-              // _selectedIndex = 0 → NewsScreen (index 0 trong screens)
-              // _selectedIndex = 1 → ProfileScreen (index 1 trong screens)
-              // Nếu _selectedIndex = 2 (từ employee mode) → chuyển về 1 (Profile)
               actualIndex = _selectedIndex.clamp(0, screens.length - 1);
             }
 
@@ -166,25 +168,73 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
       ),
-      bottomNavigationBar: Builder(
-        builder: (context) {
-          // Kiểm tra từ ProfileController nếu có (reactive)
-          return Obx(() {
-            bool isEmployee = false;
-            try {
-              if (Get.isRegistered<ProfileController>()) {
-                final profileController = Get.find<ProfileController>();
-                isEmployee = profileController.isEmployee.value;
-              } else {
-                // Fallback: check profile từ storage
-                final profile = _storage.read('user_profile_data');
-                isEmployee = profile != null;
-              }
-            } catch (e) {
-              isEmployee = false;
-            }
+      bottomNavigationBar:
+          isDesktop ? null : _buildNavigationBar(isTop: false),
+    );
+  }
 
-            return Container(
+  Widget _buildNavigationBar({required bool isTop}) {
+    return Builder(
+      builder: (context) {
+        // Kiểm tra từ ProfileController nếu có (reactive)
+        return Obx(() {
+          bool isEmployee = false;
+          try {
+            if (Get.isRegistered<ProfileController>()) {
+              final profileController = Get.find<ProfileController>();
+              isEmployee = profileController.isEmployee.value;
+            } else {
+              // Fallback: check profile từ storage
+              final profile = _storage.read('user_profile_data');
+              isEmployee = profile != null;
+            }
+          } catch (e) {
+            isEmployee = false;
+          }
+
+          // Nếu là macOS (isTop = true) → dùng style tab bar desktop
+          if (isTop) {
+            return SafeArea(
+              top: true,
+              bottom: false,
+              child: Container(
+                color: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    if (isEmployee)
+                      _DesktopTabItem(
+                        label: 'Trang chủ',
+                        icon: Icons.home_outlined,
+                        selectedIcon: Icons.home_rounded,
+                        selected: _selectedIndex == 0,
+                        onTap: () => _onTabTapped(0),
+                      ),
+                    _DesktopTabItem(
+                      label: 'Tin tức',
+                      icon: Icons.article_outlined,
+                      selectedIcon: Icons.article,
+                      selected: _selectedIndex == (isEmployee ? 1 : 0),
+                      onTap: () => _onTabTapped(isEmployee ? 1 : 0),
+                    ),
+                    _DesktopTabItem(
+                      label: 'Cá nhân',
+                      icon: Icons.person_outline,
+                      selectedIcon: Icons.person_rounded,
+                      selected: _selectedIndex == (isEmployee ? 2 : 1),
+                      onTap: () => _onTabTapped(isEmployee ? 2 : 1),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return SafeArea(
+            top: isTop,
+            bottom: !isTop,
+            child: Container(
               color: Colors.white,
               child: Theme(
                 data: Theme.of(context).copyWith(
@@ -208,9 +258,11 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
                 child: NavigationBar(
-                  selectedIndex: isEmployee 
-                      ? _selectedIndex.clamp(0, 2) // Employee: 0 (Home), 1 (News), 2 (Profile)
-                      : _selectedIndex.clamp(0, 1), // Non-employee: 0 (News), 1 (Profile)
+                  selectedIndex: isEmployee
+                      ? _selectedIndex.clamp(
+                          0, 2) // Employee: 0 (Home), 1 (News), 2 (Profile)
+                      : _selectedIndex.clamp(
+                          0, 1), // Non-employee: 0 (News), 1 (Profile)
                   onDestinationSelected: _onTabTapped,
                   backgroundColor: Colors.white,
                   surfaceTintColor: Colors.white,
@@ -252,9 +304,68 @@ class _MainScreenState extends State<MainScreen> {
                   ],
                 ),
               ),
-            );
-          });
-        },
+            ),
+          );
+        });
+      },
+    );
+  }
+}
+
+class _DesktopTabItem extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _DesktopTabItem({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.primary : Colors.grey.shade700;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary.withOpacity(0.12) : null,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? AppColors.primary : Colors.grey.shade300,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                selected ? selectedIcon : icon,
+                size: 18,
+                color: color,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

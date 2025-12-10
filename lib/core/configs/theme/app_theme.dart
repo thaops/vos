@@ -67,6 +67,9 @@ class AppTheme {
     ),
   );
 
+  // Material Theme optimized for desktop (macOS)
+  static final desktopLightTheme = _buildDesktopLightTheme();
+
   // Material Theme for dark mode
   static final darkTheme = ThemeData(
     primaryColor: AppColors.primary,
@@ -139,4 +142,77 @@ class AppTheme {
     barBackgroundColor: CupertinoColors.white,
     primaryContrastingColor: CupertinoColors.activeBlue,
   );
+
+  static ThemeData _buildDesktopLightTheme() {
+    const scale = 1.2; // Tăng nhẹ kích thước cho desktop
+    final base = lightTheme;
+
+    TextTheme _scaleTextTheme(TextTheme theme) {
+      TextStyle? _scaleStyle(TextStyle? style) {
+        if (style == null || style.fontSize == null) return style;
+        return style.copyWith(fontSize: style.fontSize! * scale);
+      }
+
+      return theme.copyWith(
+        displayLarge: _scaleStyle(theme.displayLarge),
+        displayMedium: _scaleStyle(theme.displayMedium),
+        displaySmall: _scaleStyle(theme.displaySmall),
+        headlineLarge: _scaleStyle(theme.headlineLarge),
+        headlineMedium: _scaleStyle(theme.headlineMedium),
+        headlineSmall: _scaleStyle(theme.headlineSmall),
+        titleLarge: _scaleStyle(theme.titleLarge),
+        titleMedium: _scaleStyle(theme.titleMedium),
+        titleSmall: _scaleStyle(theme.titleSmall),
+        bodyLarge: _scaleStyle(theme.bodyLarge),
+        bodyMedium: _scaleStyle(theme.bodyMedium),
+        bodySmall: _scaleStyle(theme.bodySmall),
+        labelLarge: _scaleStyle(theme.labelLarge),
+        labelMedium: _scaleStyle(theme.labelMedium),
+        labelSmall: _scaleStyle(theme.labelSmall),
+      );
+    }
+
+    final scaledTextTheme = _scaleTextTheme(base.textTheme);
+    final scaledPrimaryTextTheme = _scaleTextTheme(base.primaryTextTheme);
+
+    final scaledInputDecoration = base.inputDecorationTheme.copyWith(
+      contentPadding: EdgeInsets.all(16 * scale),
+      hintStyle: base.inputDecorationTheme.hintStyle?.copyWith(
+        fontSize:
+            (base.inputDecorationTheme.hintStyle?.fontSize ?? 17) * scale,
+      ),
+    );
+
+    final resolvedButtonTextStyle =
+        base.elevatedButtonTheme.style?.textStyle?.resolve({}) ??
+            const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'SFPro',
+            );
+
+    final scaledElevatedButtonTheme = ElevatedButtonThemeData(
+      style: base.elevatedButtonTheme.style?.copyWith(
+        padding: MaterialStateProperty.all(
+          EdgeInsets.symmetric(
+            vertical: 14 * scale,
+            horizontal: 16 * scale,
+          ),
+        ),
+        textStyle: MaterialStateProperty.all(
+          resolvedButtonTextStyle.copyWith(
+            fontSize: (resolvedButtonTextStyle.fontSize ?? 17) * scale,
+          ),
+        ),
+      ),
+    );
+
+    return base.copyWith(
+      textTheme: scaledTextTheme,
+      primaryTextTheme: scaledPrimaryTextTheme,
+      inputDecorationTheme: scaledInputDecoration,
+      elevatedButtonTheme: scaledElevatedButtonTheme,
+      visualDensity: VisualDensity.standard,
+    );
+  }
 }
