@@ -6,6 +6,7 @@ import 'package:vos_flutter/feature/profile/presentation/controller/profile_cont
 import 'package:vos_flutter/feature/profile/presentation/widgets/google_user_content.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/not_logged_in_state.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/profile_content.dart';
+import 'package:vos_flutter/feature/profile/presentation/widgets/logout_dialog.dart';
 
 /// Wrapper widget để làm cho Obx trở thành PreferredSizeWidget
 class _ReactiveAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -15,16 +16,22 @@ class _ReactiveAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  AppBarWidget(
+    return Obx(() {
+      // Ẩn icon logout nếu đang awaiting approval
+      final shouldShowLogout =
+          !controller.isAwaitingApproval.value &&
+          controller.isViagsLinked.value;
+
+      return AppBarWidget(
         title: 'Thông tin',
         isBack: false,
-        // iconRightfirst: controller.isViagsLinked.value ? Icons.logout : null,
-        // colorfirst: Colors.white,
-        // functionfirst: controller.isViagsLinked.value
-        //     ? () => LogoutDialog.show(controller)
-        //     : null,
+        iconRightfirst: shouldShowLogout ? Icons.logout : null,
+        colorfirst: Colors.white,
+        functionfirst: shouldShowLogout
+            ? () => LogoutDialog.show(controller)
+            : null,
       );
-    
+    });
   }
 
   @override

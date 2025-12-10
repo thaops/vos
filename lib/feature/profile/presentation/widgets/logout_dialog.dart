@@ -54,20 +54,23 @@ class LogoutDialog {
 
     // Show loading
     Get.dialog(
-      Center(
-        child: Container(
-          padding: EdgeInsets.all(20.w),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16.h),
-              Text('Đang đăng xuất...', style: TextStyle(fontSize: 16.sp)),
-            ],
+      Material(
+        color: Colors.transparent,
+        child: Center(
+          child: Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16.h),
+                Text('Đang đăng xuất...', style: TextStyle(fontSize: 16.sp)),
+              ],
+            ),
           ),
         ),
       ),
@@ -95,4 +98,3 @@ class LogoutDialog {
     }
   }
 }
-
