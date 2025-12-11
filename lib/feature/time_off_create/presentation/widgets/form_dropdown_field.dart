@@ -32,7 +32,7 @@ class FormDropdownField extends StatelessWidget {
             TextWidget(
               text: label,
               fontSize: 14,
-              color: TimeOffCreateColors.textPrimary,
+              color: TimeOffCreateColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
             if (required) ...[
@@ -46,7 +46,6 @@ class FormDropdownField extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 8),
         Obx(
           () => CustomSelect(
             name: hint,

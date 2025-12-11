@@ -27,11 +27,13 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
         behavior: HitTestBehavior.translucent,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final maxContentWidth =
-                constraints.maxWidth > 1100 ? 1100.0 : constraints.maxWidth;
+            final maxContentWidth = constraints.maxWidth > 1100
+                ? 1100.0
+                : constraints.maxWidth;
             final isWide = maxContentWidth >= 820;
-            final fieldWidth =
-                isWide ? (maxContentWidth - 20) / 2 : maxContentWidth;
+            final fieldWidth = isWide
+                ? (maxContentWidth - 20) / 2
+                : maxContentWidth;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -86,8 +88,10 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                           ),
                           SizedBox(
                             width: fieldWidth,
-                            child:
-                                _buildTextField('Địa chỉ', controller.addressController),
+                            child: _buildTextField(
+                              'Địa chỉ',
+                              controller.addressController,
+                            ),
                           ),
                           SizedBox(
                             width: fieldWidth,
@@ -104,7 +108,10 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                       const SizedBox(height: 20),
                       const FileAttachmentWidget(),
                       const SizedBox(height: 24),
-                      SizedBox(width: maxContentWidth, child: _buildActionButtons()),
+                      SizedBox(
+                        width: maxContentWidth,
+                        child: _buildActionButtons(),
+                      ),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -116,29 +123,6 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
       ),
     );
   }
-
-  // Widget _buildDatePickerField(BuildContext context) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       TextWidget(
-  //         text: 'Từ ngày',
-  //         fontSize: 14,
-  //         color: TimeOffCreateColors.textSecondary,
-  //         fontWeight: FontWeight.w500,
-  //       ),
-  //       const SizedBox(height: 8),
-  //       Obx(
-  //         () => DatePickerField(
-  //           value: controller.formattedFromDate.isEmpty
-  //               ? null
-  //               : controller.formattedFromDate,
-  //           onTap: () => controller.selectFromDate(context),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
 
   Widget _buildReasonTextArea() {
     return Column(
@@ -211,8 +195,7 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
               height: 50,
               fontSize: 14,
               width: double.infinity,
-              isLoading:
-                  controller.isLoading, 
+              isLoading: controller.isLoading,
               onPressed: controller.isLoading ? null : controller.onSubmit,
             ),
           ),
@@ -226,8 +209,7 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
               height: 50,
               width: double.infinity,
               fontSize: 14,
-              isLoading:
-                  controller.isLoading, 
+              isLoading: controller.isLoading,
               onPressed: controller.isLoading ? null : controller.onSaveDraft,
             ),
           ),

@@ -182,174 +182,171 @@ class _SelectState extends State<CustomSelect> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
     final isEnabledEffective = widget.isEnabled && !widget.isNotChange;
 
-    return Container(
-      padding: EdgeInsets.only(bottom: 16.h),
-      width: screenWidth,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (widget.label1 != null)
-            TextWidget(
-              text: widget.label1 ?? '',
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: widget.colorIcon ?? Colors.black,
-            ),
-          SizedBox(height: 10.h),
-          if (widget.searchable)
-            TypeAheadField<String>(
-              controller: _controller,
-              focusNode: _focusNode,
-              builder: (context, controller, focusNode) {
-                return TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  enabled: isEnabledEffective,
-                  readOnly: widget.onTap != null,
-                  decoration: InputDecoration(
-                    hintText: widget.name ?? 'Chọn một tùy chọn',
-                    hintStyle: TextStyle(
-                      color: Colors.black.withOpacity(0.8),
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14.sp,
-                      fontFamily: 'Inter',
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(
-                        color: widget.errorText != null
-                            ? Colors.red
-                            : Colors.grey.shade400,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(
-                        color: widget.errorText != null
-                            ? Colors.red
-                            : Colors.grey.shade400,
-                      ),
-                    ),
-                    disabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
-                    ),
-                    filled: true,
-                    fillColor: isEnabledEffective
-                        ? Colors.white
-                        : Colors.grey.shade100,
-                    suffixIcon: isEnabledEffective
-                        ? Icon(
-                            widget.icon ?? Icons.keyboard_arrow_down_rounded,
-                            color: isEnabledEffective
-                                ? widget.colorIcon ?? Colors.black
-                                : Colors.grey.shade400,
-                            size: 20.sp,
-                          )
-                        : null,
-                  ),
-                  style: TextStyle(
-                    color: Colors.black,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.label1 != null)
+          TextWidget(
+            text: widget.label1 ?? '',
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: widget.colorIcon ?? Colors.black,
+          ),
+        SizedBox(height: 10.h),
+        if (widget.searchable)
+          TypeAheadField<String>(
+            controller: _controller,
+            focusNode: _focusNode,
+            builder: (context, controller, focusNode) {
+              return TextField(
+                controller: controller,
+                focusNode: focusNode,
+                enabled: isEnabledEffective,
+                readOnly: widget.onTap != null,
+                decoration: InputDecoration(
+                  hintText: widget.name ?? 'Chọn một tùy chọn',
+                  hintStyle: TextStyle(
+                    color: Colors.black.withOpacity(0.8),
                     fontWeight: FontWeight.w400,
                     fontSize: 14.sp,
                     fontFamily: 'Inter',
                   ),
-                  onTap: () {
-                    // If provided, delegate to external picker
-                    if (widget.onTap != null) {
-                      widget.onTap!.call();
-                      return;
-                    }
-                    if (widget.selectList != null &&
-                        widget.selectList!.isNotEmpty) {
-                      // Kích hoạt gợi ý khi nhấn
-                      _controller.text = _controller.text; // Gửi sự kiện
-                      _focusNode.requestFocus();
-                    }
-                  },
-                );
-              },
-              suggestionsCallback: (pattern) async {
-                if (widget.selectList == null || widget.selectList!.isEmpty)
-                  return [];
-                return widget.selectList!
-                    .where(
-                      (item) => item.name.toLowerCase().contains(
-                        pattern.toLowerCase(),
-                      ),
-                    )
-                    .map((item) => item.name)
-                    .toList();
-              },
-              itemBuilder: (context, String suggestion) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: suggestion == _controller.text
-                        ? Colors.blue.shade50
-                        : Colors.white,
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(
+                      color: widget.errorText != null
+                          ? Colors.red
+                          : Colors.grey.shade400,
                     ),
                   ),
-                  child: ListTile(
-                    title: Text(
-                      suggestion,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w400,
-                        fontSize: 14.sp,
-                        fontFamily: 'Inter',
-                      ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(
+                      color: widget.errorText != null
+                          ? Colors.red
+                          : Colors.grey.shade400,
                     ),
                   ),
-                );
-              },
-              onSelected: (String suggestion) {
-                if (widget.selectList != null) {
-                  final selectedItem = widget.selectList!.firstWhere(
-                    (item) => item.name == suggestion,
-                    orElse: () => Item(id: '', name: ''),
-                  );
-                  setState(() {
-                    _selectedId = selectedItem.id;
-                    _controller.text = selectedItem.name;
-                  });
-                  widget.onProjectSelected?.call(selectedItem.id);
-                }
-              },
-              constraints: BoxConstraints(
-                maxHeight: Get.height * 0.3,
-                maxWidth: Get.width - 32.w,
-              ),
-              decorationBuilder: (context, child) {
-                return Material(
-                  elevation: 8.0,
-                  borderRadius: BorderRadius.circular(12.r),
-                  color: Colors.white,
-                  child: child,
-                );
-              },
-              emptyBuilder: (context) => Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
-                child: Text(
-                  'Không tìm thấy',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14.sp,
-                    fontFamily: 'Inter',
+                  disabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  filled: true,
+                  fillColor: isEnabledEffective
+                      ? Colors.white
+                      : Colors.grey.shade100,
+                  suffixIcon: isEnabledEffective
+                      ? Icon(
+                          widget.icon ?? Icons.keyboard_arrow_down_rounded,
+                          color: isEnabledEffective
+                              ? widget.colorIcon ?? Colors.black
+                              : Colors.grey.shade400,
+                          size: 20.sp,
+                        )
+                      : null,
+                ),
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14.sp,
+                  fontFamily: 'Inter',
+                ),
+                onTap: () {
+                  // If provided, delegate to external picker
+                  if (widget.onTap != null) {
+                    widget.onTap!.call();
+                    return;
+                  }
+                  if (widget.selectList != null &&
+                      widget.selectList!.isNotEmpty) {
+                    // Kích hoạt gợi ý khi nhấn
+                    _controller.text = _controller.text; // Gửi sự kiện
+                    _focusNode.requestFocus();
+                  }
+                },
+              );
+            },
+            suggestionsCallback: (pattern) async {
+              if (widget.selectList == null || widget.selectList!.isEmpty)
+                return [];
+              return widget.selectList!
+                  .where(
+                    (item) =>
+                        item.name.toLowerCase().contains(pattern.toLowerCase()),
+                  )
+                  .map((item) => item.name)
+                  .toList();
+            },
+            itemBuilder: (context, String suggestion) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: suggestion == _controller.text
+                      ? Colors.blue.shade50
+                      : Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade200),
                   ),
                 ),
+                child: ListTile(
+                  title: Text(
+                    suggestion,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14.sp,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+              );
+            },
+            onSelected: (String suggestion) {
+              if (widget.selectList != null) {
+                final selectedItem = widget.selectList!.firstWhere(
+                  (item) => item.name == suggestion,
+                  orElse: () => Item(id: '', name: ''),
+                );
+                setState(() {
+                  _selectedId = selectedItem.id;
+                  _controller.text = selectedItem.name;
+                });
+                widget.onProjectSelected?.call(selectedItem.id);
+              }
+            },
+            constraints: BoxConstraints(
+              maxHeight: Get.height * 0.3,
+              maxWidth: Get.width - 32.w,
+            ),
+            decorationBuilder: (context, child) {
+              return Material(
+                elevation: 8.0,
+                borderRadius: BorderRadius.circular(12.r),
+                color: Colors.white,
+                child: child,
+              );
+            },
+            emptyBuilder: (context) => Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+              child: Text(
+                'Không tìm thấy',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14.sp,
+                  fontFamily: 'Inter',
+                ),
               ),
-            )
-          else if (widget.onTap != null)
-            TextFormField(
+            ),
+          )
+        else if (widget.onTap != null)
+          SizedBox(
+            height: 48,
+            child: TextFormField(
               controller: _controller,
               readOnly: true,
               enabled: isEnabledEffective,
@@ -367,11 +364,11 @@ class _SelectState extends State<CustomSelect> {
                   fontFamily: 'Inter',
                 ),
                 contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 8.h,
+                  horizontal: 12,
+                  vertical: 12,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(
                     color: widget.errorText != null
                         ? Colors.red
@@ -379,7 +376,7 @@ class _SelectState extends State<CustomSelect> {
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(
                     color: widget.errorText != null
                         ? Colors.red
@@ -387,7 +384,7 @@ class _SelectState extends State<CustomSelect> {
                   ),
                 ),
                 disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey.shade200),
                 ),
                 filled: true,
@@ -410,11 +407,14 @@ class _SelectState extends State<CustomSelect> {
                 fontSize: 14.sp,
                 fontFamily: 'Inter',
               ),
-            )
-          else
-            Builder(
-              builder: (context) {
-                return TextFormField(
+            ),
+          )
+        else
+          Builder(
+            builder: (context) {
+              return SizedBox(
+                height: 48,
+                child: TextFormField(
                   key: _fieldKey,
                   controller: _controller,
                   readOnly: true,
@@ -434,11 +434,11 @@ class _SelectState extends State<CustomSelect> {
                       fontFamily: 'Inter',
                     ),
                     contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
+                      horizontal: 12,
+                      vertical: 12,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
                         color: widget.errorText != null
                             ? Colors.red
@@ -446,7 +446,7 @@ class _SelectState extends State<CustomSelect> {
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
                         color: widget.errorText != null
                             ? Colors.red
@@ -454,7 +454,7 @@ class _SelectState extends State<CustomSelect> {
                       ),
                     ),
                     disabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
+                      borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: Colors.grey.shade200),
                     ),
                     filled: true,
@@ -477,21 +477,21 @@ class _SelectState extends State<CustomSelect> {
                     fontSize: 14.sp,
                     fontFamily: 'Inter',
                   ),
-                );
-              },
-            ),
-          if (widget.errorText != null) ...[
-            SizedBox(height: 4.h),
-            TextWidget(
-              paddingHorizontal: 24.w,
-              text: widget.errorText!,
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w400,
-              color: Colors.red,
-            ),
-          ],
+                ),
+              );
+            },
+          ),
+        if (widget.errorText != null) ...[
+          SizedBox(height: 4.h),
+          TextWidget(
+            paddingHorizontal: 24.w,
+            text: widget.errorText!,
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w400,
+            color: Colors.red,
+          ),
         ],
-      ),
+      ],
     );
   }
 }
