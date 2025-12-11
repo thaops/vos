@@ -284,243 +284,278 @@ class _AuthorizeScreenState extends State<AuthorizeScreen> {
 
     final controller = Get.find<AuthorizeController>();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBarWidget(
-        title: 'Danh sách ủy quyền',
-        iconRightfirst: Icons.add,
-        colorfirst: Colors.white,
-        functionfirst: () async {
-          final result = await Get.toNamed(AppRouter.authorizeCreate);
-          if (result == true) {
-            _loadData();
-          }
-        },
-      ),
-      body: Obx(() {
-        print(
-          '🔄 AuthorizeScreen Obx rebuild - isLoading: ${controller.isLoading.value}, error: ${controller.error.value}, count: ${controller.authorizes.length}',
-        );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
 
-        // Loading state
-        if (controller.isLoading.value) {
-          return Center(child: CircularProgressIndicator());
-        }
+        return Scaffold(
+          backgroundColor: const Color(0xFFF5F7FA),
+          appBar: AppBarWidget(
+            title: 'Danh sách ủy quyền',
+            iconRightfirst: Icons.add,
+            colorfirst: Colors.white,
+            functionfirst: () async {
+              final result = await Get.toNamed(AppRouter.authorizeCreate);
+              if (result == true) {
+                _loadData();
+              }
+            },
+          ),
+          body: Obx(() {
+            print(
+              '🔄 AuthorizeScreen Obx rebuild - isLoading: ${controller.isLoading.value}, error: ${controller.error.value}, count: ${controller.authorizes.length}',
+            );
 
-        // Error state
-        if (controller.error.value.isNotEmpty) {
-          print('❌ Showing error: ${controller.error.value}');
-          return Center(
-            child: Padding(
-              padding: EdgeInsets.all(24.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
-                  SizedBox(height: 16.h),
-                  Text(
-                    controller.error.value,
-                    style: TextStyle(color: Colors.red, fontSize: 16.sp),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 16.h),
-                  ElevatedButton(
-                    onPressed: () => _loadData(),
-                    child: Text('Thử lại'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+            // Loading state
+            if (controller.isLoading.value) {
+              return Center(child: CircularProgressIndicator());
+            }
 
-        // Empty state
-        if (controller.authorizes.isEmpty) {
-          print('⚠️ Authorize list is empty');
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.inbox_outlined,
-                  size: 64.sp,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  'Chưa có ủy quyền nào',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16.sp),
-                ),
-                SizedBox(height: 16.h),
-                ElevatedButton(
-                  onPressed: () => _loadData(),
-                  child: Text('Tải lại'),
-                ),
-              ],
-            ),
-          );
-        }
-
-        // List state
-        final filteredList = _getFilteredList(controller.authorizes);
-        print(
-          '✅ Displaying ${filteredList.length}/${controller.authorizes.length} authorizes (filtered)',
-        );
-
-        return Column(
-          children: [
-            // Search bar và filter
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              color: Colors.white,
-              child: Row(
-                children: [
-                  // Search bar
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Tìm kiếm...',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  setState(() {
-                                    _searchController.clear();
-                                  });
-                                },
-                              )
-                            : null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF006884),
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 12.h,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {});
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  // Filter button - dùng PopupMenuButton để tránh lỗi layout
-                  Container(
-                    width: 48.w,
-                    height: 48.w,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: PopupMenuButton<String>(
-                      onSelected: (value) {
-                        setState(() {
-                          _statusFilter = value;
-                        });
-                      },
-                      icon: Icon(
-                        Icons.filter_list,
-                        color: Colors.grey[700],
-                        size: 24.sp,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'all',
-                          child: Container(
-                            width: 140.w,
-                            padding: EdgeInsets.symmetric(vertical: 4.h),
-                            child: Text(
-                              'Tất cả',
-                              style: TextStyle(fontSize: 14.sp),
-                            ),
-                          ),
-                        ),
-                        ..._statuses.map((status) {
-                          final code = status['code'] ?? '';
-                          // Chỉ hiển thị "Đang sử dụng" nếu code là "OK"
-                          final name = code == 'OK'
-                              ? 'Đang sử dụng'
-                              : status['name'] ?? '';
-
-                          return PopupMenuItem(
-                            value: code,
-                            child: Container(
-                              width: 140.w,
-                              padding: EdgeInsets.symmetric(vertical: 4.h),
-                              child: Text(
-                                '$name',
-                                style: TextStyle(fontSize: 14.sp),
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // List
-            if (filteredList.isEmpty)
-              Expanded(
-                child: Center(
+            // Error state
+            if (controller.error.value.isNotEmpty) {
+              print('❌ Showing error: ${controller.error.value}');
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.w),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.search_off,
-                        size: 64.sp,
-                        color: Colors.grey[400],
-                      ),
+                      Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
                       SizedBox(height: 16.h),
                       Text(
-                        _searchController.text.isNotEmpty
-                            ? 'Không tìm thấy kết quả'
-                            : _statusFilter != 'all'
-                            ? 'Không có ủy quyền với trạng thái này'
-                            : 'Không có dữ liệu',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16.sp,
+                        controller.error.value,
+                        style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16.h),
+                      ElevatedButton(
+                        onPressed: () => _loadData(),
+                        child: Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Empty state
+            if (controller.authorizes.isEmpty) {
+              print('⚠️ Authorize list is empty');
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 64.sp,
+                      color: Colors.grey[400],
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Chưa có ủy quyền nào',
+                      style:
+                          TextStyle(color: Colors.grey[600], fontSize: 16.sp),
+                    ),
+                    SizedBox(height: 16.h),
+                    ElevatedButton(
+                      onPressed: () => _loadData(),
+                      child: Text('Tải lại'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // List state
+            final filteredList = _getFilteredList(controller.authorizes);
+            print(
+              '✅ Displaying ${filteredList.length}/${controller.authorizes.length} authorizes (filtered)',
+            );
+
+            return Column(
+              children: [
+                // Search bar và filter
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  color: Colors.white,
+                  child: Row(
+                    children: [
+                      // Search bar
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Tìm kiếm...',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      setState(() {
+                                        _searchController.clear();
+                                      });
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF006884),
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 12.h,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      // Filter button - dùng PopupMenuButton để tránh lỗi layout
+                      Container(
+                        width: 48.w,
+                        height: 48.w,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            setState(() {
+                              _statusFilter = value;
+                            });
+                          },
+                          icon: Icon(
+                            Icons.filter_list,
+                            color: Colors.grey[700],
+                            size: 24.sp,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'all',
+                              child: Container(
+                                width: 140.w,
+                                padding: EdgeInsets.symmetric(vertical: 4.h),
+                                child: Text(
+                                  'Tất cả',
+                                  style: TextStyle(fontSize: 14.sp),
+                                ),
+                              ),
+                            ),
+                            ..._statuses.map((status) {
+                              final code = status['code'] ?? '';
+                              // Chỉ hiển thị "Đang sử dụng" nếu code là "OK"
+                              final name = code == 'OK'
+                                  ? 'Đang sử dụng'
+                                  : status['name'] ?? '';
+
+                              return PopupMenuItem(
+                                value: code,
+                                child: Container(
+                                  width: 140.w,
+                                  padding:
+                                      EdgeInsets.symmetric(vertical: 4.h),
+                                  child: Text(
+                                    '$name',
+                                    style: TextStyle(fontSize: 14.sp),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  padding: EdgeInsets.all(16.w),
-                  itemCount: filteredList.length,
-                  itemBuilder: (context, index) {
-                    final authorize = filteredList[index];
-                    return _buildAuthorizeCard(authorize);
-                  },
-                ),
-              ),
-          ],
+                // List
+                if (filteredList.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 64.sp,
+                            color: Colors.grey[400],
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            _searchController.text.isNotEmpty
+                                ? 'Không tìm thấy kết quả'
+                                : _statusFilter != 'all'
+                                ? 'Không có ủy quyền với trạng thái này'
+                                : 'Không có dữ liệu',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 16.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverPadding(
+                          padding: EdgeInsets.all(16.w),
+                          sliver: isWide
+                              ? SliverGrid(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 12,
+                                    crossAxisSpacing: 12,
+                                    childAspectRatio: 1.1,
+                                  ),
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final authorize = filteredList[index];
+                                      return _buildAuthorizeCard(authorize);
+                                    },
+                                    childCount: filteredList.length,
+                                  ),
+                                )
+                              : SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final authorize = filteredList[index];
+                                      return _buildAuthorizeCard(authorize);
+                                    },
+                                    childCount: filteredList.length,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          }),
         );
-      }),
+      },
     );
   }
 

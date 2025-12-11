@@ -24,60 +24,94 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
         onTap: () {
           FocusScope.of(context).unfocus();
         },
-        behavior:
-            HitTestBehavior.translucent, 
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              const UserInfoBlock(),
-              // const SizedBox(height: 20),
-              // _buildDatePickerField(context), // Comment UI từ ngày
-              const SizedBox(height: 20),
-              FormDropdownField(
-                label: 'Loại phép',
-                required: true,
-                hint: 'Chọn loại phép',
-                options: controller.leaveTypeOptions,
-                selectedId: controller.selectedLeaveType,
-                onChanged: controller.onLeaveTypeChanged,
+        behavior: HitTestBehavior.translucent,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final maxContentWidth =
+                constraints.maxWidth > 1100 ? 1100.0 : constraints.maxWidth;
+            final isWide = maxContentWidth >= 820;
+            final fieldWidth =
+                isWide ? (maxContentWidth - 20) / 2 : maxContentWidth;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      const UserInfoBlock(),
+                      const SizedBox(height: 20),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 20,
+                        children: [
+                          SizedBox(
+                            width: fieldWidth,
+                            child: FormDropdownField(
+                              label: 'Loại phép',
+                              required: true,
+                              hint: 'Chọn loại phép',
+                              options: controller.leaveTypeOptions,
+                              selectedId: controller.selectedLeaveType,
+                              onChanged: controller.onLeaveTypeChanged,
+                            ),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: const WorkCodeListWidget(),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: _buildReasonTextArea(),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: FormDropdownField(
+                              label: 'Nơi nghỉ',
+                              hint: 'Chọn nơi nghỉ',
+                              options: controller.leaveLocationOptions,
+                              selectedId: controller.leaveLocation,
+                              onChanged: controller.onLeaveLocationChanged,
+                            ),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: _buildTextField(
+                              'Thông tin liên lạc',
+                              controller.contactInfoController,
+                            ),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child:
+                                _buildTextField('Địa chỉ', controller.addressController),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: FormDropdownField(
+                              label: 'Trạng thái',
+                              hint: 'Chọn trạng thái',
+                              options: controller.statusOptions,
+                              selectedId: controller.selectedStatus,
+                              onChanged: controller.onStatusChanged,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      const FileAttachmentWidget(),
+                      const SizedBox(height: 24),
+                      SizedBox(width: maxContentWidth, child: _buildActionButtons()),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 20),
-              const WorkCodeListWidget(),
-              const SizedBox(height: 20),
-              _buildReasonTextArea(),
-              const SizedBox(height: 20),
-              FormDropdownField(
-                label: 'Nơi nghỉ',
-                hint: 'Chọn nơi nghỉ',
-                options: controller.leaveLocationOptions,
-                selectedId: controller.leaveLocation,
-                onChanged: controller.onLeaveLocationChanged,
-              ),
-              const SizedBox(height: 20),
-              _buildTextField(
-                'Thông tin liên lạc',
-                controller.contactInfoController,
-              ),
-              const SizedBox(height: 20),
-              _buildTextField('Địa chỉ', controller.addressController),
-              const SizedBox(height: 16),
-              FormDropdownField(
-                label: 'Trạng thái',
-                hint: 'Chọn trạng thái',
-                options: controller.statusOptions,
-                selectedId: controller.selectedStatus,
-                onChanged: controller.onStatusChanged,
-              ),
-              const SizedBox(height: 20),
-              const FileAttachmentWidget(),
-              const SizedBox(height: 24),
-              _buildActionButtons(),
-              const SizedBox(height: 24),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

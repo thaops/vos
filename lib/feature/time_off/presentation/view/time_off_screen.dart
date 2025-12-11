@@ -13,124 +13,183 @@ class TimeOffScreen extends GetView<TimeOffController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBarWidget(
-        title: 'Đơn nghỉ phép',
-        iconRightfirst: Icons.add,
-        functionfirst: () async {
-          final result = await Get.toNamed(AppRouter.timeOffCreate);
-          // Nếu submit thành công (result = true), reload data
-          if (result == true) {
-            controller.loadTimeOffList();
-          }
-        },
-      ),
-      body: Column(
-        children: [
-          // Filter bar
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            color: Colors.white,
-            child: Obx(
-              () => Row(
-                children: [
-                  // Dropdown năm (flex: 1)
-                  Expanded(
-                    flex: 1,
-                    child: CustomSelect(
-                      name: controller.selectedYearId.value.isEmpty
-                          ? 'Chọn năm'
-                          : controller.selectedYearId.value,
-                      selectList: controller.yearList
-                          .map(
-                            (year) => Item(
-                              id: year.toString(),
-                              name: year.toString(),
-                            ),
-                          )
-                          .toList(),
-                      selectedId: controller.selectedYearId.value.isEmpty
-                          ? null
-                          : controller.selectedYearId.value,
-                      selectedName: controller.selectedYearId.value.isEmpty
-                          ? null
-                          : controller.selectedYearId.value,
-                      onProjectSelected: controller.onYearFilterChanged,
-                      searchable: false,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  // Dropdown trạng thái (flex: 2)
-                  Expanded(
-                    flex: 2,
-                    child: CustomSelect(
-                      name: controller.selectedStatusFilter.value.isEmpty
-                          ? 'Chọn trạng thái'
-                          : controller.selectedStatusFilter.value,
-                      selectList: TimeOffController.statusFilterList
-                          .map(
-                            (filter) => Item(
-                              id: filter['code']!,
-                              name: filter['name']!,
-                            ),
-                          )
-                          .toList(),
-                      selectedId: controller.selectedStatusCode.value.isEmpty
-                          ? null
-                          : controller.selectedStatusCode.value,
-                      selectedName:
-                          controller.selectedStatusFilter.value.isEmpty
-                          ? null
-                          : controller.selectedStatusFilter.value,
-                      onProjectSelected: controller.onStatusFilterChanged,
-                      searchable: false,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF5F7FA),
+          appBar: AppBarWidget(
+            title: 'Đơn nghỉ phép',
+            iconRightfirst: Icons.add,
+            functionfirst: () async {
+              final result = await Get.toNamed(AppRouter.timeOffCreate);
+              // Nếu submit thành công (result = true), reload data
+              if (result == true) {
+                controller.loadTimeOffList();
+              }
+            },
           ),
-          // List content
-          Expanded(
-            child: Obx(() {
-              final data = controller.timeOffList;
-              if (data.isEmpty &&
-                  controller.status == ControllerStatus.loading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (data.isEmpty) {
-                return const Center(child: Text('Không có dữ liệu'));
-              }
-              return RefreshIndicator(
-                onRefresh: controller.onRefresh,
-                child: ListView.builder(
-                  padding: EdgeInsets.all(16.w),
-                  itemCount: data.length,
-                  itemBuilder: (context, index) {
-                    final item = data[index];
-                    return TimeOffCard(
-                      timeOff: item,
-                      onCancel: controller.isDraft(item)
-                          ? () => controller.cancelTimeOff(item)
-                          : null,
-                      onRecall: controller.canCancel(item)
-                          ? () => controller.recallTimeOff(item)
-                          : null,
-                      onSendApprove: controller.isDraft(item)
-                          ? () => controller.sendApproveRequest(item)
-                          : null,
-                      onEdit: controller.isDraft(item)
-                          ? () => controller.navigateToUpdate(item)
-                          : null,
-                    );
-                  },
+          body: Column(
+            children: [
+              // Filter bar
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                color: Colors.white,
+                child: Obx(
+                  () => Row(
+                    children: [
+                      // Dropdown năm (flex: 1)
+                      Expanded(
+                        flex: 1,
+                        child: CustomSelect(
+                          name: controller.selectedYearId.value.isEmpty
+                              ? 'Chọn năm'
+                              : controller.selectedYearId.value,
+                          selectList: controller.yearList
+                              .map(
+                                (year) => Item(
+                                  id: year.toString(),
+                                  name: year.toString(),
+                                ),
+                              )
+                              .toList(),
+                          selectedId: controller.selectedYearId.value.isEmpty
+                              ? null
+                              : controller.selectedYearId.value,
+                          selectedName: controller.selectedYearId.value.isEmpty
+                              ? null
+                              : controller.selectedYearId.value,
+                          onProjectSelected: controller.onYearFilterChanged,
+                          searchable: false,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      // Dropdown trạng thái (flex: 2)
+                      Expanded(
+                        flex: 2,
+                        child: CustomSelect(
+                          name: controller.selectedStatusFilter.value.isEmpty
+                              ? 'Chọn trạng thái'
+                              : controller.selectedStatusFilter.value,
+                          selectList: TimeOffController.statusFilterList
+                              .map(
+                                (filter) => Item(
+                                  id: filter['code']!,
+                                  name: filter['name']!,
+                                ),
+                              )
+                              .toList(),
+                          selectedId: controller.selectedStatusCode.value.isEmpty
+                              ? null
+                              : controller.selectedStatusCode.value,
+                          selectedName:
+                              controller.selectedStatusFilter.value.isEmpty
+                              ? null
+                              : controller.selectedStatusFilter.value,
+                          onProjectSelected: controller.onStatusFilterChanged,
+                          searchable: false,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              );
-            }),
+              ),
+              // List content
+              Expanded(
+                child: Obx(() {
+                  final data = controller.timeOffList;
+                  if (data.isEmpty &&
+                      controller.status == ControllerStatus.loading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (data.isEmpty) {
+                    return const Center(child: Text('Không có dữ liệu'));
+                  }
+                  return RefreshIndicator(
+                    onRefresh: controller.onRefresh,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverPadding(
+                          padding: EdgeInsets.all(16.w),
+                          sliver: isWide
+                              ? SliverGrid(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 10,
+                                    crossAxisSpacing: 12,
+                                    childAspectRatio: 1.5,
+                                  ),
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final item = data[index];
+                                      return TimeOffCard(
+                                        timeOff: item,
+                                        onCancel: controller.isDraft(item)
+                                            ? () =>
+                                                controller.cancelTimeOff(item)
+                                            : null,
+                                        onRecall: controller.canCancel(item)
+                                            ? () =>
+                                                controller.recallTimeOff(item)
+                                            : null,
+                                        onSendApprove: controller.isDraft(item)
+                                            ? () => controller
+                                                .sendApproveRequest(item)
+                                            : null,
+                                        onEdit: controller.isDraft(item)
+                                            ? () =>
+                                                controller.navigateToUpdate(item)
+                                            : null,
+                                      );
+                                    },
+                                    childCount: data.length,
+                                  ),
+                                )
+                              : SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final item = data[index];
+                                      return TimeOffCard(
+                                        timeOff: item,
+                                        onCancel: controller.isDraft(item)
+                                            ? () =>
+                                                controller.cancelTimeOff(item)
+                                            : null,
+                                        onRecall: controller.canCancel(item)
+                                            ? () =>
+                                                controller.recallTimeOff(item)
+                                            : null,
+                                        onSendApprove: controller.isDraft(item)
+                                            ? () => controller
+                                                .sendApproveRequest(item)
+                                            : null,
+                                        onEdit: controller.isDraft(item)
+                                            ? () =>
+                                                controller.navigateToUpdate(item)
+                                            : null,
+                                      );
+                                    },
+                                    childCount: data.length,
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                  );
+                }),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

@@ -31,33 +31,38 @@ class LoginScreen extends StatelessWidget {
       builder: (context, constraints) {
         final isTablet = constraints.maxWidth > 600;
         final isDesktop = constraints.maxWidth > 1200;
+        final maxContentWidth =
+            constraints.maxWidth > 900 ? 900.0 : constraints.maxWidth;
 
         final screenHeight = constraints.maxHeight;
         final topPadding = screenHeight * 0.1;
 
         return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-              maxHeight: double.infinity,
-            ),
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: topPadding,
-                left: isDesktop ? 40.w : 20.w,
-                right: isDesktop ? 40.w : 20.w,
-                bottom: isTablet ? 30.h : 20.h,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight,
+                maxHeight: double.infinity,
+                maxWidth: maxContentWidth,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  _buildLogo(controller),
-                  SizedBox(height: isTablet ? 60.h : 48.h),
-                  _buildWelcomeSection(controller, isTablet),
-                  SizedBox(height: 32.h),
-                  _buildGoogleSignInButton(controller, isTablet),
-                ],
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: topPadding,
+                  left: isDesktop ? 40.w : 20.w,
+                  right: isDesktop ? 40.w : 20.w,
+                  bottom: isTablet ? 30.h : 20.h,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _buildLogo(controller),
+                    SizedBox(height: isTablet ? 60.h : 48.h),
+                    _buildWelcomeSection(controller, isTablet),
+                    SizedBox(height: 32.h),
+                    _buildGoogleSignInButton(controller, isTablet),
+                  ],
+                ),
               ),
             ),
           ),
@@ -124,55 +129,60 @@ class LoginScreen extends StatelessWidget {
     return Obx(() {
       final isLoading = controller.isLoading;
       return Center(
-        child: Container(
-          height: isTablet ? 56.h : 50.h,
-          constraints: BoxConstraints(minWidth: double.infinity),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: isTablet ? 360.w : double.infinity,
+            maxWidth: isTablet ? 460.w : double.infinity,
           ),
-          child: ElevatedButton.icon(
-            onPressed: isLoading ? null : () => controller.signInWithGoogle(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.grey[800],
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              elevation: 0,
+          child: Container(
+            height: isTablet ? 56.h : 50.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            icon: isLoading
-                ? SizedBox(
-                    width: isTablet ? 24.w : 20.w,
-                    height: isTablet ? 24.h : 20.h,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.primary,
+            child: ElevatedButton.icon(
+              onPressed: isLoading ? null : () => controller.signInWithGoogle(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.grey[800],
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                elevation: 0,
+              ),
+              icon: isLoading
+                  ? SizedBox(
+                      width: isTablet ? 24.w : 20.w,
+                      height: isTablet ? 24.h : 20.h,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
+                        ),
                       ),
+                    )
+                  : Image.asset(
+                      Img.google,
+                      width: isTablet ? 24.w : 20.w,
+                      height: isTablet ? 24.h : 20.h,
+                      fit: BoxFit.contain,
                     ),
-                  )
-                : Image.asset(
-                    Img.google,
-                    width: isTablet ? 24.w : 20.w,
-                    height: isTablet ? 24.h : 20.h,
-                    fit: BoxFit.contain,
-                  ),
-            label: Text(
-              isLoading ? 'Đang đăng nhập...' : 'Tiếp tục với Google',
-              style: TextStyle(
-                fontSize: isTablet ? 16.sp : 15.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
+              label: Text(
+                isLoading ? 'Đang đăng nhập...' : 'Tiếp tục với Google',
+                style: TextStyle(
+                  fontSize: isTablet ? 16.sp : 15.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
               ),
             ),
           ),

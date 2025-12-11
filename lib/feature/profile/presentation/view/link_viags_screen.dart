@@ -103,37 +103,49 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const LinkViagsHeaderCard(),
-                  SizedBox(height: 20.h),
-                  LinkViagsFormFields(
-                    nameController: _nameController,
-                    passwordController: _passwordController,
-                    obscurePassword: _obscurePassword,
-                    onObscurePasswordChanged: (value) {
-                      setState(() {
-                        _obscurePassword = value;
-                      });
-                    },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final maxContentWidth =
+                constraints.maxWidth > 760 ? 760.0 : constraints.maxWidth;
+
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxContentWidth),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const LinkViagsHeaderCard(),
+                          SizedBox(height: 20.h),
+                          LinkViagsFormFields(
+                            nameController: _nameController,
+                            passwordController: _passwordController,
+                            obscurePassword: _obscurePassword,
+                            onObscurePasswordChanged: (value) {
+                              setState(() {
+                                _obscurePassword = value;
+                              });
+                            },
+                          ),
+                          SizedBox(height: 24.h),
+                          LinkViagsSubmitButton(
+                            isLoading: _isLoading,
+                            onPressed: _handleLink,
+                          ),
+                          SizedBox(height: 12.h),
+                          const LinkViagsInfoBanner(),
+                        ],
+                      ),
+                    ),
                   ),
-                  SizedBox(height: 24.h),
-                  LinkViagsSubmitButton(
-                    isLoading: _isLoading,
-                    onPressed: _handleLink,
-                  ),
-                  SizedBox(height: 12.h),
-                  const LinkViagsInfoBanner(),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

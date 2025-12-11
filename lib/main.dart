@@ -318,15 +318,7 @@ class _MainAppState extends State<MainApp> {
           child: child ?? const SizedBox.shrink(),
         );
 
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: scaledChild,
-            ),
-          ),
-        );
+        return _DesktopBackSwipeWrapper(child: scaledChild);
       },
       home: SplashScreen(initialDeepLink: widget.initialDeepLink),
       getPages: AppRouter.routes,
@@ -346,6 +338,47 @@ class _MainAppState extends State<MainApp> {
         name: '/unknown',
         page: () => SplashScreen(initialDeepLink: widget.initialDeepLink),
       ),
+    );
+  }
+}
+
+class _DesktopBackSwipeWrapper extends StatefulWidget {
+  final Widget child;
+  const _DesktopBackSwipeWrapper({required this.child});
+
+  @override
+  State<_DesktopBackSwipeWrapper> createState() =>
+      _DesktopBackSwipeWrapperState();
+}
+
+class _DesktopBackSwipeWrapperState extends State<_DesktopBackSwipeWrapper> {
+  double _dragDeltaX = 0;
+
+  void _handleDragUpdate(DragUpdateDetails details) {
+    _dragDeltaX += details.delta.dx;
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    // Threshold: swipe sang phải đủ lớn thì back
+    const threshold = 120.0;
+    if (_dragDeltaX > threshold && Navigator.of(context).canPop()) {
+      Navigator.of(context).maybePop();
+    }
+    _dragDeltaX = 0;
+  }
+
+  void _handleDragStart(DragStartDetails details) {
+    _dragDeltaX = 0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onHorizontalDragStart: _handleDragStart,
+      onHorizontalDragUpdate: _handleDragUpdate,
+      onHorizontalDragEnd: _handleDragEnd,
+      child: widget.child,
     );
   }
 }

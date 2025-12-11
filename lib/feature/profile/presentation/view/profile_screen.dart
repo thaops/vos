@@ -51,26 +51,38 @@ class ProfileScreen extends GetView<ProfileController> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: _ReactiveAppBar(controller: controller),
-      body: Obx(() {
-        final hasGoogleUser = controller.googleUser.value != null;
-        final hasUserProfile = controller.userProfile.value != null;
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxContentWidth =
+              constraints.maxWidth > 1000 ? 1000.0 : constraints.maxWidth;
 
-        if (!hasGoogleUser && !hasUserProfile) {
-          return const NotLoggedInState();
-        }
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxContentWidth),
+              child: Obx(() {
+                final hasGoogleUser = controller.googleUser.value != null;
+                final hasUserProfile = controller.userProfile.value != null;
 
-        // Ưu tiên VACS profile nếu có
-        if (hasUserProfile) {
-          return ProfileContent(controller: controller);
-        }
+                if (!hasGoogleUser && !hasUserProfile) {
+                  return const NotLoggedInState();
+                }
 
-        // Fallback Google user
-        if (hasGoogleUser) {
-          return GoogleUserContent(controller: controller);
-        }
+                // Ưu tiên VACS profile nếu có
+                if (hasUserProfile) {
+                  return ProfileContent(controller: controller);
+                }
 
-        return const NotLoggedInState();
-      }),
+                // Fallback Google user
+                if (hasGoogleUser) {
+                  return GoogleUserContent(controller: controller);
+                }
+
+                return const NotLoggedInState();
+              }),
+            ),
+          );
+        },
+      ),
     );
   }
 }

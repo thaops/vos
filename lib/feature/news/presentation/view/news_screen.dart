@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
@@ -69,159 +67,174 @@ class _NewsScreenState extends State<NewsScreen> {
     }
 
     final controller = Get.find<NewsController>();
-    final isDesktop =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBarWidget(title: 'VĂN HÓA - TIN TỨC', isBack: false),
-      body: Column(
-        children: [
-          // Search bar
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            color: Colors.white,
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => _onSearchChanged(value, controller),
-              onSubmitted: (value) {
-                // Cancel debounce timer khi submit
-                _debounceTimer?.cancel();
-                controller.onSearch(value);
-              },
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm tin tức...',
-                hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-                prefixIcon: Icon(
-                  Icons.search,
-                  size: 20.sp,
-                  color: Colors.grey[600],
-                ),
-                suffixIcon: Obx(() {
-                  if (controller.searchQuery.value.isNotEmpty) {
-                    return IconButton(
-                      icon: Icon(
-                        Icons.clear,
-                        size: 20.sp,
-                        color: Colors.grey[600],
-                      ),
-                      onPressed: () {
-                        // Cancel debounce timer khi clear
-                        _debounceTimer?.cancel();
-                        _searchController.clear();
-                        controller.onSearchChanged('');
-                        controller.onRefresh();
-                      },
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.blue[300]!, width: 2),
-                ),
-                filled: true,
-                fillColor: Colors.grey[50],
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 12.h,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF5F7FA),
+          appBar: AppBarWidget(title: 'VĂN HÓA - TIN TỨC', isBack: false),
+          body: Column(
+            children: [
+              // Search bar
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                color: Colors.white,
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) => _onSearchChanged(value, controller),
+                  onSubmitted: (value) {
+                    // Cancel debounce timer khi submit
+                    _debounceTimer?.cancel();
+                    controller.onSearch(value);
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Tìm kiếm tin tức...',
+                    hintStyle:
+                        TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20.sp,
+                      color: Colors.grey[600],
+                    ),
+                    suffixIcon: Obx(() {
+                      if (controller.searchQuery.value.isNotEmpty) {
+                        return IconButton(
+                          icon: Icon(
+                            Icons.clear,
+                            size: 20.sp,
+                            color: Colors.grey[600],
+                          ),
+                          onPressed: () {
+                            // Cancel debounce timer khi clear
+                            _debounceTimer?.cancel();
+                            _searchController.clear();
+                            controller.onSearchChanged('');
+                            controller.onRefresh();
+                          },
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide:
+                          BorderSide(color: Colors.blue[300]!, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          // News list
-          Expanded(
-            child: Obx(() {
-              final data = controller.news;
-              if (data.isEmpty &&
-                  controller.status == ControllerStatus.loading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (data.isEmpty) {
-                return Center(
-                  child: Text(
-                    controller.searchQuery.value.isNotEmpty
-                        ? 'Không tìm thấy kết quả'
-                        : 'No data',
-                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-                  ),
-                );
-              }
-              return RefreshIndicator(
-                onRefresh: controller.onRefresh,
-                child: CustomScrollView(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 8.h,
-                        horizontal: isDesktop ? 12.w : 0,
+              // News list
+              Expanded(
+                child: Obx(() {
+                  final data = controller.news;
+                  if (data.isEmpty &&
+                      controller.status == ControllerStatus.loading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (data.isEmpty) {
+                    return Center(
+                      child: Text(
+                        controller.searchQuery.value.isNotEmpty
+                            ? 'Không tìm thấy kết quả'
+                            : 'No data',
+                        style:
+                            TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                       ),
-                      sliver: isDesktop
-                          ? SliverGrid(
-                              gridDelegate:
-                                  SliverGridDelegateWithMaxCrossAxisExtent(
-                                // Responsive: thêm cột khi đủ rộng, tối đa ~420px mỗi item
-                                maxCrossAxisExtent: 420,
-                                mainAxisSpacing: 12.h,
-                                crossAxisSpacing: 12.w,
-                                childAspectRatio: 1.05,
+                    );
+                  }
+                  return RefreshIndicator(
+                    onRefresh: controller.onRefresh,
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1200),
+                        child: CustomScrollView(
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
+                            SliverPadding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 8.h,
+                                horizontal: isWide ? 12.w : 0,
                               ),
-                              delegate:
-                                  SliverChildBuilderDelegate((context, index) {
-                                final item = data[index];
-                                return NewsCard(
-                                  newsItem: item.toNewsItemModel(),
-                                  isCompact: true,
-                                  onTap: () {
-                                    Get.toNamed(
-                                      AppRouter.newsDetail,
-                                      arguments: NewsDetailArgs(
-                                        id: item.id,
-                                        title: item.title,
-                                        categoryCode: item.categoryCode,
+                              sliver: isWide
+                                  ? SliverGrid(
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 8,
+                                        crossAxisSpacing: 12,
+                                        childAspectRatio: 1.7,
                                       ),
-                                    );
-                                  },
-                                );
-                              }, childCount: data.length),
-                            )
-                          : SliverList(
-                              delegate:
-                                  SliverChildBuilderDelegate((context, index) {
-                                final item = data[index];
-                                return NewsCard(
-                                  newsItem: item.toNewsItemModel(),
-                                  onTap: () {
-                                    Get.toNamed(
-                                      AppRouter.newsDetail,
-                                      arguments: NewsDetailArgs(
-                                        id: item.id,
-                                        title: item.title,
-                                        categoryCode: item.categoryCode,
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, index) {
+                                          final item = data[index];
+                                          return NewsCard(
+                                            newsItem: item.toNewsItemModel(),
+                                            isCompact: true,
+                                            onTap: () {
+                                              Get.toNamed(
+                                                AppRouter.newsDetail,
+                                                arguments: NewsDetailArgs(
+                                                  id: item.id,
+                                                  title: item.title,
+                                                  categoryCode: item.categoryCode,
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        childCount: data.length,
                                       ),
-                                    );
-                                  },
-                                );
-                              }, childCount: data.length),
+                                    )
+                                  : SliverList(
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, index) {
+                                          final item = data[index];
+                                          return NewsCard(
+                                            newsItem: item.toNewsItemModel(),
+                                            onTap: () {
+                                              Get.toNamed(
+                                                AppRouter.newsDetail,
+                                                arguments: NewsDetailArgs(
+                                                  id: item.id,
+                                                  title: item.title,
+                                                  categoryCode: item.categoryCode,
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        childCount: data.length,
+                                      ),
+                                    ),
                             ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-              );
-            }),
+                  );
+                }),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

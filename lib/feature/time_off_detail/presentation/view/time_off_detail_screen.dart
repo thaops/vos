@@ -9,8 +9,6 @@ import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
 import 'package:vos_flutter/feature/time_off_detail/presentation/controller/time_off_detail_controller.dart';
 import 'package:vos_flutter/feature/time_off_detail/presentation/widgets/file_attachments_section.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
-import 'package:vos_flutter/router/app_router.dart';
 
 class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   const TimeOffDetailScreen({super.key});
@@ -53,82 +51,94 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           );
         }
 
-        return RefreshIndicator(
-          onRefresh: controller.onRefresh,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildGeneralInfoSection(timeOff),
-                SizedBox(height: 20.h),
-                if (timeOff.attachFiles != null &&
-                    timeOff.attachFiles!.isNotEmpty)
-                  FileAttachmentsSection(attachments: timeOff.attachFiles!),
-                SizedBox(height: 20.h),
-                _buildApprovalProcessSection(timeOff),
-                SizedBox(height: 20.h),
-                _buildCommentSection(timeOff),
-              ],
-            ),
-          ),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final maxContentWidth =
+                constraints.maxWidth > 1100 ? 1100.0 : constraints.maxWidth;
+            final isWide = maxContentWidth >= 820;
+            final fieldWidth =
+                isWide ? (maxContentWidth - 16) / 2 : maxContentWidth;
+
+            return RefreshIndicator(
+              onRefresh: controller.onRefresh,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16.w),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxContentWidth),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildGeneralInfoSection(
+                          timeOff,
+                          fieldWidth: fieldWidth,
+                        ),
+                        SizedBox(height: 20.h),
+                        if (timeOff.attachFiles != null &&
+                            timeOff.attachFiles!.isNotEmpty)
+                          FileAttachmentsSection(attachments: timeOff.attachFiles!),
+                        SizedBox(height: 20.h),
+                        _buildApprovalProcessSection(timeOff),
+                        SizedBox(height: 20.h),
+                        _buildCommentSection(timeOff),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         );
       }),
     );
   }
 
   // Section 1: Thông tin chung (Form Detail Section)
-  Widget _buildGeneralInfoSection(TimeOff timeOff) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 16.h,
-      children: [
-        // _buildInfoRow(
-        //   label: 'Người tạo đơn',
-        //   value: timeOff.contactPerson ?? '',
-        // ),
-        // _buildInfoRow(label: 'Người nghỉ', value: timeOff.contactPerson ?? ''),
-        // _buildInfoRow(label: 'Email', value: 'dev@namphuongso.com'),
-        // _buildInfoRow(label: 'Số điện thoại', value: "0909090909"),
-        _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
+  Widget _buildGeneralInfoSection(TimeOff timeOff, {required double fieldWidth}) {
+    final items = [
+      _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
+      _buildInfoRow(
+        label: 'Cơ quan / Đơn vị',
+        value: timeOff.level2Name ?? '',
+      ),
+      _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
+      _buildInfoRow(
+        label: 'Thời gian nghỉ',
+        value: _formatDateRange(timeOff),
+      ),
+      _buildInfoRow(
+        label: 'Lần nghỉ thứ',
+        value: timeOff.vacationNo?.toString() ?? '',
+      ),
+      _buildInfoRow(
+        label: 'Loại phép',
+        value: timeOff.vacationReasonName ?? 'N/A',
+      ),
+      _buildInfoRow(label: 'Nơi nghỉ', value: timeOff.domIntName ?? 'N/A'),
+      _buildInfoRow(
+        label: 'Lý do',
+        value: timeOff.description ?? '',
+        isMultiline: true,
+      ),
+      if (timeOff.phepTon != null)
         _buildInfoRow(
-          label: 'Cơ quan / Đơn vị',
-          value: timeOff.level2Name ?? '',
+          label: 'Tiêu chuẩn phép',
+          value: timeOff.phepTon!.toStringAsFixed(0),
         ),
-        _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
+      _buildInfoRow(label: 'Tổng ngày nghỉ', value: "Chưa có"),
+      if (timeOff.overtimeTon != null)
+        _buildInfoRow(
+          label: 'Tồn OT',
+          value: timeOff.overtimeTon!.toStringAsFixed(0),
+        ),
+    ];
 
-        // _buildInfoRow(label: 'Đội / Tổ', value: 'chưa có'),
-        _buildInfoRow(
-          label: 'Thời gian nghỉ',
-          value: _formatDateRange(timeOff),
-        ),
-        _buildInfoRow(
-          label: 'Lần nghỉ thứ',
-          value: timeOff.vacationNo?.toString() ?? '',
-        ),
-        _buildInfoRow(
-          label: 'Loại phép',
-          value: timeOff.vacationReasonName ?? 'N/A',
-        ),
-        _buildInfoRow(label: 'Nơi nghỉ', value: timeOff.domIntName ?? 'N/A'),
-        _buildInfoRow(
-          label: 'Lý do',
-          value: timeOff.description ?? '',
-          isMultiline: true,
-        ),
-
-        if (timeOff.phepTon != null)
-          _buildInfoRow(
-            label: 'Tiêu chuẩn phép',
-            value: timeOff.phepTon!.toStringAsFixed(0),
-          ),
-        _buildInfoRow(label: 'Tổng ngày nghỉ', value: "Chưa có"),
-        if (timeOff.overtimeTon != null)
-          _buildInfoRow(
-            label: 'Tồn OT',
-            value: timeOff.overtimeTon!.toStringAsFixed(0),
-          ),
-      ],
+    return Wrap(
+      spacing: 12.w,
+      runSpacing: 16.h,
+      children: items
+          .map((item) => SizedBox(width: fieldWidth, child: item))
+          .toList(),
     );
   }
 
