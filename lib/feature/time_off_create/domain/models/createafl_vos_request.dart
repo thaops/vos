@@ -8,6 +8,7 @@ class CreateAflVosRequest {
   final String reason;
   final bool isOverseas;
   final List<AttachmentItem> attachments;
+  final int vRegId;
   final List<ApprovalItem> approvals;
 
   CreateAflVosRequest({
@@ -17,6 +18,7 @@ class CreateAflVosRequest {
     required this.reason,
     required this.isOverseas,
     required this.attachments,
+    required this.vRegId,
     required this.approvals,
   });
 
@@ -28,6 +30,7 @@ class CreateAflVosRequest {
       'Reason': reason,
       'IsOverseas': isOverseas,
       'Attachments': attachments.map((a) => a.toJson()).toList(),
+      'VRegID': vRegId,
       'Approvals': approvals.map((a) => a.toJson()).toList(),
     };
   }
@@ -53,7 +56,7 @@ class CreateAflVosRequest {
             days: inferredDays - 1,
           ));
 
-      // Set giờ: startDate từ 00:00:00, endDate đến 23:59:59
+      // Format date với time: startDate từ 00:00:00, endDate đến 23:59:59
       final startDateTime = DateTime(
         startDate.year,
         startDate.month,
@@ -114,16 +117,18 @@ class CreateAflVosRequest {
     }).toList();
 
     // 7. Approvals: chỉ dùng override khi có dữ liệu, không thì fallback processes
+    // Step bắt đầu từ 0 (theo format mới)
     final approvals = (approvalsOverride != null && approvalsOverride.isNotEmpty)
         ? approvalsOverride
         : processes.asMap().entries.map((entry) {
             final index = entry.key;
             final process = entry.value;
             return ApprovalItem(
-              step: index + 1, // Step bắt đầu từ 1
+              step: index, // Step bắt đầu từ 0
               name: process.fullName,
               email: process.email,
               position: '', // Cần lấy từ đâu đó, có thể để trống
+              vAppId: 0, // Mặc định là 0, sẽ được set từ API response nếu có
             );
           }).toList();
 
@@ -134,6 +139,7 @@ class CreateAflVosRequest {
       reason: reason,
       isOverseas: isOverseas,
       attachments: attachments,
+      vRegId: timeOff.vRegId,
       approvals: approvals,
     );
   }
@@ -219,7 +225,7 @@ class ApprovalItem {
       'Name': name,
       'Email': email,
       'Position': position,
-      if (vAppId != null) 'VAppId': vAppId,
+      'VAppId': vAppId ?? 0, // Luôn include VAppId, mặc định là 0
     };
   }
 }

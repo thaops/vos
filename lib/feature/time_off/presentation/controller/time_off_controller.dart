@@ -188,7 +188,6 @@ class TimeOffController extends BaseController with ApiResultMixin {
     await handleApiCall<void>(
       apiCall: () => recallTimeOffUsecase.call(timeOff.vRegId),
       onSuccess: (_) async {
-        // Gọi updateAflVos sau khi thu hồi thành công
         await _callUpdateAflVos(timeOff);
         loadTimeOffList();
       },
@@ -197,7 +196,6 @@ class TimeOffController extends BaseController with ApiResultMixin {
 
   Future<void> _callUpdateAflVos(TimeOff timeOff) async {
     try {
-      // Lấy email từ ProfileController
       String? email;
       if (Get.isRegistered<ProfileController>()) {
         final profileController = Get.find<ProfileController>();
@@ -221,12 +219,18 @@ class TimeOffController extends BaseController with ApiResultMixin {
         return;
       }
 
+      // Lấy VAppId từ process đầu tiên (step 1)
+      // TimeOffProcess không có vAppId, nên dùng approveNo
+      // Nếu có thể lấy từ nơi khác (ví dụ từ SendApproveResult), có thể truyền vào vAppIdOverride
+      final firstProcess = processes.first;
+      final vAppId = firstProcess.approveNo; // Tạm thời dùng approveNo
+
       // Map data
       final request = UpdateAflVosRequest.fromTimeOff(
         timeOff: timeOffDetail,
         processes: processes,
+        vAppIdOverride: vAppId,
       );
-
       // Call API
       await handleApiCallVoid(
         apiCall: () => updateAflVosUsecase.call(
@@ -236,6 +240,7 @@ class TimeOffController extends BaseController with ApiResultMixin {
         ),
         onSuccess: () {
           print('✅ [UpdateAflVos] Gửi thành công');
+          loadTimeOffList();
         },
         onError: (error) {
           print('❌ [UpdateAflVos] Lỗi: $error');

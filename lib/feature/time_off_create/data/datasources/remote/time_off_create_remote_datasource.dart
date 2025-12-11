@@ -360,7 +360,7 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       // Encode email và build URL
       final encodedEmail = Uri.encodeComponent(emailWithDefault);
       final url =
-          'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos/updateafl_vos/$vRegId?userEmail=$encodedEmail';
+          'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos/updatestatus_vos/$vRegId?userEmail=$encodedEmail';
 
       // Headers với Authorization Bearer token
       final headers = {

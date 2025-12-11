@@ -60,14 +60,15 @@ class SendApproveResultDto {
       }
 
       final approveNo = _tryParseInt(item['ApproveNo']);
-      final step = (approveNo ?? index) + 1;
+      // Step bắt đầu từ 0 (theo format mới)
+      final step = index;
 
       return ApprovalItem(
         step: step,
         name: item['FullName']?.toString() ?? '',
         email: item['Email']?.toString() ?? '',
         position: item['Name_Job_Title']?.toString() ?? '',
-        vAppId: _tryParseInt(item['VApp_ID']),
+        vAppId: _tryParseInt(item['VApp_ID']) ?? 0, // Mặc định là 0 nếu không có
         approveNo: approveNo,
       );
     }).whereType<ApprovalItem>().toList();
