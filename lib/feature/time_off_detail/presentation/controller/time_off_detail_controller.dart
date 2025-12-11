@@ -11,6 +11,7 @@ import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
 class TimeOffDetailController extends BaseController with ApiResultMixin {
@@ -77,9 +78,9 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
 
   // Gửi phê duyệt
   Future<void> sendApproveRequest() async {
-    await handleApiCall<int>(
+    await handleApiCall<SendApproveResult>(
       apiCall: () => sendApproveRequestUsecase.call(vRegId),
-      onSuccess: (id) {
+      onSuccess: (_) {
         SuccessDialog.show(
           context: Get.context!,
           title: 'Thành công',

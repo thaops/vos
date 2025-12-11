@@ -5,23 +5,29 @@ import 'package:vos_flutter/common/widgets/success_dialog.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
 import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_list_usecase.dart';
+import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
 import 'package:vos_flutter/feature/time_off/presentation/widgets/time_off_confirm_dialog.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/updateafl_vos_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/work_code_detail.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/updateafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/usecases/recall_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
 class TimeOffController extends BaseController with ApiResultMixin {
   final GetTimeOffListUsecase getTimeOffListUsecase;
+  final GetTimeOffDetailUsecase getTimeOffDetailUsecase;
   final UpdateTimeOffUsecase updateTimeOffUsecase;
   final SendApproveRequestUsecase sendApproveRequestUsecase;
   final RecallTimeOffUsecase recallTimeOffUsecase;
   final CreateAflVosUsecase createAflVosUsecase;
+  final UpdateAflVosUsecase updateAflVosUsecase;
 
   final RxList<TimeOff> timeOffList = <TimeOff>[].obs;
   final RxList<TimeOff> allTimeOffList = <TimeOff>[].obs;
@@ -55,10 +61,12 @@ class TimeOffController extends BaseController with ApiResultMixin {
 
   TimeOffController({
     required this.getTimeOffListUsecase,
+    required this.getTimeOffDetailUsecase,
     required this.updateTimeOffUsecase,
     required this.sendApproveRequestUsecase,
     required this.recallTimeOffUsecase,
     required this.createAflVosUsecase,
+    required this.updateAflVosUsecase,
   });
 
   @override
@@ -179,10 +187,64 @@ class TimeOffController extends BaseController with ApiResultMixin {
   void _recallTimeOff(TimeOff timeOff) async {
     await handleApiCall<void>(
       apiCall: () => recallTimeOffUsecase.call(timeOff.vRegId),
-      onSuccess: (_) {
+      onSuccess: (_) async {
+        // Gọi updateAflVos sau khi thu hồi thành công
+        await _callUpdateAflVos(timeOff);
         loadTimeOffList();
       },
     );
+  }
+
+  Future<void> _callUpdateAflVos(TimeOff timeOff) async {
+    try {
+      // Lấy email từ ProfileController
+      String? email;
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        email = profileController.userProfile.value?.email;
+      }
+
+      // Dùng email mặc định nếu null
+      final emailWithDefault = email ?? 'phongdh@viags.vn';
+
+      // Load TimeOff detail để lấy đầy đủ thông tin (processes, attachFiles)
+      final detailResult = await getTimeOffDetailUsecase.call(vRegId: timeOff.vRegId);
+      if (!detailResult.isSuccess || detailResult.data == null) {
+        print('⚠️ [UpdateAflVos] Không load được detail, bỏ qua');
+        return;
+      }
+
+      final TimeOff timeOffDetail = detailResult.data!;
+      final processes = timeOffDetail.processes ?? [];
+      if (processes.isEmpty) {
+        print('⚠️ [UpdateAflVos] Không có processes, bỏ qua');
+        return;
+      }
+
+      // Map data
+      final request = UpdateAflVosRequest.fromTimeOff(
+        timeOff: timeOffDetail,
+        processes: processes,
+      );
+
+      // Call API
+      await handleApiCallVoid(
+        apiCall: () => updateAflVosUsecase.call(
+          request: request,
+          vRegId: timeOff.vRegId,
+          email: emailWithDefault,
+        ),
+        onSuccess: () {
+          print('✅ [UpdateAflVos] Gửi thành công');
+        },
+        onError: (error) {
+          print('❌ [UpdateAflVos] Lỗi: $error');
+          // Không hiển thị lỗi cho user, chỉ log
+        },
+      );
+    } catch (e) {
+      print('❌ [UpdateAflVos] Exception: $e');
+    }
   }
 
   // Gửi phê duyệt
@@ -194,11 +256,11 @@ class TimeOffController extends BaseController with ApiResultMixin {
     );
 
     if (confirmed == true) {
-      await handleApiCall<int>(
+      await handleApiCall<SendApproveResult>(
         apiCall: () => sendApproveRequestUsecase.call(timeOff.vRegId),
-        onSuccess: (id) async {
+        onSuccess: (result) async {
           // ✅ Gọi API mới sau khi thành công
-          await _callCreateAflVos(timeOff);
+          await _callCreateAflVos(timeOff, result.approvals);
 
           SuccessDialog.show(
             context: Get.context!,
@@ -214,7 +276,10 @@ class TimeOffController extends BaseController with ApiResultMixin {
     }
   }
 
-  Future<void> _callCreateAflVos(TimeOff timeOff) async {
+  Future<void> _callCreateAflVos(
+    TimeOff timeOff,
+    List<ApprovalItem> approvalsFromApi,
+  ) async {
     try {
       // Lấy email từ ProfileController
       String? email;
@@ -237,6 +302,7 @@ class TimeOffController extends BaseController with ApiResultMixin {
       final request = CreateAflVosRequest.fromTimeOff(
         timeOff: timeOff,
         processes: processes,
+        approvalsOverride: approvalsFromApi,
       );
 
       // Call API

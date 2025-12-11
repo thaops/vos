@@ -4,10 +4,12 @@ import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/file
 import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/time_off_create_request_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/updateafl_vos_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/status.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/vacation_reason.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/work_code.dart';
@@ -65,7 +67,7 @@ class TimeOffCreateRepositoryImpl implements TimeOffCreateRepository {
   }
   
   @override
-  Future<ApiResult<int>> sendApproveRequest(int vRegId) {
+  Future<ApiResult<SendApproveResult>> sendApproveRequest(int vRegId) {
     return remoteDataSource.sendApproveRequest(vRegId);
   }
 
@@ -80,5 +82,18 @@ class TimeOffCreateRepositoryImpl implements TimeOffCreateRepository {
     required String email,
   }) {
     return remoteDataSource.createAflVos(request: request, email: email);
+  }
+
+  @override
+  Future<ApiResult<void>> updateAflVos({
+    required UpdateAflVosRequest request,
+    required int vRegId,
+    required String email,
+  }) {
+    return remoteDataSource.updateAflVos(
+      request: request,
+      vRegId: vRegId,
+      email: email,
+    );
   }
 }

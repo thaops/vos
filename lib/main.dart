@@ -6,6 +6,7 @@ import 'package:app_links/app_links.dart';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform, compute;
 import 'package:flutter/material.dart';
@@ -353,32 +354,58 @@ class _DesktopBackSwipeWrapper extends StatefulWidget {
 
 class _DesktopBackSwipeWrapperState extends State<_DesktopBackSwipeWrapper> {
   double _dragDeltaX = 0;
+  bool _edgeActivated = false;
+  static const double _edgeThreshold = 80;
+
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    final dx = event.scrollDelta.dx;
+    final dy = event.scrollDelta.dy;
+
+    // Vuốt ngang (trackpad) sang phải, đủ lớn và trội hơn trục dọc
+    if (dx > 60 && dx.abs() > dy.abs() * 1.5) {
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        navigator.maybePop();
+      }
+    }
+  }
 
   void _handleDragUpdate(DragUpdateDetails details) {
+    if (!_edgeActivated) return;
     _dragDeltaX += details.delta.dx;
   }
 
   void _handleDragEnd(DragEndDetails details) {
+    if (!_edgeActivated) {
+      _dragDeltaX = 0;
+      return;
+    }
     // Threshold: swipe sang phải đủ lớn thì back
     const threshold = 120.0;
     if (_dragDeltaX > threshold && Navigator.of(context).canPop()) {
       Navigator.of(context).maybePop();
     }
     _dragDeltaX = 0;
+    _edgeActivated = false;
   }
 
   void _handleDragStart(DragStartDetails details) {
+    _edgeActivated = details.globalPosition.dx <= _edgeThreshold;
     _dragDeltaX = 0;
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onHorizontalDragStart: _handleDragStart,
-      onHorizontalDragUpdate: _handleDragUpdate,
-      onHorizontalDragEnd: _handleDragEnd,
-      child: widget.child,
+    return Listener(
+      onPointerSignal: _handlePointerSignal,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragStart: _handleDragStart,
+        onHorizontalDragUpdate: _handleDragUpdate,
+        onHorizontalDragEnd: _handleDragEnd,
+        child: widget.child,
+      ),
     );
   }
 }

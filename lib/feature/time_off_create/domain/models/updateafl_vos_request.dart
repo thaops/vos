@@ -1,16 +1,16 @@
 import 'package:intl/intl.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
 
-class CreateAflVosRequest {
+class UpdateAflVosRequest {
   final List<List<String>> leaveDateRange;
   final String leaveTimes;
   final String leavePlace;
   final String reason;
   final bool isOverseas;
-  final List<AttachmentItem> attachments;
-  final List<ApprovalItem> approvals;
+  final List<UpdateAttachmentItem> attachments;
+  final List<UpdateApprovalItem> approvals;
 
-  CreateAflVosRequest({
+  UpdateAflVosRequest({
     required this.leaveDateRange,
     required this.leaveTimes,
     required this.leavePlace,
@@ -23,7 +23,7 @@ class CreateAflVosRequest {
   Map<String, dynamic> toJson() {
     return {
       'LeaveDateRange': leaveDateRange,
-      'LeaveTimes': leaveTimes.toString(), // Đảm bảo luôn là string
+      'LeaveTimes': leaveTimes.toString(),
       'LeavePlace': leavePlace,
       'Reason': reason,
       'IsOverseas': isOverseas,
@@ -32,13 +32,13 @@ class CreateAflVosRequest {
     };
   }
 
-  /// Factory method để map từ TimeOff sang CreateAflVosRequest
-  factory CreateAflVosRequest.fromTimeOff({
+  /// Factory method để map từ TimeOff sang UpdateAflVosRequest
+  factory UpdateAflVosRequest.fromTimeOff({
     required TimeOff timeOff,
     required List<TimeOffProcess> processes,
-    List<ApprovalItem>? approvalsOverride,
+    List<UpdateApprovalItem>? approvalsOverride,
   }) {
-    // 1. LeaveDateRange: luôn ưu tiên from/to date, rơi back sang details nếu cần
+    // 1. LeaveDateRange: luôn ưu tiên from/to date
     final leaveDateRange = <List<String>>[];
     final totalDays = timeOff.details?.fold<double>(
           0.0,
@@ -53,37 +53,16 @@ class CreateAflVosRequest {
             days: inferredDays - 1,
           ));
 
-      // Set giờ: startDate từ 00:00:00, endDate đến 23:59:59
-      final startDateTime = DateTime(
-        startDate.year,
-        startDate.month,
-        startDate.day,
-        0, // 00 giờ
-        0, // 00 phút
-        0, // 00 giây
-      );
-      final endDateTime = DateTime(
-        endDate.year,
-        endDate.month,
-        endDate.day,
-        23, // 23 giờ
-        59, // 59 phút
-        59, // 59 giây
-      );
-
-      final startStr = DateFormat('yyyy-MM-dd HH:mm:ss').format(startDateTime);
-      final endStr = DateFormat('yyyy-MM-dd HH:mm:ss').format(endDateTime);
+      // Format date: "yyyy-MM-dd" (không có time)
+      final startStr = DateFormat('yyyy-MM-dd').format(startDate);
+      final endStr = DateFormat('yyyy-MM-dd').format(endDate);
       leaveDateRange.add([startStr, endStr]);
     }
 
     // 2. LeaveTimes: ưu tiên tổng detail, fallback theo khoảng ngày
-    // Đảm bảo luôn trả về string (0.5 -> "0.5")
     final String leaveTimes;
     if (totalDays > 0) {
-      // Format số thập phân, loại bỏ trailing zeros không cần thiết
-      // Ví dụ: 0.5 -> "0.5", 1.0 -> "1", 2.5 -> "2.5"
       final formatted = totalDays.toString();
-      // Loại bỏ ".0" ở cuối nếu là số nguyên
       leaveTimes = formatted.replaceAll(RegExp(r'\.0$'), '');
     } else if (timeOff.fromDate != null) {
       final endDate = timeOff.toDate ?? timeOff.fromDate!;
@@ -104,12 +83,12 @@ class CreateAflVosRequest {
 
     // 6. Attachments: Map từ attachFiles
     final attachments = (timeOff.attachFiles ?? []).map((file) {
-      return AttachmentItem(
+      return UpdateAttachmentItem(
         name: file.fileName,
         type: _getFileType(file.fileName),
         url: file.fileUrl,
         size: _parseFileSize(file.fileSize),
-        uid: file.fileName, // Dùng fileName làm uid nếu không có fileId
+        uid: file.fileName,
       );
     }).toList();
 
@@ -119,15 +98,16 @@ class CreateAflVosRequest {
         : processes.asMap().entries.map((entry) {
             final index = entry.key;
             final process = entry.value;
-            return ApprovalItem(
-              step: index + 1, // Step bắt đầu từ 1
+            return UpdateApprovalItem(
+              step: index + 1,
               name: process.fullName,
               email: process.email,
-              position: '', // Cần lấy từ đâu đó, có thể để trống
+              position: '',
+              vAppId: null, // TimeOffProcess không có vAppId, có thể thêm sau nếu cần
             );
           }).toList();
 
-    return CreateAflVosRequest(
+    return UpdateAflVosRequest(
       leaveDateRange: leaveDateRange,
       leaveTimes: leaveTimes,
       leavePlace: leavePlace,
@@ -170,14 +150,14 @@ class CreateAflVosRequest {
   }
 }
 
-class AttachmentItem {
+class UpdateAttachmentItem {
   final String name;
   final String type;
   final String url;
   final int size;
   final String uid;
 
-  AttachmentItem({
+  UpdateAttachmentItem({
     required this.name,
     required this.type,
     required this.url,
@@ -196,7 +176,7 @@ class AttachmentItem {
   }
 }
 
-class ApprovalItem {
+class UpdateApprovalItem {
   final int step;
   final String name;
   final String email;
@@ -204,7 +184,7 @@ class ApprovalItem {
   final int? vAppId;
   final int? approveNo;
 
-  ApprovalItem({
+  UpdateApprovalItem({
     required this.step,
     required this.name,
     required this.email,
@@ -223,4 +203,3 @@ class ApprovalItem {
     };
   }
 }
-

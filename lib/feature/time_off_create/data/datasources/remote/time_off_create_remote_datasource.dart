@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:vos_flutter/common/services/services.dart';
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
 import 'package:vos_flutter/core/network/api_endpoints.dart';
 import 'package:vos_flutter/core/network/base_share_datasource.dart';
@@ -10,9 +11,12 @@ import 'package:vos_flutter/feature/time_off_create/data/models/leave_location_d
 import 'package:vos_flutter/feature/time_off_create/data/models/leave_type_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/status_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/time_off_create_request_dto.dart';
+import 'package:vos_flutter/feature/time_off_create/data/models/send_approve_result_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/vacation_reason_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/work_code_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/updateafl_vos_request.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_location.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/status.dart';
@@ -30,10 +34,15 @@ abstract class TimeOffCreateRemoteDataSource {
   Future<ApiResult<List<WorkCode>>> getWorkCodes();
   Future<ApiResult<List<LeaveLocation>>> getLeaveLocations();
   Future<ApiResult<int>> createTimeOff(TimeOffCreateRequestDto request);
-  Future<ApiResult<int>> sendApproveRequest(int vRegId);
+  Future<ApiResult<SendApproveResult>> sendApproveRequest(int vRegId);
   Future<ApiResult<void>> recallTimeOff(int vRegId);
   Future<ApiResult<void>> createAflVos({
     required CreateAflVosRequest request,
+    required String email,
+  });
+  Future<ApiResult<void>> updateAflVos({
+    required UpdateAflVosRequest request,
+    required int vRegId,
     required String email,
   });
 }
@@ -230,14 +239,16 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
   }
 
   @override
-  Future<ApiResult<int>> sendApproveRequest(int vRegId) async {
-    return shareApiRepository.callShareUpdateMix<int>(
+  Future<ApiResult<SendApproveResult>> sendApproveRequest(int vRegId) async {
+    return shareApiRepository.callShareUpdateMix<SendApproveResult>(
       functionCode: 'Vacation_Approve_Creator',
       token: getToken(),
       data: {'VReg_ID': vRegId, 'CreateAgain': 'YES'},
       parser: (json) {
-        final map = ShareJsonHelper.decode(json);
-        return ShareJsonHelper.getInt(map, 'VReg_ID');
+        // Share API trả Data là string list -> parser nhận trực tiếp list/str
+        // Gói vào map với key Data để tái sử dụng logic hiện có
+        final dto = SendApproveResultDto.fromMap({'Data': json});
+        return dto.toDomain();
       },
     );
   }
@@ -327,5 +338,60 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
     }
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     return emailRegex.hasMatch(email.trim());
+  }
+
+  @override
+  Future<ApiResult<void>> updateAflVos({
+    required UpdateAflVosRequest request,
+    required int vRegId,
+    required String email,
+  }) async {
+    try {
+      final dioApi = Get.find<DioApi>();
+      final services = await Services.create();
+      final accessToken = await services.getAccessToken();
+
+      // Validate email
+      final emailWithDefault = _isValidEmail(email) ? email : _getEmailFromCache();
+      if (emailWithDefault.isEmpty) {
+        return ApiResult.error('Email không được tìm thấy');
+      }
+
+      // Encode email và build URL
+      final encodedEmail = Uri.encodeComponent(emailWithDefault);
+      final url =
+          'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos/updateafl_vos/$vRegId?userEmail=$encodedEmail';
+
+      // Headers với Authorization Bearer token
+      final headers = {
+        'accept': '*/*',
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+        'X-API-KEY': ApiEndpoints.vosApiKey,
+        'Cookie': ApiEndpoints.vosCookie,
+      };
+
+      print("UpdateAflVos request: ${request.toJson()}");
+      print("UpdateAflVos url: $url");
+
+      final response = await dioApi.dio.request(
+        url,
+        data: request.toJson(),
+        options: dioLib.Options(
+          method: 'PATCH',
+          headers: headers,
+        ),
+      );
+
+      print("UpdateAflVos response: ${response.data}");
+
+      if (response.statusCode == 200) {
+        return ApiResult.success(null);
+      } else {
+        return ApiResult.error(response.statusMessage ?? 'Unknown error');
+      }
+    } catch (e) {
+      return ApiResult.error(e.toString());
+    }
   }
 }

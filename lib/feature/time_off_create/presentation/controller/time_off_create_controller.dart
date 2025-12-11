@@ -26,6 +26,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_
 import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/send_approve_request_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/upload_files_usecase.dart';
 
 class WorkCodeItem {
@@ -457,10 +458,10 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   void _sendApproveRequest(int vRegId) async {
-    await handleApiCallVoid(
+    await handleApiCall<SendApproveResult>(
       apiCall: () => sendApproveRequestUsecase.call(vRegId),
-      onSuccess: () async {
-        await _callCreateAflVos(vRegId);
+      onSuccess: (result) async {
+        await _callCreateAflVos(vRegId, result.approvals);
 
         SuccessDialog.show(
           context: Get.context!,
@@ -475,7 +476,10 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     );
   }
 
-  Future<void> _callCreateAflVos(int vRegId) async {
+  Future<void> _callCreateAflVos(
+    int vRegId,
+    List<ApprovalItem> approvalsFromApi,
+  ) async {
     try {
       // Lấy email từ ProfileController
       String? email;
@@ -501,10 +505,11 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
         return;
       }
 
-      // Map data
+      // Map data (ưu tiên approvals từ API sendApprove)
       final request = CreateAflVosRequest.fromTimeOff(
         timeOff: timeOff,
         processes: processes,
+        approvalsOverride: approvalsFromApi,
       );
 
       // Call API

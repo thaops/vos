@@ -516,39 +516,44 @@ class _AuthorizeScreenState extends State<AuthorizeScreen> {
                   )
                 else
                   Expanded(
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        SliverPadding(
-                          padding: EdgeInsets.all(16.w),
-                          sliver: isWide
-                              ? SliverGrid(
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 12,
-                                    crossAxisSpacing: 12,
-                                    childAspectRatio: 1.1,
-                                  ),
-                                  delegate: SliverChildBuilderDelegate(
-                                    (context, index) {
-                                      final authorize = filteredList[index];
-                                      return _buildAuthorizeCard(authorize);
-                                    },
-                                    childCount: filteredList.length,
-                                  ),
-                                )
-                              : SliverList(
-                                  delegate: SliverChildBuilderDelegate(
-                                    (context, index) {
-                                      final authorize = filteredList[index];
-                                      return _buildAuthorizeCard(authorize);
-                                    },
-                                    childCount: filteredList.length,
-                                  ),
-                                ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1200),
+                        child: CustomScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
+                            SliverPadding(
+                              padding: EdgeInsets.all(16.w),
+                              sliver: isWide
+                                  ? SliverGrid(
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 10,
+                                        crossAxisSpacing: 12,
+                                        childAspectRatio: 1.5,
+                                      ),
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, index) {
+                                          final authorize = filteredList[index];
+                                          return _buildAuthorizeCard(authorize);
+                                        },
+                                        childCount: filteredList.length,
+                                      ),
+                                    )
+                                  : SliverList(
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, index) {
+                                          final authorize = filteredList[index];
+                                          return _buildAuthorizeCard(authorize);
+                                        },
+                                        childCount: filteredList.length,
+                                      ),
+                                    ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
               ],
