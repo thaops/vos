@@ -77,6 +77,7 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
   final RxString selectedVacationReason = ''.obs;
   final RxString selectedVacationReasonCode = ''.obs;
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
+  final Rx<DateTime?> toDate = Rx<DateTime?>(null);
   final RxList<File> attachedFiles = <File>[].obs;
   final RxList<FileAttachment> uploadedFiles = <FileAttachment>[].obs;
   final RxBool isUploading = false.obs;
@@ -117,6 +118,25 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     return DateFormat('dd/MM/yyyy').format(fromDate.value!);
   }
 
+  String get formattedFromTime {
+    if (fromDate.value == null) return '';
+    return DateFormat('HH:mm').format(fromDate.value!);
+  }
+
+  String get formattedToTime {
+    if (toDate.value == null) return '';
+    return DateFormat('HH:mm').format(toDate.value!);
+  }
+
+  bool get isReasonRequired {
+    return leaveLocationCode.value == 'NO' && selectedStatusCode.value == 'YES';
+  }
+
+  String get formattedToDate {
+    if (toDate.value == null) return '';
+    return DateFormat('dd/MM/yyyy').format(toDate.value!);
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -143,9 +163,11 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
 
       if (profile != null) {
         userName.value = profile.userName;
+        // Chức danh: Lấy từ description (job title/position)
         userPosition.value = profile.description.isNotEmpty
             ? profile.description
             : '';
+        // Đơn vị: Ưu tiên branchNameVN, sau đó companyNameVN
         userDepartment.value = profile.branchNameVN.isNotEmpty
             ? profile.branchNameVN
             : profile.companyNameVN.isNotEmpty
@@ -283,6 +305,9 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     if (timeOff.fromDate != null) {
       fromDate.value = timeOff.fromDate;
     }
+    if (timeOff.toDate != null) {
+      toDate.value = timeOff.toDate;
+    }
 
     if (timeOff.vacationReason != null && timeOff.vacationReason!.isNotEmpty) {
       selectedLeaveTypeCode.value = timeOff.vacationReason!;
@@ -371,6 +396,19 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     }
   }
 
+  void updateDays(int index, String value) {
+    if (index < workCodeList.length) {
+      final parsedValue = double.tryParse(value);
+      if (parsedValue != null && parsedValue >= 0) {
+        workCodeList[index].days = parsedValue;
+        workCodeList.refresh();
+      } else if (value.isEmpty) {
+        workCodeList[index].days = 0.0;
+        workCodeList.refresh();
+      }
+    }
+  }
+
   void decrementDays(int index) {
     if (index < workCodeList.length && workCodeList[index].days > 0) {
       workCodeList[index].days -= 0.5;
@@ -440,14 +478,87 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
   }
 
   Future<void> selectFromDate(BuildContext context) async {
+    final currentDate = fromDate.value ?? DateTime.now();
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: fromDate.value ?? DateTime.now(),
+      initialDate: currentDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      fromDate.value = picked;
+      // Giữ nguyên giờ, chỉ cập nhật ngày
+      fromDate.value = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        currentDate.hour,
+        currentDate.minute,
+      );
+      // Nếu toDate nhỏ hơn fromDate, cập nhật toDate
+      if (toDate.value != null && toDate.value!.isBefore(fromDate.value!)) {
+        toDate.value = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          toDate.value!.hour,
+          toDate.value!.minute,
+        );
+      }
+    }
+  }
+
+  Future<void> selectFromTime(BuildContext context) async {
+    final currentDate = fromDate.value ?? DateTime.now();
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(currentDate),
+    );
+    if (picked != null) {
+      fromDate.value = DateTime(
+        currentDate.year,
+        currentDate.month,
+        currentDate.day,
+        picked.hour,
+        picked.minute,
+      );
+    }
+  }
+
+  Future<void> selectToDate(BuildContext context) async {
+    final currentDate = toDate.value ?? fromDate.value ?? DateTime.now();
+    final minDate = fromDate.value ?? DateTime.now();
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: currentDate,
+      firstDate: minDate,
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      // Giữ nguyên giờ, chỉ cập nhật ngày
+      toDate.value = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        currentDate.hour,
+        currentDate.minute,
+      );
+    }
+  }
+
+  Future<void> selectToTime(BuildContext context) async {
+    final currentDate = toDate.value ?? fromDate.value ?? DateTime.now();
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(currentDate),
+    );
+    if (picked != null) {
+      toDate.value = DateTime(
+        currentDate.year,
+        currentDate.month,
+        currentDate.day,
+        picked.hour,
+        picked.minute,
+      );
     }
   }
 
@@ -489,6 +600,7 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
     final request = TimeOffCreateRequest(
       vRegId: vRegId, // Update: dùng VReg_ID của đơn đó
       fromDate: fromDate.value ?? timeOff.fromDate ?? DateTime.now(),
+      toDate: toDate.value ?? timeOff.toDate,
       domInt: leaveLocationCode.value,
       description: reasonController.text,
       vacationReason: vacationReasonCode,
@@ -510,6 +622,18 @@ class TimeOffUpdateController extends BaseController with ApiResultMixin {
 
   Future<void> onSubmit() async {
     print('🚀 [TimeOffUpdate] onSubmit() - Bắt đầu submit');
+
+    // Validation: Nếu Nơi nghỉ = "NO" và Trạng thái = "YES" thì Lý do bắt buộc
+    if (isReasonRequired && reasonController.text.trim().isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Vui lòng nhập lý do nghỉ phép',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
 
     if (fromDate.value == null) {
       fromDate.value = timeOff.fromDate ?? DateTime.now();

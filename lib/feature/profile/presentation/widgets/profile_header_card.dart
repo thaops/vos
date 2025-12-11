@@ -74,14 +74,19 @@ class ProfileHeaderCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8.h),
-          // Department
-          Text(
-            user.description.isNotEmpty
-                ? user.description
-                : 'Phòng Công nghệ thông tin',
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
+          // Branch/Department
+          if (user.branchNameVN.isNotEmpty)
+            Text(
+              user.branchNameVN,
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            )
+          else if (user.description.isNotEmpty)
+            Text(
+              user.description,
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
           SizedBox(height: 8.h),
           // Primary Email
           Obx(() {
@@ -107,4 +112,3 @@ class ProfileHeaderCard extends StatelessWidget {
     );
   }
 }
-

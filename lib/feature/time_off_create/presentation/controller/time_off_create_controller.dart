@@ -72,6 +72,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   final RxString selectedVacationReason = ''.obs;
   final RxString selectedVacationReasonCode = ''.obs;
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
+  final Rx<DateTime?> toDate = Rx<DateTime?>(null);
   final RxList<File> attachedFiles = <File>[].obs;
   final RxList<FileAttachment> uploadedFiles = <FileAttachment>[].obs;
   final RxBool isUploading = false.obs;
@@ -111,6 +112,25 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     return DateFormat('dd/MM/yyyy').format(fromDate.value!);
   }
 
+  String get formattedFromTime {
+    if (fromDate.value == null) return '';
+    return DateFormat('HH:mm').format(fromDate.value!);
+  }
+
+  String get formattedToDate {
+    if (toDate.value == null) return '';
+    return DateFormat('dd/MM/yyyy').format(toDate.value!);
+  }
+
+  String get formattedToTime {
+    if (toDate.value == null) return '';
+    return DateFormat('HH:mm').format(toDate.value!);
+  }
+
+  bool get isReasonRequired {
+    return leaveLocationCode.value == 'NO' && selectedStatusCode.value == 'YES';
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -118,7 +138,26 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     _initializeData();
     _loadUserInfoFromProfile();
     _setupProfileListener();
+    _setDefaultDates();
     loadLeaveTypes();
+  }
+
+  void _setDefaultDates() {
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    fromDate.value = DateTime(
+      tomorrow.year,
+      tomorrow.month,
+      tomorrow.day,
+      0,
+      0,
+    );
+    toDate.value = DateTime(
+      tomorrow.year,
+      tomorrow.month,
+      tomorrow.day,
+      23,
+      59,
+    );
   }
 
   void _setupProfileListener() {
@@ -138,9 +177,11 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
 
       if (profile != null) {
         userName.value = profile.userName;
+        // Chức danh: Lấy từ description (job title/position)
         userPosition.value = profile.description.isNotEmpty
             ? profile.description
             : '';
+        // Đơn vị: Ưu tiên branchNameVN, sau đó companyNameVN
         userDepartment.value = profile.branchNameVN.isNotEmpty
             ? profile.branchNameVN
             : profile.companyNameVN.isNotEmpty
@@ -310,6 +351,19 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     }
   }
 
+  void updateDays(int index, String value) {
+    if (index < workCodeList.length) {
+      final parsedValue = double.tryParse(value);
+      if (parsedValue != null && parsedValue >= 0) {
+        workCodeList[index].days = parsedValue;
+        workCodeList.refresh();
+      } else if (value.isEmpty) {
+        workCodeList[index].days = 0.0;
+        workCodeList.refresh();
+      }
+    }
+  }
+
   Future<void> loadVacationReasons({
     required String workCode,
     required String name,
@@ -373,14 +427,95 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   Future<void> selectFromDate(BuildContext context) async {
+    final currentDate =
+        fromDate.value ?? DateTime.now().add(const Duration(days: 1));
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: fromDate.value ?? DateTime.now(),
+      initialDate: currentDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      fromDate.value = picked;
+      // Giữ nguyên giờ, chỉ cập nhật ngày
+      fromDate.value = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        currentDate.hour,
+        currentDate.minute,
+      );
+      // Nếu toDate nhỏ hơn fromDate, cập nhật toDate
+      if (toDate.value != null && toDate.value!.isBefore(fromDate.value!)) {
+        toDate.value = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          toDate.value!.hour,
+          toDate.value!.minute,
+        );
+      }
+    }
+  }
+
+  Future<void> selectFromTime(BuildContext context) async {
+    final currentDate =
+        fromDate.value ?? DateTime.now().add(const Duration(days: 1));
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(currentDate),
+    );
+    if (picked != null) {
+      fromDate.value = DateTime(
+        currentDate.year,
+        currentDate.month,
+        currentDate.day,
+        picked.hour,
+        picked.minute,
+      );
+    }
+  }
+
+  Future<void> selectToDate(BuildContext context) async {
+    final currentDate =
+        toDate.value ??
+        fromDate.value ??
+        DateTime.now().add(const Duration(days: 1));
+    final minDate = fromDate.value ?? DateTime.now();
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: currentDate,
+      firstDate: minDate,
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      // Giữ nguyên giờ, chỉ cập nhật ngày
+      toDate.value = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        currentDate.hour,
+        currentDate.minute,
+      );
+    }
+  }
+
+  Future<void> selectToTime(BuildContext context) async {
+    final currentDate =
+        toDate.value ??
+        fromDate.value ??
+        DateTime.now().add(const Duration(days: 1));
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(currentDate),
+    );
+    if (picked != null) {
+      toDate.value = DateTime(
+        currentDate.year,
+        currentDate.month,
+        currentDate.day,
+        picked.hour,
+        picked.minute,
+      );
     }
   }
 
@@ -411,12 +546,12 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       vacationReasonCode = selectedLeaveTypeCode.value;
     }
 
-
     final request = TimeOffCreateRequest(
       vRegId: 0, // Create mới
       fromDate:
           fromDate.value ??
           DateTime.now().add(const Duration(days: 1)), // Mặc định là ngày mai
+      toDate: toDate.value,
       domInt: leaveLocationCode.value,
       description: reasonController.text,
       vacationReason: vacationReasonCode,
@@ -437,13 +572,23 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   Future<void> onSubmit() async {
+    // Validation: Nếu Nơi nghỉ = "NO" và Trạng thái = "YES" thì Lý do bắt buộc
+    if (isReasonRequired && reasonController.text.trim().isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Vui lòng nhập lý do nghỉ phép',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
 
     if (fromDate.value == null) {
       fromDate.value = DateTime.now().add(const Duration(days: 1));
     }
 
     if (attachedFiles.isNotEmpty) {
-     
       await uploadFiles();
     }
 
@@ -530,13 +675,11 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   Future<void> onSaveDraft() async {
-
     if (fromDate.value == null) {
       fromDate.value = DateTime.now().add(const Duration(days: 1));
     }
 
     if (attachedFiles.isNotEmpty) {
-     
       await uploadFiles();
     }
 
@@ -545,7 +688,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     await handleApiCallVoid(
       apiCall: () => createTimeOffUsecase.call(request),
       onSuccess: () {
-   
         SuccessDialog.show(
           context: Get.context!,
           title: 'Thành công',

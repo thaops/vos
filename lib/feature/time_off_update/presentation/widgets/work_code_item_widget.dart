@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/time_off_create_colors.dart';
@@ -22,7 +23,7 @@ class WorkCodeItemWidget extends GetView<TimeOffUpdateController> {
             Expanded(flex: 2, child: _buildText(item.code)),
             Expanded(flex: 3, child: _buildText(item.name, maxLines: 2)),
             SizedBox(
-              width: 100,
+              width: 120, // Tăng width để chứa TextField
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -32,17 +33,10 @@ class WorkCodeItemWidget extends GetView<TimeOffUpdateController> {
                     enabled: canDecrement,
                   ),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 30,
-                    child: TextWidget(
-                      text: item.days == item.days.toInt()
-                          ? '${item.days.toInt()}'
-                          : '${item.days.toStringAsFixed(1)}',
-                      fontSize: 16,
-                      color: TimeOffCreateColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      textAlign: TextAlign.center,
-                    ),
+                  _DaysInputField(
+                    index: index,
+                    days: item.days,
+                    onChanged: (value) => controller.updateDays(index, value),
                   ),
                   const SizedBox(width: 8),
                   _buildCounterButton(
@@ -95,6 +89,108 @@ class WorkCodeItemWidget extends GetView<TimeOffUpdateController> {
               ? TimeOffCreateColors.primary
               : TimeOffCreateColors.textSecondary,
         ),
+      ),
+    );
+  }
+}
+
+class _DaysInputField extends StatefulWidget {
+  final int index;
+  final double days;
+  final Function(String) onChanged;
+
+  const _DaysInputField({
+    required this.index,
+    required this.days,
+    required this.onChanged,
+  });
+
+  @override
+  State<_DaysInputField> createState() => _DaysInputFieldState();
+}
+
+class _DaysInputFieldState extends State<_DaysInputField> {
+  late TextEditingController _controller;
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.days == widget.days.toInt()
+          ? '${widget.days.toInt()}'
+          : widget.days.toStringAsFixed(1),
+    );
+  }
+
+  @override
+  void didUpdateWidget(_DaysInputField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isUpdating && oldWidget.days != widget.days) {
+      final newText = widget.days == widget.days.toInt()
+          ? '${widget.days.toInt()}'
+          : widget.days.toStringAsFixed(1);
+      if (_controller.text != newText) {
+        _controller.text = newText;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 50,
+      child: TextField(
+        controller: _controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,1}')),
+        ],
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 16,
+          color: TimeOffCreateColors.textPrimary,
+          fontWeight: FontWeight.w700,
+        ),
+        decoration: InputDecoration(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(
+              color: TimeOffCreateColors.borderColor,
+              width: 1,
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(
+              color: TimeOffCreateColors.borderColor,
+              width: 1,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(4),
+            borderSide: BorderSide(
+              color: TimeOffCreateColors.primary,
+              width: 1.5,
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 4,
+          ),
+          isDense: true,
+        ),
+        onChanged: (value) {
+          _isUpdating = true;
+          widget.onChanged(value);
+          _isUpdating = false;
+        },
       ),
     );
   }

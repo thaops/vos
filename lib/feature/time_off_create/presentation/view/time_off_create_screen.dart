@@ -6,9 +6,11 @@ import 'package:vos_flutter/common/widgets/custom_button.dart';
 import 'package:vos_flutter/common/widgets/custom_text_field.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/controller/time_off_create_controller.dart';
+import 'package:vos_flutter/feature/time_off_create/presentation/widgets/date_picker_field.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/file_attachment_widget.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/form_dropdown_field.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/time_off_create_colors.dart';
+import 'package:vos_flutter/feature/time_off_create/presentation/widgets/time_picker_field.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/user_info_block.dart';
 import 'package:vos_flutter/feature/time_off_create/presentation/widgets/work_code_list_widget.dart';
 
@@ -63,14 +65,6 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                           ),
                           SizedBox(
                             width: fieldWidth,
-                            child: const WorkCodeListWidget(),
-                          ),
-                          SizedBox(
-                            width: fieldWidth,
-                            child: _buildReasonTextArea(),
-                          ),
-                          SizedBox(
-                            width: fieldWidth,
                             child: FormDropdownField(
                               label: 'Nơi nghỉ',
                               hint: 'Chọn nơi nghỉ',
@@ -78,6 +72,125 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                               selectedId: controller.leaveLocation,
                               onChanged: controller.onLeaveLocationChanged,
                             ),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    TextWidget(
+                                      text: 'Ngày bắt đầu',
+                                      fontSize: 14,
+                                      color: TimeOffCreateColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    TextWidget(
+                                      text: '*',
+                                      fontSize: 14,
+                                      color: TimeOffCreateColors.error,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Obx(
+                                        () => DatePickerField(
+                                          label: '',
+                                          required: false,
+                                          value:
+                                              controller
+                                                  .formattedFromDate
+                                                  .isEmpty
+                                              ? null
+                                              : controller.formattedFromDate,
+                                          onTap: () => controller
+                                              .selectFromDate(context),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Obx(
+                                        () => TimePickerField(
+                                          value:
+                                              controller
+                                                  .formattedFromTime
+                                                  .isEmpty
+                                              ? null
+                                              : controller.formattedFromTime,
+                                          onTap: () => controller
+                                              .selectFromTime(context),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextWidget(
+                                  text: 'Ngày kết thúc',
+                                  fontSize: 14,
+                                  color: TimeOffCreateColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Obx(
+                                        () => DatePickerField(
+                                          label: '',
+                                          required: false,
+                                          value:
+                                              controller.formattedToDate.isEmpty
+                                              ? null
+                                              : controller.formattedToDate,
+                                          onTap: () =>
+                                              controller.selectToDate(context),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Obx(
+                                        () => TimePickerField(
+                                          value:
+                                              controller.formattedToTime.isEmpty
+                                              ? null
+                                              : controller.formattedToTime,
+                                          onTap: () =>
+                                              controller.selectToTime(context),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: const WorkCodeListWidget(),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: _buildReasonTextArea(),
                           ),
                           SizedBox(
                             width: fieldWidth,
@@ -125,32 +238,43 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
   }
 
   Widget _buildReasonTextArea() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextWidget(
-          text: 'Lý do',
-          fontSize: 14,
-          color: TimeOffCreateColors.textSecondary,
-          fontWeight: FontWeight.w500,
-        ),
-        const SizedBox(height: 8),
-        CustomTextField(
-          controller: controller.reasonController,
-          hintText: 'Nhập lý do nghỉ phép...',
-          minLines: 5,
-          maxLines: 6,
-          paddingVertical: 0, // Bỏ padding vertical bên ngoài
-          paddingHorizontal: 0, // Bỏ padding horizontal bên ngoài
-          borderRadius: 8,
-          fontSize: 14,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ), //
-        ),
-      ],
-    );
+    return Obx(() {
+      final isRequired = controller.isReasonRequired;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              TextWidget(
+                text: 'Lý do',
+                fontSize: 14,
+                color: TimeOffCreateColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+              if (isRequired) ...[
+                const SizedBox(width: 4),
+                Icon(Icons.error, size: 16, color: TimeOffCreateColors.error),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          CustomTextField(
+            controller: controller.reasonController,
+            hintText: 'Nhập lý do nghỉ phép...',
+            minLines: 5,
+            maxLines: 6,
+            paddingVertical: 0,
+            paddingHorizontal: 0,
+            borderRadius: 8,
+            fontSize: 14,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+          ),
+        ],
+      );
+    });
   }
 
   Widget _buildTextField(String label, TextEditingController controller) {

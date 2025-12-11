@@ -4,6 +4,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/work_code_deta
 class TimeOffCreateRequest {
   final int vRegId;
   final DateTime fromDate;
+  final DateTime? toDate;
   final String domInt;
   final String description;
   final String vacationReason;
@@ -18,6 +19,7 @@ class TimeOffCreateRequest {
   const TimeOffCreateRequest({
     required this.vRegId,
     required this.fromDate,
+    this.toDate,
     required this.domInt,
     required this.description,
     required this.vacationReason,
@@ -33,6 +35,7 @@ class TimeOffCreateRequest {
   TimeOffCreateRequest copyWith({
     int? vRegId,
     DateTime? fromDate,
+    DateTime? toDate,
     String? domInt,
     String? description,
     String? vacationReason,
@@ -47,6 +50,7 @@ class TimeOffCreateRequest {
     return TimeOffCreateRequest(
       vRegId: vRegId ?? this.vRegId,
       fromDate: fromDate ?? this.fromDate,
+      toDate: toDate ?? this.toDate,
       domInt: domInt ?? this.domInt,
       description: description ?? this.description,
       vacationReason: vacationReason ?? this.vacationReason,
@@ -60,4 +64,3 @@ class TimeOffCreateRequest {
     );
   }
 }
-

@@ -4,9 +4,11 @@ import 'package:vos_flutter/feature/login/presentation/view/login_screen.dart';
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/about_screen.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/link_viags_screen.dart';
+import 'package:vos_flutter/feature/profile/presentation/view/personal_info_screen.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/privacy_policy_screen.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/profile_screen.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/terms_of_service_screen.dart';
+import 'package:vos_flutter/feature/profile/presentation/view/terms_screen.dart';
 import 'package:vos_flutter/feature/news_detail/binding/news_detail_binding.dart';
 import 'package:vos_flutter/feature/news_detail/presentation/view/news_detail_screen.dart';
 import 'package:vos_flutter/feature/authorize/binding/authorize_binding.dart';
@@ -27,6 +29,8 @@ class AppRouter {
   // Route cha
   static const main = '/main';
   static const profile = '/profile';
+  static const personalInfo = '/profile/personal-info';
+  static const terms = '/profile/terms';
   static const linkViags = '/profile/link-viags';
   static const privacyPolicy = '/profile/privacy-policy';
   static const termsOfService = '/profile/terms-of-service';
@@ -62,22 +66,19 @@ class AppRouter {
       binding: ProfileBinding(),
     ),
     GetPage(
+      name: personalInfo,
+      page: () => const PersonalInfoScreen(),
+      binding: ProfileBinding(),
+    ),
+    GetPage(name: terms, page: () => const TermsScreen()),
+    GetPage(
       name: linkViags,
       page: () => const LinkViagsScreen(),
       binding: ProfileBinding(),
     ),
-    GetPage(
-      name: privacyPolicy,
-      page: () => const PrivacyPolicyScreen(),
-    ),
-    GetPage(
-      name: termsOfService,
-      page: () => const TermsOfServiceScreen(),
-    ),
-    GetPage(
-      name: about,
-      page: () => const AboutScreen(),
-    ),
+    GetPage(name: privacyPolicy, page: () => const PrivacyPolicyScreen()),
+    GetPage(name: termsOfService, page: () => const TermsOfServiceScreen()),
+    GetPage(name: about, page: () => const AboutScreen()),
     GetPage(
       name: newsDetail,
       page: () => const NewsDetailScreen(),
