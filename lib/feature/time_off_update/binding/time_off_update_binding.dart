@@ -11,6 +11,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_leave_ty
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_personal_vacation_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/data/repository_impl/time_off_update_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/repositories/time_off_update_repository.dart';
@@ -97,6 +98,12 @@ class TimeOffUpdateBinding extends Bindings {
       ),
     );
 
+    Get.lazyPut<GetPersonalVacationUsecase>(
+      () => GetPersonalVacationUsecase(
+        repository: Get.find<TimeOffCreateRepository>(),
+      ),
+    );
+
     // UpdateUsecase riêng
     Get.lazyPut<UpdateTimeOffUsecase>(
       () =>
@@ -150,6 +157,7 @@ class TimeOffUpdateBinding extends Bindings {
         getAllVacationReasonsUsecase: Get.find<GetAllVacationReasonsUsecase>(),
         getWorkCodesUsecase: Get.find<GetWorkCodesUsecase>(),
         getLeaveLocationsUsecase: Get.find<GetLeaveLocationsUsecase>(),
+        getPersonalVacationUsecase: Get.find<GetPersonalVacationUsecase>(),
         updateTimeOffUsecase: Get.find<UpdateTimeOffUsecase>(),
         sendApproveRequestUsecase: Get.find<SendApproveRequestUsecase>(),
         uploadFilesUsecase: Get.find<UploadFilesUsecase>(),

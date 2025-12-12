@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
@@ -23,7 +24,7 @@ class WorkCodeListWidget extends GetView<TimeOffUpdateController> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.primary,
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
               ),
@@ -40,20 +41,7 @@ class WorkCodeListWidget extends GetView<TimeOffUpdateController> {
             ),
           ),
           Obx(
-            () => ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.workCodeList.length,
-              separatorBuilder: (_, __) => const Divider(
-                height: 1,
-                color: TimeOffCreateColors.dividerColor,
-              ),
-              itemBuilder: (_, index) => WorkCodeItemWidget(index: index),
-            ),
-          ),
-          Obx(
             () => Container(
-              padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
                 border: Border(
                   top: BorderSide(
@@ -63,24 +51,41 @@ class WorkCodeListWidget extends GetView<TimeOffUpdateController> {
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   TextWidget(
-                    text: 'Tổng ngày nghỉ:',
+                    text: '',
                     fontSize: 14,
                     color: TimeOffCreateColors.textPrimary,
                     fontWeight: FontWeight.w500,
                   ),
-                  TextWidget(
-                    text: controller.totalDays == controller.totalDays.toInt()
-                        ? '${controller.totalDays.toInt()}'
-                        : '${controller.totalDays.toStringAsFixed(1)}',
-                    fontSize: 16,
-                    color: TimeOffCreateColors.primary,
-                    fontWeight: FontWeight.w700,
+                  Spacer(),
+                  SizedBox(
+                    width: 150.w,
+                    child: TextWidget(
+                      text: controller.totalDays == controller.totalDays.toInt()
+                          ? '${controller.totalDays.toInt()}'
+                          : '${controller.totalDays.toStringAsFixed(1)}',
+                      fontSize: 18,
+                      color: TimeOffCreateColors.primary,
+                      fontWeight: FontWeight.w700,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),
+            ),
+          ),
+          Obx(
+            () => ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.workCodeList.length,
+              separatorBuilder: (_, __) => const Divider(
+                height: 1,
+                color: TimeOffCreateColors.dividerColor,
+              ),
+              itemBuilder: (_, index) => WorkCodeItemWidget(index: index),
             ),
           ),
         ],

@@ -11,4 +11,3 @@ class GetPersonalVacationUsecase {
     return await repository.getPersonalVacation(hrId: hrId);
   }
 }
-

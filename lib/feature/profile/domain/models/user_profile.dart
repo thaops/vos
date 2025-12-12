@@ -31,6 +31,10 @@ class UserProfile {
   final int hrId;
   final String hrNo;
   final String loginType;
+  final String depCode;
+  final String depNameVN;
+  final String codeJobTitle;
+  final String jobTitleNameVN;
 
   UserProfile({
     required this.userId,
@@ -65,6 +69,9 @@ class UserProfile {
     required this.hrId,
     required this.hrNo,
     required this.loginType,
+    required this.depCode,
+    required this.depNameVN,
+    required this.codeJobTitle,
+    required this.jobTitleNameVN,
   });
 }
-

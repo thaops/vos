@@ -109,6 +109,45 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     }
   }
 
+
+    String buildStatusTag(String status) {
+    switch (status) {
+      case '--':
+        return 'Chưa chuyển cho cán bộ phê duyệt';
+      case 'IN':
+        return 'Đang trong quá trình phê duyệt';
+      case 'FN':
+        return 'Được phê duyệt';
+      case 'RJ':
+        return 'Từ chối';
+      case 'BK':
+        return 'Thu hồi';
+      case 'OK':
+        return 'Chưa phê duyệt';
+      default:
+        return '--';
+    }
+  }
+
+  Color buildStatusColor(String status) {
+    switch (status) {
+      case '--':
+        return Colors.grey;
+      case 'IN':
+        return Colors.orange;
+      case 'FN':
+        return Colors.green;
+      case 'RJ':
+        return Colors.red;
+      case 'BK':
+        return Colors.blueGrey;
+      case 'OK':
+        return Colors.grey;
+      default:
+        return Colors.grey;
+    }
+  }
+
   // Thu hồi đơn
   Future<void> recallTimeOff() async {
     final timeOff = timeOffDetail.value;

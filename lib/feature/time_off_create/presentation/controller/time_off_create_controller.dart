@@ -588,7 +588,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       baseFromDate.minute,
     );
 
-    // Giờ mặc định 08:00 nếu user chưa chọn giờ (hour & minute đều 0)
     final normalizedFromDate =
         (baseFromDate.hour == 0 && baseFromDate.minute == 0)
         ? DateTime(
@@ -648,7 +647,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     if (isReasonRequired && reasonController.text.trim().isEmpty) {
       Get.snackbar(
         'Lỗi',
-        'Vui lòng nhập lý do nghỉ phép',
+        'Vui lòng nhập mô tả nghỉ phép',
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red.shade100,
         colorText: Colors.red.shade800,
@@ -699,15 +698,15 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   ) async {
     try {
       String? email;
+      int? hrId;
       if (Get.isRegistered<ProfileController>()) {
         final profileController = Get.find<ProfileController>();
         email = profileController.userProfile.value?.email;
+        hrId = profileController.userProfile.value?.hrId;
       }
 
-      // Dùng email mặc định nếu null
       final emailWithDefault = email ?? 'phongdh@viags.vn';
 
-      // Load TimeOff detail để lấy đầy đủ thông tin (processes, attachFiles)
       final detailResult = await getTimeOffDetailUsecase.call(vRegId: vRegId);
       if (!detailResult.isSuccess || detailResult.data == null) {
         print('⚠️ [CreateAflVos] Không load được detail, bỏ qua');
@@ -721,26 +720,59 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
         return;
       }
 
-      // Map data (ưu tiên approvals từ API sendApprove)
+      // Chuẩn hóa from/to từ UI để truyền giờ chính xác
+      final baseFromDate =
+          fromDate.value ?? DateTime.now().add(const Duration(days: 1));
+      final normalizedFromDate =
+          (baseFromDate.hour == 0 && baseFromDate.minute == 0)
+          ? DateTime(
+              baseFromDate.year,
+              baseFromDate.month,
+              baseFromDate.day,
+              8,
+              0,
+            )
+          : DateTime(
+              baseFromDate.year,
+              baseFromDate.month,
+              baseFromDate.day,
+              baseFromDate.hour,
+              baseFromDate.minute,
+            );
+
+      final leaveTimes = totalDays;
+      final baseToDate = toDate.value ?? normalizedFromDate;
+      final daysToAdd = leaveTimes.ceil().clamp(0, 365);
+      final computedToDate = leaveTimes <= 1
+          ? baseToDate
+          : DateTime(
+              normalizedFromDate.year,
+              normalizedFromDate.month,
+              normalizedFromDate.day,
+              baseToDate.hour,
+              baseToDate.minute,
+            ).add(Duration(days: daysToAdd - 1));
+
       final request = CreateAflVosRequest.fromTimeOff(
         timeOff: timeOff,
         processes: processes,
         approvalsOverride: approvalsFromApi,
+        overrideFromDate: normalizedFromDate,
+        overrideToDate: computedToDate,
+        hrId: hrId,
       );
 
-      // Call API
       await handleApiCallVoid(
         apiCall: () =>
             createAflVosUsecase.call(request: request, email: emailWithDefault),
         showErrorSnackbar: false,
       );
     } catch (e) {
-      print('❌ [CreateAflVos] Exception: $e');
+      print('[CreateAflVos] Exception: $e');
     }
   }
 
   Future<void> onSaveDraft() async {
-    // Validation: Loại phép là bắt buộc
     if (selectedLeaveType.value.isEmpty) {
       Get.snackbar(
         'Lỗi',
@@ -822,11 +854,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       onSuccess: (data) {
         uploadedFiles.addAll(data);
         attachedFiles.clear();
-        Get.snackbar(
-          'Thành công',
-          'Upload ${data.length} file thành công',
-          snackPosition: SnackPosition.TOP,
-        );
       },
       onError: (error) {
         Get.snackbar(

@@ -87,7 +87,7 @@ class UserInfoBlock extends GetView<TimeOffCreateController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 100,
+          width: 200,
           child: TextWidget(
             text: '$label:',
             fontSize: 14,

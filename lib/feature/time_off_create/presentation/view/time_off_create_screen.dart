@@ -75,6 +75,10 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                           ),
                           SizedBox(
                             width: fieldWidth,
+                            child: _buildReasonTextArea(),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -140,10 +144,7 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                             width: fieldWidth,
                             child: const WorkCodeListWidget(),
                           ),
-                          SizedBox(
-                            width: fieldWidth,
-                            child: _buildReasonTextArea(),
-                          ),
+
                           SizedBox(
                             width: fieldWidth,
                             child: _buildTextField(
@@ -220,7 +221,7 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
           const SizedBox(height: 8),
           CustomTextField(
             controller: controller.reasonController,
-            hintText: 'Nhập lý do nghỉ phép...',
+            hintText: 'Mô tả lý do nghỉ phép...',
             minLines: 5,
             maxLines: 6,
             paddingVertical: 0,

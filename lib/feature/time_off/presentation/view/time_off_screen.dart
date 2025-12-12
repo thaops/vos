@@ -72,15 +72,14 @@ class TimeOffScreen extends GetView<TimeOffController> {
                           name: controller.selectedStatusFilter.value.isEmpty
                               ? 'Chọn trạng thái'
                               : controller.selectedStatusFilter.value,
-                          selectList: TimeOffController.statusFilterList
+                          selectList: controller.statusFilterList
                               .map(
-                                (filter) => Item(
-                                  id: filter['code']!,
-                                  name: filter['name']!,
-                                ),
+                                (filter) =>
+                                    Item(id: filter.code, name: filter.name),
                               )
                               .toList(),
-                          selectedId: controller.selectedStatusCode.value.isEmpty
+                          selectedId:
+                              controller.selectedStatusCode.value.isEmpty
                               ? null
                               : controller.selectedStatusCode.value,
                           selectedName:
@@ -99,6 +98,10 @@ class TimeOffScreen extends GetView<TimeOffController> {
               Expanded(
                 child: Obx(() {
                   final data = controller.timeOffList;
+                  final statusNameMap = {
+                    for (final status in controller.statusFilterList)
+                      status.code: status.name,
+                  };
                   if (data.isEmpty &&
                       controller.status == ControllerStatus.loading) {
                     return const Center(child: CircularProgressIndicator());
@@ -108,81 +111,89 @@ class TimeOffScreen extends GetView<TimeOffController> {
                   }
                   return RefreshIndicator(
                     onRefresh: controller.onRefresh,
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        SliverPadding(
-                          padding: EdgeInsets.all(16.w),
-                          sliver: isWide
-                              ? SliverGrid(
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 10,
-                                    crossAxisSpacing: 12,
-                                    childAspectRatio: 1.5,
-                                  ),
-                                  delegate: SliverChildBuilderDelegate(
-                                    (context, index) {
-                                      final item = data[index];
-                                      return TimeOffCard(
-                                        timeOff: item,
-                                        onCancel: controller.isDraft(item)
-                                            ? () =>
-                                                controller.cancelTimeOff(item)
-                                            : null,
-                                        onRecall: controller.canCancel(item)
-                                            ? () =>
-                                                controller.recallTimeOff(item)
-                                            : null,
-                                        onSendApprove: controller.isDraft(item)
-                                            ? () => controller
-                                                .sendApproveRequest(item)
-                                            : null,
-                                        onEdit: controller.isDraft(item)
-                                            ? () =>
-                                                controller.navigateToUpdate(item)
-                                            : null,
-                                      );
-                                    },
-                                    childCount: data.length,
-                                  ),
-                                )
-                              : SliverList(
-                                  delegate: SliverChildBuilderDelegate(
-                                    (context, index) {
-                                      final item = data[index];
-                                      return TimeOffCard(
-                                        timeOff: item,
-                                        onCancel: controller.isDraft(item)
-                                            ? () =>
-                                                controller.cancelTimeOff(item)
-                                            : null,
-                                        onRecall: controller.canCancel(item)
-                                            ? () =>
-                                                controller.recallTimeOff(item)
-                                            : null,
-                                        onSendApprove: controller.isDraft(item)
-                                            ? () => controller
-                                                .sendApproveRequest(item)
-                                            : null,
-                                        onEdit: controller.isDraft(item)
-                                            ? () =>
-                                                controller.navigateToUpdate(item)
-                                            : null,
-                                      );
-                                    },
-                                    childCount: data.length,
-                                  ),
-                                ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1200),
+                        child: CustomScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
+                            SliverPadding(
+                              padding: EdgeInsets.all(16.w),
+                              sliver: isWide
+                                  ? SliverGrid(
+                                      gridDelegate:
+                                          const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            mainAxisSpacing: 10,
+                                            crossAxisSpacing: 12,
+                                            childAspectRatio: 1.5,
+                                          ),
+                                      delegate: SliverChildBuilderDelegate((
+                                        context,
+                                        index,
+                                      ) {
+                                        final item = data[index];
+                                        return TimeOffCard(
+                                          timeOff: item,
+                                          statusNameByCode: statusNameMap,
+                                          onCancel: controller.isDraft(item)
+                                              ? () => controller.cancelTimeOff(
+                                                  item,
+                                                )
+                                              : null,
+                                          onRecall: controller.canCancel(item)
+                                              ? () => controller.recallTimeOff(
+                                                  item,
+                                                )
+                                              : null,
+                                          onSendApprove:
+                                              controller.isDraft(item)
+                                              ? () => controller
+                                                    .sendApproveRequest(item)
+                                              : null,
+                                          onEdit: controller.isDraft(item)
+                                              ? () => controller
+                                                    .navigateToUpdate(item)
+                                              : null,
+                                        );
+                                      }, childCount: data.length),
+                                    )
+                                  : SliverList(
+                                      delegate: SliverChildBuilderDelegate((
+                                        context,
+                                        index,
+                                      ) {
+                                        final item = data[index];
+                                        return TimeOffCard(
+                                          timeOff: item,
+                                          statusNameByCode: statusNameMap,
+                                          onCancel: controller.isDraft(item)
+                                              ? () => controller.cancelTimeOff(
+                                                  item,
+                                                )
+                                              : null,
+                                          onRecall: controller.canCancel(item)
+                                              ? () => controller.recallTimeOff(
+                                                  item,
+                                                )
+                                              : null,
+                                          onSendApprove:
+                                              controller.isDraft(item)
+                                              ? () => controller
+                                                    .sendApproveRequest(item)
+                                              : null,
+                                          onEdit: controller.isDraft(item)
+                                              ? () => controller
+                                                    .navigateToUpdate(item)
+                                              : null,
+                                        );
+                                      }, childCount: data.length),
+                                    ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
                   );
                 }),
               ),

@@ -1,13 +1,17 @@
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
 import 'package:vos_flutter/core/network/base_share_datasource.dart';
 import 'package:vos_flutter/feature/time_off/data/models/time_off_dto.dart';
+import 'package:vos_flutter/feature/time_off/data/models/time_off_status_dto.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/time_off_status.dart';
 
 abstract class TimeOffRemoteDataSource {
   Future<ApiResult<List<TimeOff>>> getTimeOffList({
     int vRegId = 0,
     int year = 0,
   });
+
+  Future<ApiResult<List<TimeOffStatus>>> getStatusList();
 }
 
 class TimeOffRemoteDataSourceImpl extends BaseShareDataSource
@@ -45,6 +49,23 @@ class TimeOffRemoteDataSourceImpl extends BaseShareDataSource
         }
 
         return timeOffs;
+      },
+    );
+  }
+
+  @override
+  Future<ApiResult<List<TimeOffStatus>>> getStatusList() async {
+    return shareApiRepository.callShareGet<List<TimeOffStatus>>(
+      functionCode: 'EAF_HR.dbo.Vacation_Register.ApproveStatus',
+      token: getToken(),
+      data: const {},
+      parser: (json) {
+        if (json is! List) return [];
+
+        return json
+            .whereType<Map<String, dynamic>>()
+            .map((item) => TimeOffStatusDto.fromJson(item).toDomain())
+            .toList();
       },
     );
   }

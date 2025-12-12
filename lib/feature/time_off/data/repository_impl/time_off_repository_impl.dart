@@ -1,6 +1,7 @@
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
 import 'package:vos_flutter/feature/time_off/data/datasources/remote/time_off_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/time_off_status.dart';
 import 'package:vos_flutter/feature/time_off/domain/repositories/time_off_repository.dart';
 
 class TimeOffRepositoryImpl implements TimeOffRepository {
@@ -14,5 +15,10 @@ class TimeOffRepositoryImpl implements TimeOffRepository {
     int year = 0,
   }) async {
     return await remoteDataSource.getTimeOffList(vRegId: vRegId, year: year);
+  }
+
+  @override
+  Future<ApiResult<List<TimeOffStatus>>> getStatusList() async {
+    return await remoteDataSource.getStatusList();
   }
 }

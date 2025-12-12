@@ -16,9 +16,9 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   static const _colorTextDark = Color(0xFF212121);
   static const _colorTextGray = Color(0xFF666666);
   static const _colorBackground = Color(0xFFF5F5F5);
-  static const _colorStatusApproved = Color(0xFF4CAF50); 
-  static const _colorStatusProcessing = Color(0xFFFF9800); 
-  static const _colorStatusRejected = Color(0xFFE53935); 
+  static const _colorStatusApproved = Color(0xFF4CAF50);
+  static const _colorStatusProcessing = Color(0xFFFF9800);
+  static const _colorStatusRejected = Color(0xFFE53935);
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +184,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           final isLast = index == timeOff.processes!.length - 1;
           final totalSteps = timeOff.processes!.length;
           final approvedCount = timeOff.processes!
-              .where((p) => p.status == 'OK')
+              .where((p) => _isApprovedStatus(p.status))
               .length;
 
           return _buildTimelineStep(
@@ -206,9 +206,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     required int approvedCount,
     required bool isLast,
   }) {
-    final isApproved = process.status == 'OK';
-    final isRejected = process.status == 'XX';
-
     // Header step: "3/5: Thủ trưởng CQ/ĐV"
     final stepHeader = '$stepNumber/$totalSteps: ${process.fullName}';
 
@@ -239,34 +236,20 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: isApproved
-                      ? _colorStatusApproved.withOpacity(0.1)
-                      : isRejected
-                      ? _colorStatusRejected.withOpacity(0.1)
-                      : _colorStatusProcessing.withOpacity(0.1),
+                  color: controller
+                      .buildStatusColor(process.status)
+                      .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(2.r),
                   border: Border.all(
-                    color: isApproved
-                        ? _colorStatusApproved
-                        : isRejected
-                        ? _colorStatusRejected
-                        : _colorStatusProcessing,
+                    color: controller.buildStatusColor(process.status),
                   ),
                 ),
                 child: Text(
-                  isApproved
-                      ? 'Đã duyệt'
-                      : isRejected
-                      ? 'Từ chối'
-                      : 'Đang xử lý',
+                  controller.buildStatusTag(process.status),
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w500,
-                    color: isApproved
-                        ? _colorStatusApproved
-                        : isRejected
-                        ? _colorStatusRejected
-                        : _colorStatusProcessing,
+                    color: controller.buildStatusColor(process.status),
                   ),
                 ),
               ),
@@ -437,5 +420,9 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       return '$hrIdStr - $name';
     }
     return hrIdStr.isNotEmpty ? hrIdStr : name;
+  }
+
+  bool _isApprovedStatus(String status) {
+    return status == 'OK' || status == 'FN';
   }
 }

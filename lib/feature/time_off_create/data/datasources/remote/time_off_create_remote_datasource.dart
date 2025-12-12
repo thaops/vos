@@ -370,7 +370,7 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       // Headers với Authorization Bearer token
       final headers = {
         'accept': '*/*',
-        // 'Authorization': 'Bearer $accessToken',
+        'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
         'X-API-KEY': ApiEndpoints.vosApiKey,
         'Cookie': ApiEndpoints.vosCookie,

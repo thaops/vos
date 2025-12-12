@@ -75,18 +75,13 @@ class ProfileHeaderCard extends StatelessWidget {
           ),
           SizedBox(height: 8.h),
           // Branch/Department
-          if (user.branchNameVN.isNotEmpty)
+          if (user.depNameVN.isNotEmpty)
             Text(
-              user.branchNameVN,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            )
-          else if (user.description.isNotEmpty)
-            Text(
-              user.description,
+              user.depNameVN,
               style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
+
           SizedBox(height: 8.h),
           // Primary Email
           Obx(() {

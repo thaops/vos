@@ -4,7 +4,9 @@ import 'package:vos_flutter/common/mixins/api_result_mixin.dart';
 import 'package:vos_flutter/common/widgets/success_dialog.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/time_off_status.dart';
 import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_list_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_status_usecase.dart';
 import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
 import 'package:vos_flutter/feature/time_off/presentation/widgets/time_off_confirm_dialog.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
@@ -22,6 +24,7 @@ import 'package:vos_flutter/router/app_router.dart';
 
 class TimeOffController extends BaseController with ApiResultMixin {
   final GetTimeOffListUsecase getTimeOffListUsecase;
+  final GetTimeOffStatusUsecase getTimeOffStatusUsecase;
   final GetTimeOffDetailUsecase getTimeOffDetailUsecase;
   final UpdateTimeOffUsecase updateTimeOffUsecase;
   final SendApproveRequestUsecase sendApproveRequestUsecase;
@@ -35,16 +38,9 @@ class TimeOffController extends BaseController with ApiResultMixin {
   final RxString selectedStatusCode = 'ALL'.obs;
   final RxInt selectedYear = DateTime.now().year.obs;
   final RxString selectedYearId = DateTime.now().year.toString().obs;
-
-  static const List<Map<String, String>> statusFilterList = [
-    {'code': 'ALL', 'name': 'Tất cả'},
-    {'code': '-', 'name': 'Chưa chuyển phê duyệt'},
-    {'code': 'IN', 'name': 'Trong quá trình phê duyệt'},
-    {'code': 'RJ', 'name': 'Từ chối'},
-    {'code': 'FN', 'name': 'Đồng ý hoàn toàn'},
-    {'code': 'HF', 'name': 'Đồng ý 1 phần'},
-    {'code': 'BK', 'name': 'Thu hồi'},
-  ];
+  final RxList<TimeOffStatus> statusFilterList = <TimeOffStatus>[
+    const TimeOffStatus(code: 'ALL', name: 'Tất cả'),
+  ].obs;
 
   List<int> get yearList {
     final currentYear = DateTime.now().year;
@@ -56,11 +52,12 @@ class TimeOffController extends BaseController with ApiResultMixin {
   }
 
   RxList<String> get statusOptions {
-    return statusFilterList.map((filter) => filter['name']!).toList().obs;
+    return statusFilterList.map((filter) => filter.name).toList().obs;
   }
 
   TimeOffController({
     required this.getTimeOffListUsecase,
+    required this.getTimeOffStatusUsecase,
     required this.getTimeOffDetailUsecase,
     required this.updateTimeOffUsecase,
     required this.sendApproveRequestUsecase,
@@ -73,7 +70,22 @@ class TimeOffController extends BaseController with ApiResultMixin {
   void onInit() {
     super.onInit();
     selectedYearId.value = selectedYear.value.toString();
+    loadStatusFilters();
     loadTimeOffList();
+  }
+
+  Future<void> loadStatusFilters() async {
+    final result = await getTimeOffStatusUsecase.call();
+    if (result.isSuccess && result.data != null) {
+      final apiStatuses = result.data!
+          .where((item) => item.code.isNotEmpty && item.name.isNotEmpty)
+          .toList();
+
+      statusFilterList.assignAll([
+        const TimeOffStatus(code: 'ALL', name: 'Tất cả'),
+        ...apiStatuses,
+      ]);
+    }
   }
 
   Future<void> loadTimeOffList() async {
@@ -116,16 +128,17 @@ class TimeOffController extends BaseController with ApiResultMixin {
     if (statusCode == null) return;
 
     final filter = statusFilterList.firstWhere(
-      (item) => item['code'] == statusCode,
-      orElse: () => statusFilterList[0],
+      (item) => item.code == statusCode,
+      orElse: () => statusFilterList.first,
     );
 
     selectedStatusCode.value = statusCode;
-    selectedStatusFilter.value = filter['name'] ?? 'Tất cả';
+    selectedStatusFilter.value = filter.name;
     applyStatusFilter();
   }
 
   Future<void> onRefresh() async {
+    await loadStatusFilters();
     await loadTimeOffList();
   }
 
@@ -218,7 +231,7 @@ class TimeOffController extends BaseController with ApiResultMixin {
       }
 
       final firstProcess = processes.first;
-      final vAppId = firstProcess.approveNo; 
+      final vAppId = firstProcess.approveNo;
 
       final request = UpdateAflVosRequest.fromTimeOff(
         timeOff: timeOffDetail,
@@ -239,8 +252,7 @@ class TimeOffController extends BaseController with ApiResultMixin {
           print('[UpdateAflVos] Lỗi: $error');
         },
       );
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<void> sendApproveRequest(TimeOff timeOff) async {

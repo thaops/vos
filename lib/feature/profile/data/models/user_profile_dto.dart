@@ -33,6 +33,10 @@ class UserProfileDto {
   final int hrId;
   final String hrNo;
   final String loginType;
+  final String depCode;
+  final String depNameVN;
+  final String codeJobTitle;
+  final String jobTitleNameVN;
 
   UserProfileDto({
     required this.userId,
@@ -67,6 +71,10 @@ class UserProfileDto {
     required this.hrId,
     required this.hrNo,
     required this.loginType,
+    required this.depCode,
+    required this.depNameVN,
+    required this.codeJobTitle,
+    required this.jobTitleNameVN,
   });
 
   factory UserProfileDto.fromJson(Map<String, dynamic> json) {
@@ -103,6 +111,10 @@ class UserProfileDto {
       hrId: json['HR_ID'] as int? ?? 0,
       hrNo: json['HR_No'] as String? ?? '',
       loginType: json['Login_Type'] as String? ?? 'EAF',
+      depCode: json['DepCode'] as String? ?? '',
+      depNameVN: json['DepName_VN'] as String? ?? '',
+      codeJobTitle: json['CodeJobTitle'] as String? ?? '',
+      jobTitleNameVN: json['JobTitleName_VN'] as String? ?? '',
     );
   }
 
@@ -140,6 +152,10 @@ class UserProfileDto {
       'HR_ID': hrId,
       'HR_No': hrNo,
       'Login_Type': loginType,
+      'DepCode': depCode,
+      'DepName_VN': depNameVN,
+      'CodeJobTitle': codeJobTitle,
+      'JobTitleName_VN': jobTitleNameVN,
     };
   }
 
@@ -178,6 +194,10 @@ class UserProfileDto {
       hrId: hrId,
       hrNo: hrNo,
       loginType: loginType,
+      depCode: depCode,
+      depNameVN: depNameVN,
+      codeJobTitle: codeJobTitle,
+      jobTitleNameVN: jobTitleNameVN,
     );
   }
 
@@ -216,7 +236,10 @@ class UserProfileDto {
       hrId: profile.hrId,
       hrNo: profile.hrNo,
       loginType: profile.loginType,
+      depCode: profile.depCode,
+      depNameVN: profile.depNameVN,
+      codeJobTitle: profile.codeJobTitle,
+      jobTitleNameVN: profile.jobTitleNameVN,
     );
   }
 }
-

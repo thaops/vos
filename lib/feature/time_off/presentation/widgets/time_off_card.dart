@@ -14,6 +14,7 @@ class TimeOffCard extends StatelessWidget {
   final VoidCallback? onRecall;
   final VoidCallback? onSendApprove;
   final VoidCallback? onEdit;
+  final Map<String, String>? statusNameByCode;
 
   const TimeOffCard({
     super.key,
@@ -22,41 +23,8 @@ class TimeOffCard extends StatelessWidget {
     this.onRecall,
     this.onSendApprove,
     this.onEdit,
+    this.statusNameByCode,
   });
-
-  // Map approveStatus với text và màu sắc
-  static const Map<String, Map<String, dynamic>> approveStatusMap = {
-    '-': {
-      'text': 'Chưa chuyển phê duyệt',
-      'bgColor': Color(0xFFF5F5F5),
-      'textColor': Color(0xFF666666),
-    },
-    'IN': {
-      'text': 'Trong quá trình phê duyệt',
-      'bgColor': Color(0xFFFFF3E0),
-      'textColor': Color(0xFFF57C00),
-    },
-    'RJ': {
-      'text': 'Từ chối',
-      'bgColor': Color(0xFFFFEBEE),
-      'textColor': Color(0xFFD32F2F),
-    },
-    'FN': {
-      'text': 'Đồng ý hoàn toàn',
-      'bgColor': Color(0xFFE0FFF3),
-      'textColor': Color(0xFF00B894),
-    },
-    'HF': {
-      'text': 'Đồng ý 1 phần',
-      'bgColor': Color(0xFFE3F2FD),
-      'textColor': Color(0xFF1976D2),
-    },
-    'BK': {
-      'text': 'Thu hồi',
-      'bgColor': Color(0xFFFFF3E0),
-      'textColor': Color(0xFFE65100),
-    },
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -159,13 +127,11 @@ class TimeOffCard extends StatelessWidget {
 
   Widget _buildStatusChip() {
     final approveStatus = timeOff.approveStatus ?? '-';
-    final statusInfo =
-        approveStatusMap[approveStatus] ??
-        approveStatusMap['-']!; // Fallback về '-' nếu không tìm thấy
-
-    final statusText = statusInfo['text'] as String;
-    final bgColor = statusInfo['bgColor'] as Color;
-    final textColor = statusInfo['textColor'] as Color;
+    final statusText =
+        statusNameByCode?[approveStatus] ?? timeOff.statusName ?? approveStatus;
+    final colors = _statusColors(approveStatus);
+    final bgColor = colors.$1;
+    final textColor = colors.$2;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
@@ -185,6 +151,24 @@ class TimeOffCard extends StatelessWidget {
         maxLines: 1,
       ),
     );
+  }
+
+  /// Map màu theo code trạng thái (ưu tiên các code từ API)
+  (Color, Color) _statusColors(String code) {
+    switch (code) {
+      case '--': // Chưa chuyển cho cán bộ phê duyệt
+        return (const Color(0xFFF5F5F5), const Color(0xFF666666));
+      case 'IN': // Đang trong quá trình phê duyệt
+        return (const Color(0xFFFFF3E0), const Color(0xFFF57C00));
+      case 'FN': // Được phê duyệt
+        return (const Color(0xFFE0FFF3), const Color(0xFF00B894));
+      case 'RJ': // Từ chối
+        return (const Color(0xFFFFEBEE), const Color(0xFFD32F2F));
+      case 'BK': // Thu hồi
+        return (const Color(0xFFFFF3E0), const Color(0xFFE65100));
+      default: // Fallback
+        return (AppColors.primary.withOpacity(0.08), AppColors.primary);
+    }
   }
 
   Widget _buildInfoItem({

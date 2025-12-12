@@ -30,60 +30,7 @@ class ProfileContent extends StatelessWidget {
                 children: [
                   ViagsConnectionStatusCard(),
                   SizedBox(height: 16.h),
-                  // Thông tin phép cá nhân
-                  if (controller.phepTon.value > 0 ||
-                      controller.overtimeTon.value > 0)
-                    Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16.w),
-                      padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                size: 20.sp,
-                                color: Colors.blue,
-                              ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                'Thông tin phép',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade900,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12.h),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildVacationInfoItem(
-                                'Tồn phép',
-                                '${controller.phepTon.value.toStringAsFixed(1)} ngày',
-                                Colors.green,
-                              ),
-                              _buildVacationInfoItem(
-                                'Tồn OT',
-                                '${controller.overtimeTon.value.toStringAsFixed(1)} ngày',
-                                Colors.orange,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (controller.phepTon.value > 0 ||
-                      controller.overtimeTon.value > 0)
-                    SizedBox(height: 16.h),
+
                   PersonalInfoDetailCard(user: user),
 
                   SizedBox(height: 16.h),

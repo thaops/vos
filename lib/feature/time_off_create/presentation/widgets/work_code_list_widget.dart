@@ -61,15 +61,18 @@ class WorkCodeListWidget extends GetView<TimeOffCreateController> {
                     fontWeight: FontWeight.w500,
                   ),
                   Spacer(),
-                  TextWidget(
-                    text: controller.totalDays == controller.totalDays.toInt()
-                        ? '${controller.totalDays.toInt()}' // Hiển thị số nguyên nếu là số nguyên
-                        : '${controller.totalDays.toStringAsFixed(1)}', // Hiển thị 1 chữ số thập phân
-                    fontSize: 16,
-                    color: TimeOffCreateColors.primary,
-                    fontWeight: FontWeight.w700,
+                  SizedBox(
+                    width: 135.w,
+                    child: TextWidget(
+                      text: controller.totalDays == controller.totalDays.toInt()
+                          ? '${controller.totalDays.toInt()}' // Hiển thị số nguyên nếu là số nguyên
+                          : '${controller.totalDays.toStringAsFixed(1)}', // Hiển thị 1 chữ số thập phân
+                      fontSize: 18,
+                      color: TimeOffCreateColors.primary,
+                      fontWeight: FontWeight.w700,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  SizedBox(width: 60.w),
                 ],
               ),
             ),

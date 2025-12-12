@@ -138,38 +138,7 @@ class FileAttachmentWidget extends GetView<TimeOffUpdateController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.orange.shade200,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.pending_outlined,
-                            size: 16,
-                            color: Colors.orange.shade700,
-                          ),
-                          const SizedBox(width: 8),
-                          TextWidget(
-                            text:
-                                'Chưa upload (${controller.attachedFiles.length})',
-                            fontSize: 13,
-                            color: Colors.orange.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+
                     ...List.generate(controller.attachedFiles.length, (index) {
                       final file = controller.attachedFiles[index];
                       return Container(

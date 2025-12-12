@@ -9,6 +9,7 @@ class CreateAflVosRequest {
   final bool isOverseas;
   final List<AttachmentItem> attachments;
   final int vRegId;
+  final int hrId;
   final List<ApprovalItem> approvals;
 
   CreateAflVosRequest({
@@ -19,6 +20,7 @@ class CreateAflVosRequest {
     required this.isOverseas,
     required this.attachments,
     required this.vRegId,
+    required this.hrId,
     required this.approvals,
   });
 
@@ -31,6 +33,7 @@ class CreateAflVosRequest {
       'IsOverseas': isOverseas,
       'Attachments': attachments.map((a) => a.toJson()).toList(),
       'VRegID': vRegId,
+      'HR_ID': hrId,
       'Approvals': approvals.map((a) => a.toJson()).toList(),
     };
   }
@@ -40,6 +43,9 @@ class CreateAflVosRequest {
     required TimeOff timeOff,
     required List<TimeOffProcess> processes,
     List<ApprovalItem>? approvalsOverride,
+    DateTime? overrideFromDate,
+    DateTime? overrideToDate,
+    int? hrId,
   }) {
     // 1. LeaveDateRange: dùng fromDate + LeaveTimes để suy ra endDate, kèm giờ
     final leaveDateRange = <List<String>>[];
@@ -63,11 +69,13 @@ class CreateAflVosRequest {
     // Đảm bảo luôn trả về string (0.5 -> "0.5", 1.0 -> "1")
     final leaveTimes = leaveTimesNum.toString().replaceAll(RegExp(r'\.0$'), '');
 
-    if (timeOff.fromDate != null) {
-      final startDate = timeOff.fromDate!;
+    final DateTime? baseFromDate = overrideFromDate ?? timeOff.fromDate;
+
+    if (baseFromDate != null) {
+      final startDate = baseFromDate;
       final daysToAdd = leaveTimesNum <= 1 ? 0 : leaveTimesNum.ceil() - 1;
       final computedEndDate = startDate.add(Duration(days: daysToAdd));
-      final endDate = timeOff.toDate ?? computedEndDate;
+      final endDate = overrideToDate ?? timeOff.toDate ?? computedEndDate;
 
       final formatter = DateFormat('yyyy-MM-dd HH:mm');
       final startStr = formatter.format(startDate);
@@ -114,6 +122,7 @@ class CreateAflVosRequest {
       isOverseas: isOverseas,
       attachments: attachments,
       vRegId: timeOff.vRegId,
+      hrId: timeOff.hrId ?? 1752,
       approvals: approvals,
     );
   }

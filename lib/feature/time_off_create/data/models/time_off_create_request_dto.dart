@@ -33,10 +33,6 @@ class TimeOffCreateRequestDto {
   });
 
   factory TimeOffCreateRequestDto.fromDomain(TimeOffCreateRequest request) {
-    print('📦 [TimeOffCreateDTO] fromDomain() - Bắt đầu convert');
-    print('   - Số lượng files: ${request.jsonAttachFiles.length}');
-    
-    // Convert FileAttachment list to JSON string
     final attachFilesJson = request.jsonAttachFiles.isEmpty
         ? ''
         : json.encode(
@@ -44,17 +40,9 @@ class TimeOffCreateRequestDto {
                 .map((file) => FileAttachmentDto.fromDomain(file).toJson())
                 .toList(),
           );
-
-    print('   - JsonAttachFiles length: ${attachFilesJson.length}');
-    if (attachFilesJson.isNotEmpty) {
-      print('   - JsonAttachFiles preview: ${attachFilesJson.substring(0, attachFilesJson.length > 200 ? 200 : attachFilesJson.length)}...');
-    } else {
-      print('   ⚠️ JsonAttachFiles RỖNG!');
-    }
-
     return TimeOffCreateRequestDto(
       vRegId: request.vRegId,
-      fromDate: DateFormat('yyyy-MM-dd').format(request.fromDate),
+      fromDate: DateFormat('yyyy-MM-dd HH:mm:ss').format(request.fromDate),
       domInt: request.domInt,
       description: request.description,
       vacationReason: request.vacationReason,
@@ -88,7 +76,6 @@ class TimeOffCreateRequestDto {
       'ls_Detail': lsDetail,
     };
     
-    // Thêm ApproveStatus nếu có
     if (approveStatus != null) {
       jsonData['ApproveStatus'] = approveStatus!;
     }

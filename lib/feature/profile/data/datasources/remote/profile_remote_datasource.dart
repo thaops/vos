@@ -5,7 +5,9 @@ import 'package:vos_flutter/feature/profile/data/models/user_profile_dto.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<ApiResult<UserProfileDto>> getUserProfile();
-  Future<ApiResult<UserProfileDto>> linkViagsAccount(LinkViagsRequestDto request);
+  Future<ApiResult<UserProfileDto>> linkViagsAccount(
+    LinkViagsRequestDto request,
+  );
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -25,21 +27,22 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<ApiResult<UserProfileDto>> linkViagsAccount(
-      LinkViagsRequestDto request) async {
+    LinkViagsRequestDto request,
+  ) async {
     // Parse request data
     final requestData = request.toJson();
-    
+
     return shareApiRepository.callShareUpdate<UserProfileDto>(
       functionCode: 'MOBI_LOGIN',
-      token: '', // Profile API không dùng token trong header
+      token: '',
       data: requestData,
       parser: (json) {
         if (json is! Map<String, dynamic>) {
           throw Exception('No data in response');
         }
+        print('jsonss: $json');
         return UserProfileDto.fromJson(json);
       },
     );
   }
 }
-

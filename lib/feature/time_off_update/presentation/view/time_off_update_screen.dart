@@ -57,7 +57,7 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
                             child: FormDropdownField(
                               label: 'Lý do nghỉ',
                               required: true,
-                              hint: 'Chọn loại phép',
+                              hint: 'Chọn loại',
                               options: controller.leaveTypeOptions,
                               selectedId: controller.selectedLeaveType,
                               onChanged: controller.onLeaveTypeChanged,
@@ -72,6 +72,10 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
                               selectedId: controller.leaveLocation,
                               onChanged: controller.onLeaveLocationChanged,
                             ),
+                          ),
+                          SizedBox(
+                            width: fieldWidth,
+                            child: _buildReasonTextArea(),
                           ),
                           SizedBox(
                             width: fieldWidth,
@@ -136,67 +140,66 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
                               ],
                             ),
                           ),
-                          SizedBox(
-                            width: fieldWidth,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextWidget(
-                                  text: 'Ngày kết thúc',
-                                  fontSize: 14,
-                                  color: TimeOffCreateColors.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Obx(
-                                        () => DatePickerField(
-                                          label: '',
-                                          required: false,
-                                          value:
-                                              controller.formattedToDate.isEmpty
-                                              ? null
-                                              : controller.formattedToDate,
-                                          onTap: () =>
-                                              controller.selectToDate(context),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Obx(
-                                        () => TimePickerField(
-                                          value:
-                                              controller.formattedToTime.isEmpty
-                                              ? null
-                                              : controller.formattedToTime,
-                                          onTap: () =>
-                                              controller.selectToTime(context),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
+                          // SizedBox(
+                          //   width: fieldWidth,
+                          //   child: Column(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     children: [
+                          //       TextWidget(
+                          //         text: 'Ngày kết thúc',
+                          //         fontSize: 14,
+                          //         color: TimeOffCreateColors.textSecondary,
+                          //         fontWeight: FontWeight.w500,
+                          //       ),
+                          //       const SizedBox(height: 8),
+                          //       Row(
+                          //         children: [
+                          //           Expanded(
+                          //             flex: 2,
+                          //             child: Obx(
+                          //               () => DatePickerField(
+                          //                 label: '',
+                          //                 required: false,
+                          //                 value:
+                          //                     controller.formattedToDate.isEmpty
+                          //                     ? null
+                          //                     : controller.formattedToDate,
+                          //                 onTap: () =>
+                          //                     controller.selectToDate(context),
+                          //               ),
+                          //             ),
+                          //           ),
+                          //           const SizedBox(width: 8),
+                          //           Expanded(
+                          //             flex: 1,
+                          //             child: Obx(
+                          //               () => TimePickerField(
+                          //                 value:
+                          //                     controller.formattedToTime.isEmpty
+                          //                     ? null
+                          //                     : controller.formattedToTime,
+                          //                 onTap: () =>
+                          //                     controller.selectToTime(context),
+                          //               ),
+                          //             ),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
                           SizedBox(
                             width: fieldWidth,
                             child: const WorkCodeListWidget(),
                           ),
-                          SizedBox(
-                            width: fieldWidth,
-                            child: _buildReasonTextArea(),
-                          ),
+
                           SizedBox(
                             width: fieldWidth,
                             child: _buildTextField(
                               'Thông tin liên lạc',
                               controller.contactInfoController,
+                              minLines: 5,
+                              maxLines: 5,
                             ),
                           ),
                           SizedBox(
@@ -245,22 +248,27 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
         children: [
           Row(
             children: [
+              if (isRequired) ...[
+                TextWidget(
+                  text: '*',
+                  fontSize: 14,
+                  color: TimeOffCreateColors.error,
+                  fontWeight: FontWeight.w500,
+                ),
+                const SizedBox(width: 4),
+              ],
               TextWidget(
                 text: 'Mô tả chi tiết',
                 fontSize: 14,
                 color: TimeOffCreateColors.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
-              if (isRequired) ...[
-                const SizedBox(width: 4),
-                Icon(Icons.error, size: 16, color: TimeOffCreateColors.error),
-              ],
             ],
           ),
           const SizedBox(height: 8),
           CustomTextField(
             controller: controller.reasonController,
-            hintText: 'Nhập lý do nghỉ phép...',
+            hintText: 'Mô tả lý do nghỉ phép...',
             minLines: 5,
             maxLines: 6,
             paddingVertical: 0,
@@ -277,7 +285,12 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
     });
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    int minLines = 1,
+    int maxLines = 1,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -288,21 +301,39 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
           fontWeight: FontWeight.w500,
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          height: 48,
-          child: CustomTextField(
+        if (minLines == 1 && maxLines == 1)
+          SizedBox(
+            height: 48,
+            child: CustomTextField(
+              controller: controller,
+              hintText: label,
+              borderRadius: 8,
+              fontSize: 14,
+              paddingVertical: 0,
+              paddingHorizontal: 0,
+              minLines: minLines,
+              maxLines: maxLines,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+          )
+        else
+          CustomTextField(
             controller: controller,
             hintText: label,
             borderRadius: 8,
             fontSize: 14,
             paddingVertical: 0,
             paddingHorizontal: 0,
+            minLines: minLines,
+            maxLines: maxLines,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 12,
             ),
           ),
-        ),
       ],
     );
   }
@@ -327,7 +358,7 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
           8.horizontalSpace,
           Expanded(
             child: CustomButton(
-              text: 'Lưu',
+              text: 'Lưu tạm',
               isOutlined: true,
               borderColor: TimeOffCreateColors.success,
               textColor: TimeOffCreateColors.success,

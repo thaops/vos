@@ -11,71 +11,37 @@ class PersonalInfoDetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 8.h,
         children: [
-          _buildSectionTitle('Thông tin cá nhân'),
-          SizedBox(height: 16.h),
-          _buildInfoRow('Mã nhân viên', user.userCode),
-          _buildInfoRow('Họ và tên', user.userName),
-          _buildInfoRow('Email', user.email.isNotEmpty ? user.email : 'N/A'),
-          _buildInfoRow(
-            'Số điện thoại',
-            user.phone.isNotEmpty ? user.phone : 'N/A',
+          _buildSectionTitle('Thông tin tài khoản Viags'),
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              spacing: 8.h,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoRow('Chức vụ', user.jobTitleNameVN),
+                _buildInfoRow('Tổ đội', user.depNameVN),
+                _buildInfoRow('Mã nhân viên', user.userCode),
+                _buildInfoRow(
+                  'Email',
+                  user.email.isNotEmpty ? user.email : 'N/A',
+                ),
+                _buildInfoRow(
+                  'Số điện thoại',
+                  user.phone.isNotEmpty ? user.phone : 'N/A',
+                ),
+              ],
+            ),
           ),
-          _buildInfoRow('Trạng thái', user.status),
-          if (user.brieftName.isNotEmpty)
-            _buildInfoRow('Tên viết tắt', user.brieftName),
-          _buildInfoRow('Ngôn ngữ', user.language),
-          _buildInfoRow('Loại đăng nhập', user.loginType),
-          if (user.devices.isNotEmpty) _buildInfoRow('Thiết bị', user.devices),
-          if (user.description.isNotEmpty)
-            _buildInfoRow('Mô tả', user.description),
-          SizedBox(height: 24.h),
-          _buildSectionTitle('Thông tin công ty'),
-          SizedBox(height: 16.h),
-          if (user.companyCode.isNotEmpty)
-            _buildInfoRow('Mã công ty', user.companyCode),
-          if (user.companyNameVN.isNotEmpty)
-            _buildInfoRow('Tên công ty (VN)', user.companyNameVN),
-          if (user.companyNameEN.isNotEmpty)
-            _buildInfoRow('Tên công ty (EN)', user.companyNameEN),
-          // _buildSectionTitle('Thông tin công ty mẹ'),
-          // SizedBox(height: 16.h),
-          // if (user.masterCompanyCode.isNotEmpty)
-          //   _buildInfoRow('Mã công ty mẹ', user.masterCompanyCode),
-          // if (user.masterCompanyNameVN.isNotEmpty)
-          //   _buildInfoRow('Tên công ty mẹ (VN)', user.masterCompanyNameVN),
-          // if (user.masterCompanyNameEN.isNotEmpty)
-          //   _buildInfoRow('Tên công ty mẹ (EN)', user.masterCompanyNameEN),
-          // SizedBox(height: 24.h),
-          // _buildSectionTitle('Thông tin chi nhánh'),
-          // SizedBox(height: 16.h),
-          // if (user.branchCode.isNotEmpty)
-          //   _buildInfoRow('Mã chi nhánh', user.branchCode),
-          // if (user.branchNameVN.isNotEmpty)
-          //   _buildInfoRow('Tên chi nhánh (VN)', user.branchNameVN),
-          // if (user.branchNameEN.isNotEmpty)
-          //   _buildInfoRow('Tên chi nhánh (EN)', user.branchNameEN),
-          // SizedBox(height: 24.h),
-          // _buildSectionTitle('Thông tin HR'),
-          // SizedBox(height: 16.h),
-          // if (user.hrId > 0) _buildInfoRow('HR ID', user.hrId.toString()),
-          // if (user.hrNo.isNotEmpty) _buildInfoRow('HR No', user.hrNo),
         ],
       ),
     );
@@ -84,11 +50,7 @@ class PersonalInfoDetailCard extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 18.sp,
-        fontWeight: FontWeight.bold,
-        color: AppColors.primary,
-      ),
+      style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
     );
   }
 
@@ -99,23 +61,29 @@ class PersonalInfoDetailCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Image.asset(Img.copy, width: 12.w, height: 12.w, fit: BoxFit.contain),
+          Image.asset(Img.copy, width: 14.w, height: 14.w, fit: BoxFit.contain),
           SizedBox(width: 12.w),
           SizedBox(
-            width: 140.w,
+            width: 120.w,
             child: Text(
               label,
               style: TextStyle(
                 fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+                fontWeight: FontWeight.w400,
+                color: Colors.grey[500],
               ),
             ),
           ),
+
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[900]),
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.black,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.end,
             ),
           ),
         ],
