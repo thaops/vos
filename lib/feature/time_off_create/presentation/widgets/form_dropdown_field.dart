@@ -29,21 +29,21 @@ class FormDropdownField extends StatelessWidget {
       children: [
         Row(
           children: [
-            TextWidget(
-              text: label,
-              fontSize: 14,
-              color: TimeOffCreateColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
             if (required) ...[
-              const SizedBox(width: 4),
               TextWidget(
                 text: '*',
                 fontSize: 14,
                 color: TimeOffCreateColors.error,
                 fontWeight: FontWeight.w500,
               ),
+              const SizedBox(width: 4),
             ],
+            TextWidget(
+              text: label,
+              fontSize: 14,
+              color: TimeOffCreateColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
           ],
         ),
         Obx(

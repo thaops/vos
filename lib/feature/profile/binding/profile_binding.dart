@@ -12,6 +12,10 @@ import 'package:vos_flutter/feature/profile/domain/usecases/link_viags_account_u
 import 'package:vos_flutter/feature/profile/domain/usecases/unlink_viags_account_usecase.dart';
 import 'package:vos_flutter/feature/profile/domain/usecases/logout_usecase.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
+import 'package:vos_flutter/feature/vacation/data/datasources/remote/vacation_remote_datasource.dart';
+import 'package:vos_flutter/feature/vacation/data/repository_impl/vacation_repository_impl.dart';
+import 'package:vos_flutter/feature/vacation/domain/repositories/vacation_repository.dart';
+import 'package:vos_flutter/feature/vacation/domain/usecases/get_vacation_list_usecase.dart';
 
 class ProfileBinding extends Bindings {
   @override
@@ -30,9 +34,7 @@ class ProfileBinding extends Bindings {
       ),
     );
 
-    Get.lazyPut<ProfileLocalDataSource>(
-      () => ProfileLocalDataSourceImpl(),
-    );
+    Get.lazyPut<ProfileLocalDataSource>(() => ProfileLocalDataSourceImpl());
 
     // Repository
     Get.lazyPut<ProfileRepository>(
@@ -44,39 +46,44 @@ class ProfileBinding extends Bindings {
 
     // Use Cases
     Get.lazyPut<GetUserProfileUsecase>(
-      () => GetUserProfileUsecase(
-        Get.find<ProfileRepository>(),
-      ),
+      () => GetUserProfileUsecase(Get.find<ProfileRepository>()),
     );
 
     Get.lazyPut<LinkViagsAccountUsecase>(
-      () => LinkViagsAccountUsecase(
-        Get.find<ProfileRepository>(),
-      ),
+      () => LinkViagsAccountUsecase(Get.find<ProfileRepository>()),
     );
 
     Get.lazyPut<UnlinkViagsAccountUsecase>(
-      () => UnlinkViagsAccountUsecase(
-        Get.find<ProfileRepository>(),
-      ),
+      () => UnlinkViagsAccountUsecase(Get.find<ProfileRepository>()),
     );
 
     Get.lazyPut<LogoutUsecase>(
-      () => LogoutUsecase(
-        Get.find<ProfileRepository>(),
-      ),
+      () => LogoutUsecase(Get.find<ProfileRepository>()),
     );
 
     Get.lazyPut<CheckViagsStatusUsecase>(
-      () => CheckViagsStatusUsecase(
-        Get.find<ProfileRepository>(),
-      ),
+      () => CheckViagsStatusUsecase(Get.find<ProfileRepository>()),
     );
 
     Get.lazyPut<CheckEmployeeStatusUsecase>(
-      () => CheckEmployeeStatusUsecase(
-        Get.find<ProfileRepository>(),
+      () => CheckEmployeeStatusUsecase(Get.find<ProfileRepository>()),
+    );
+
+    // Vacation dependencies (optional - để ProfileController có thể load vacation data)
+    Get.lazyPut<VacationRemoteDataSource>(
+      () => VacationRemoteDataSourceImpl(
+        shareApiRepository: Get.find<ShareApiRepository>(),
       ),
+    );
+
+    Get.lazyPut<VacationRepository>(
+      () => VacationRepositoryImpl(
+        remoteDataSource: Get.find<VacationRemoteDataSource>(),
+      ),
+    );
+
+    Get.lazyPut<GetVacationListUsecase>(
+      () => GetVacationListUsecase(repository: Get.find<VacationRepository>()),
     );
 
     // Controller
@@ -88,6 +95,7 @@ class ProfileBinding extends Bindings {
         logoutUsecase: Get.find<LogoutUsecase>(),
         checkViagsStatusUsecase: Get.find<CheckViagsStatusUsecase>(),
         checkEmployeeStatusUsecase: Get.find<CheckEmployeeStatusUsecase>(),
+        getVacationListUsecase: Get.find<GetVacationListUsecase>(),
       ),
     );
   }

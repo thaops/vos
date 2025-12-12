@@ -176,6 +176,41 @@ class SignOutClear extends GetxService {
     }
   }
 
+  /// Huỷ liên kết đăng nhập (Google/Firebase) và xoá token để người dùng liên kết lại
+  /// Không điều hướng, không xoá cấu hình môi trường hay cache khác.
+  Future<void> unlinkAuth() async {
+    try {
+      try {
+        await FirebaseAuth.instance.signOut();
+      } catch (e) {
+        print('⚠️ Error unlinking Firebase Auth: $e');
+      }
+
+      try {
+        final googleSignIn = GoogleSignIn(scopes: ['email']);
+        await googleSignIn.disconnect();
+      } catch (e) {
+        print('⚠️ Error unlinking Google: $e');
+      }
+
+      try {
+        final box = Hive.box('google_user_box');
+        await box.delete('current_user');
+      } catch (e) {
+        print('⚠️ Error clearing Google user from Hive during unlink: $e');
+      }
+
+      // Clear access/refresh tokens nhưng giữ lại các thiết lập khác
+      final Services services = await Services.create();
+      await services.clearTokens();
+
+      // Không clear SharedPreferences/GetStorage hay điều hướng
+      // để người dùng tự liên kết lại mà không mất cấu hình.
+    } catch (e) {
+      print('❌ Error during unlink auth: $e');
+    }
+  }
+
   /// Clear chỉ user cache
   Future<void> clearUserCache() async {
     try {

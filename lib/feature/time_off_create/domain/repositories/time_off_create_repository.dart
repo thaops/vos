@@ -10,6 +10,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_r
 import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/vacation_reason.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/work_code.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/personal_vacation.dart';
 
 abstract class TimeOffCreateRepository {
   Future<ApiResult<List<LeaveType>>> getLeaveTypes();
@@ -33,4 +34,5 @@ abstract class TimeOffCreateRepository {
     required int vRegId,
     required String email,
   });
+  Future<ApiResult<PersonalVacation>> getPersonalVacation({required int hrId});
 }

@@ -45,8 +45,8 @@ mixin ApiResultMixin on BaseController {
 
         // Kiểm tra nếu token expired thì tự động đăng xuất
         if (_isTokenExpiredError(errorMsg)) {
-          print('🔒 Token expired detected, signing out...');
-          SignOutClear().signOut();
+          print('🔒 Token expired detected, unlinking auth...');
+          await _handleTokenExpired();
           return null;
         }
 
@@ -62,8 +62,8 @@ mixin ApiResultMixin on BaseController {
 
       // Kiểm tra nếu token expired thì tự động đăng xuất
       if (_isTokenExpiredError(errorMsg)) {
-        print('🔒 Token expired detected in exception, signing out...');
-        SignOutClear().signOut();
+        print('🔒 Token expired detected in exception, unlinking auth...');
+        await _handleTokenExpired();
         return null;
       }
 
@@ -98,8 +98,8 @@ mixin ApiResultMixin on BaseController {
 
         // Kiểm tra nếu token expired thì tự động đăng xuất
         if (_isTokenExpiredError(errorMsg)) {
-          print('🔒 Token expired detected, signing out...');
-          SignOutClear().signOut();
+          print('🔒 Token expired detected, unlinking auth...');
+          await _handleTokenExpired();
           return false;
         }
 
@@ -115,8 +115,8 @@ mixin ApiResultMixin on BaseController {
 
       // Kiểm tra nếu token expired thì tự động đăng xuất
       if (_isTokenExpiredError(errorMsg)) {
-        print('🔒 Token expired detected in exception, signing out...');
-        SignOutClear().signOut();
+        print('🔒 Token expired detected in exception, unlinking auth...');
+        await _handleTokenExpired();
         return false;
       }
 
@@ -137,5 +137,13 @@ mixin ApiResultMixin on BaseController {
         lowerError.contains('token hết hạn') ||
         lowerError.contains('unauthorized') ||
         lowerError.contains('token invalid');
+  }
+
+  Future<void> _handleTokenExpired() async {
+    // Hủy liên kết để người dùng tự liên kết lại, không sign out toàn bộ
+    await SignOutClear().unlinkAuth();
+    setStatus(ControllerStatus.error,
+        error: 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại.');
+    CustomSnackbar.show('Phiên đăng nhập đã hết hạn, vui lòng liên kết lại.');
   }
 }

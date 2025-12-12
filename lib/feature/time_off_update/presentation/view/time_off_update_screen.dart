@@ -55,7 +55,7 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
                           SizedBox(
                             width: fieldWidth,
                             child: FormDropdownField(
-                              label: 'Loại phép',
+                              label: 'Lý do nghỉ',
                               required: true,
                               hint: 'Chọn loại phép',
                               options: controller.leaveTypeOptions,
@@ -246,7 +246,7 @@ class TimeOffUpdateScreen extends GetView<TimeOffUpdateController> {
           Row(
             children: [
               TextWidget(
-                text: 'Lý do',
+                text: 'Mô tả chi tiết',
                 fontSize: 14,
                 color: TimeOffCreateColors.textSecondary,
                 fontWeight: FontWeight.w500,

@@ -55,9 +55,9 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                           SizedBox(
                             width: fieldWidth,
                             child: FormDropdownField(
-                              label: 'Loại phép',
+                              label: 'Lý do nghỉ',
                               required: true,
-                              hint: 'Chọn loại phép',
+                              hint: 'Chọn loại',
                               options: controller.leaveTypeOptions,
                               selectedId: controller.selectedLeaveType,
                               onChanged: controller.onLeaveTypeChanged,
@@ -138,54 +138,6 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                           ),
                           SizedBox(
                             width: fieldWidth,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TextWidget(
-                                  text: 'Ngày kết thúc',
-                                  fontSize: 14,
-                                  color: TimeOffCreateColors.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 2,
-                                      child: Obx(
-                                        () => DatePickerField(
-                                          label: '',
-                                          required: false,
-                                          value:
-                                              controller.formattedToDate.isEmpty
-                                              ? null
-                                              : controller.formattedToDate,
-                                          onTap: () =>
-                                              controller.selectToDate(context),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Obx(
-                                        () => TimePickerField(
-                                          value:
-                                              controller.formattedToTime.isEmpty
-                                              ? null
-                                              : controller.formattedToTime,
-                                          onTap: () =>
-                                              controller.selectToTime(context),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            width: fieldWidth,
                             child: const WorkCodeListWidget(),
                           ),
                           SizedBox(
@@ -197,6 +149,8 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
                             child: _buildTextField(
                               'Thông tin liên lạc',
                               controller.contactInfoController,
+                              minLines: 5,
+                              maxLines: 5,
                             ),
                           ),
                           SizedBox(
@@ -240,21 +194,27 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
   Widget _buildReasonTextArea() {
     return Obx(() {
       final isRequired = controller.isReasonRequired;
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              if (isRequired) ...[
+                TextWidget(
+                  text: '*',
+                  fontSize: 14,
+                  color: TimeOffCreateColors.error,
+                  fontWeight: FontWeight.w500,
+                ),
+                const SizedBox(width: 4),
+              ],
               TextWidget(
-                text: 'Lý do',
+                text: 'Mô tả chi tiết',
                 fontSize: 14,
                 color: TimeOffCreateColors.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
-              if (isRequired) ...[
-                const SizedBox(width: 4),
-                Icon(Icons.error, size: 16, color: TimeOffCreateColors.error),
-              ],
             ],
           ),
           const SizedBox(height: 8),
@@ -277,7 +237,12 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
     });
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    int minLines = 1,
+    int maxLines = 1,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -288,21 +253,39 @@ class TimeOffCreateScreen extends GetView<TimeOffCreateController> {
           fontWeight: FontWeight.w500,
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          height: 48,
-          child: CustomTextField(
+        if (minLines == 1 && maxLines == 1)
+          SizedBox(
+            height: 48,
+            child: CustomTextField(
+              controller: controller,
+              hintText: label,
+              borderRadius: 8,
+              fontSize: 14,
+              paddingVertical: 0,
+              paddingHorizontal: 0,
+              minLines: minLines,
+              maxLines: maxLines,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+          )
+        else
+          CustomTextField(
             controller: controller,
             hintText: label,
             borderRadius: 8,
             fontSize: 14,
-            paddingVertical: 0, // Bỏ padding vertical bên ngoài
-            paddingHorizontal: 0, // Bỏ padding horizontal bên ngoài
+            paddingVertical: 0,
+            paddingHorizontal: 0,
+            minLines: minLines,
+            maxLines: maxLines,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 12,
-            ), // Giảm padding bên trong
+            ),
           ),
-        ),
       ],
     );
   }

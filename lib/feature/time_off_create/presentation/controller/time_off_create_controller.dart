@@ -28,6 +28,8 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vo
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/upload_files_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_personal_vacation_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/personal_vacation.dart';
 
 class WorkCodeItem {
   final String code;
@@ -49,14 +51,18 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   final UploadFilesUsecase uploadFilesUsecase;
   final CreateAflVosUsecase createAflVosUsecase;
   final GetTimeOffDetailUsecase getTimeOffDetailUsecase;
+  final GetPersonalVacationUsecase? getPersonalVacationUsecase;
 
-  // User Info
+  // User Info - Sử dụng PersonalVacation model
+  final Rx<PersonalVacation?> personalVacation = Rx<PersonalVacation?>(null);
+
+  // Giữ lại các field cũ để backward compatibility (nếu có nơi khác dùng)
   final RxString userName = ''.obs;
   final RxString userPosition = ''.obs;
   final RxString userDepartment = ''.obs;
   final RxInt remainingLeave = 0.obs;
   final RxInt remainingOT = 0.obs;
-  final RxInt pendingLeave = 0.obs;
+  final RxInt paidLeaveUsedTotal = 0.obs;
 
   // Form fields
   final RxString selectedLeaveType = ''.obs;
@@ -105,6 +111,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     required this.uploadFilesUsecase,
     required this.createAflVosUsecase,
     required this.getTimeOffDetailUsecase,
+    this.getPersonalVacationUsecase,
   });
 
   String get formattedFromDate {
@@ -127,19 +134,21 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     return DateFormat('HH:mm').format(toDate.value!);
   }
 
-  bool get isReasonRequired {
-    return leaveLocationCode.value == 'NO' && selectedStatusCode.value == 'YES';
-  }
+  bool get isReasonRequired => leaveLocationCode.value.toUpperCase() != 'NO';
 
   @override
-  void onInit() {
+  Future<void> onInit() async {
     super.onInit();
+
     _setupTextControllers();
     _initializeData();
     _loadUserInfoFromProfile();
     _setupProfileListener();
     _setDefaultDates();
-    loadLeaveTypes();
+
+    // Chạy tuần tự để tránh ControllerStatus.loading chặn call sau
+    await loadPersonalVacation();
+    await loadLeaveTypes();
   }
 
   void _setDefaultDates() {
@@ -161,34 +170,61 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   void _setupProfileListener() {
-    // Listen profile changes và tự động update user info
     if (Get.isRegistered<ProfileController>()) {
       final profileController = Get.find<ProfileController>();
       ever(profileController.userProfile, (profile) {
-        _loadUserInfoFromProfile();
+        loadPersonalVacation();
       });
     }
   }
 
   void _loadUserInfoFromProfile() {
-    if (Get.isRegistered<ProfileController>()) {
-      final profileController = Get.find<ProfileController>();
-      final profile = profileController.userProfile.value;
+    userName.value = personalVacation.value?.fullName ?? '';
+    userPosition.value = personalVacation.value?.jobTitleNameVN ?? '';
+    userDepartment.value = personalVacation.value?.departmentName ?? '';
+    remainingLeave.value = personalVacation.value?.paidLeaveRemain ?? 0;
+    remainingOT.value = personalVacation.value?.overTimeRemain ?? 0;
+    paidLeaveUsedTotal.value = personalVacation.value?.paidLeaveUsedTotal ?? 0;
+  }
 
-      if (profile != null) {
-        userName.value = profile.userName;
-        // Chức danh: Lấy từ description (job title/position)
-        userPosition.value = profile.description.isNotEmpty
-            ? profile.description
-            : '';
-        // Đơn vị: Ưu tiên branchNameVN, sau đó companyNameVN
-        userDepartment.value = profile.branchNameVN.isNotEmpty
-            ? profile.branchNameVN
-            : profile.companyNameVN.isNotEmpty
-            ? profile.companyNameVN
-            : '';
-      }
+  Future<void> loadPersonalVacation() async {
+    if (getPersonalVacationUsecase == null) {
+      return;
     }
+
+    int hrId = 0;
+    try {
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+        final profile = profileController.userProfile.value;
+        if (profile != null && profile.hrId > 0) {
+          hrId = profile.hrId;
+        } else {
+          hrId = 2215;
+        }
+      } else {
+        hrId = 2215;
+      }
+    } catch (e) {
+      hrId = 2215;
+    }
+
+    await handleApiCall<PersonalVacation>(
+      apiCall: () => getPersonalVacationUsecase!.call(hrId: hrId),
+      showErrorSnackbar: false,
+      onSuccess: (data) {
+        personalVacation.value = data;
+        userName.value = data.fullName;
+        userPosition.value = data.jobTitleNameVN;
+        userDepartment.value = data.departmentName;
+        remainingLeave.value = data.paidLeaveRemain;
+        remainingOT.value = data.overTimeRemain;
+        paidLeaveUsedTotal.value = data.paidLeaveUsedTotal;
+      },
+      onError: (error) {
+        _loadUserInfoFromProfile();
+      },
+    );
   }
 
   void _setupTextControllers() {
@@ -212,22 +248,17 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   void _initializeData() {
-    // remainingLeave, remainingOT, pendingLeave - cần API riêng hoặc lấy từ profile nếu có
-    // Tạm thời giữ giá trị mặc định
     remainingLeave.value = 0;
     remainingOT.value = 0;
-    pendingLeave.value = 0;
+    paidLeaveUsedTotal.value = 0;
   }
 
   Future<void> loadLeaveTypes() async {
-    // Load Vacation Reasons để dùng cho dropdown "Loại phép"
     await handleApiCall<List<VacationReason>>(
       apiCall: () => getAllVacationReasonsUsecase.call(),
       onSuccess: (data) {
         vacationReasons.assignAll(data);
-        // Map Vacation Reasons vào leaveTypeOptions để hiển thị trong dropdown "Loại phép"
         leaveTypeOptions.value = data.map((e) => e.nameVn).toList();
-        // Gọi các API con độc lập (không phụ thuộc vào status)
         _loadWorkCodesIndependent();
         _loadStatusesIndependent();
         _loadLeaveLocationsIndependent();
@@ -240,7 +271,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       apiCall: () => getWorkCodesUsecase.call(),
       onSuccess: (data) {
         workCodes.assignAll(data);
-        // Map WorkCode domain models thành WorkCodeItem cho work code list
         workCodeList.value = data.map((workCode) {
           return WorkCodeItem(
             code: workCode.jobCode,
@@ -252,7 +282,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     );
   }
 
-  /// Load work codes độc lập (không check status)
   Future<void> _loadWorkCodesIndependent() async {
     try {
       final result = await getWorkCodesUsecase.call();
@@ -266,9 +295,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
           );
         }).toList();
       }
-    } catch (e) {
-      print('❌ [WorkCode] Error loading independently: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> loadLeaveLocations() async {
@@ -277,60 +304,74 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       onSuccess: (data) {
         leaveLocations.assignAll(data);
         leaveLocationOptions.value = data.map((e) => e.nameVn).toList();
+        _setDefaultLeaveLocation();
       },
     );
   }
 
-  /// Load leave locations độc lập (không check status)
   Future<void> _loadLeaveLocationsIndependent() async {
     try {
-      print('🔄 [LeaveLocation] Loading independently...');
       final result = await getLeaveLocationsUsecase.call();
       if (result.isSuccess && result.data != null) {
         leaveLocations.assignAll(result.data!);
         leaveLocationOptions.value = result.data!.map((e) => e.nameVn).toList();
-        print(
-          '✅ [LeaveLocation] Loaded ${result.data!.length} locations independently',
-        );
-      } else {
-        print('❌ [LeaveLocation] Error: ${result.error}');
+        _setDefaultLeaveLocation();
       }
-    } catch (e) {
-      print('❌ [LeaveLocation] Error loading independently: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> loadStatuses() async {
     await handleApiCall<List<Status>>(
       apiCall: () => getStatusesUsecase.call(),
       onSuccess: (data) {
-        print('✅ [Status] Loaded ${data.length} statuses');
         statuses.assignAll(data);
         statusOptions.assignAll(data.map((e) => e.nameVn).toList());
-        print('✅ [Status] Options: ${statusOptions.length} items');
-      },
-      onError: (error) {
-        print('❌ [Status] Error loading statuses: $error');
+        _setDefaultStatus();
       },
     );
   }
 
-  /// Load statuses độc lập (không check status)
   Future<void> _loadStatusesIndependent() async {
     try {
       final result = await getStatusesUsecase.call();
       if (result.isSuccess && result.data != null) {
         statuses.assignAll(result.data!);
         statusOptions.assignAll(result.data!.map((e) => e.nameVn).toList());
-        print(
-          '✅ [Status] Loaded ${result.data!.length} statuses independently',
-        );
-      } else {
-        print('❌ [Status] Error: ${result.error}');
+        _setDefaultStatus();
       }
-    } catch (e) {
-      print('❌ [Status] Error loading independently: $e');
+    } catch (e) {}
+  }
+
+  void _setDefaultStatus() {
+    if (selectedStatus.value.isNotEmpty || statuses.isEmpty) {
+      return;
     }
+
+    final defaultStatus = statuses.firstWhereOrNull(
+      (status) =>
+          status.code.toUpperCase() == 'YES' ||
+          status.nameVn.toLowerCase().contains('sử dụng'),
+    );
+
+    final statusToUse = defaultStatus ?? statuses.first;
+    selectedStatus.value = statusToUse.nameVn;
+    selectedStatusCode.value = statusToUse.code;
+  }
+
+  void _setDefaultLeaveLocation() {
+    if (leaveLocation.value.isNotEmpty || leaveLocations.isEmpty) {
+      return;
+    }
+
+    final defaultLocation = leaveLocations.firstWhereOrNull(
+      (location) =>
+          location.code.toUpperCase() == 'NO' ||
+          location.nameVn.toLowerCase().contains('trong nước'),
+    );
+
+    final locationToUse = defaultLocation ?? leaveLocations.first;
+    leaveLocation.value = locationToUse.nameVn;
+    leaveLocationCode.value = locationToUse.code;
   }
 
   double get totalDays {
@@ -339,14 +380,14 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
 
   void incrementDays(int index) {
     if (index < workCodeList.length) {
-      workCodeList[index].days += 0.5; // Tăng 0.5 thay vì 1
+      workCodeList[index].days += 0.5;
       workCodeList.refresh();
     }
   }
 
   void decrementDays(int index) {
     if (index < workCodeList.length && workCodeList[index].days > 0) {
-      workCodeList[index].days -= 0.5; // Giảm 0.5 thay vì 1
+      workCodeList[index].days -= 0.5;
       workCodeList.refresh();
     }
   }
@@ -393,7 +434,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   void onLeaveTypeChanged(String? value) {
     if (value != null) {
       selectedLeaveType.value = value;
-      // Tìm VacationReason tương ứng (vì giờ "Loại phép" dùng Vacation Reasons)
       final vacationReason = vacationReasons.firstWhereOrNull(
         (e) => e.nameVn == value,
       );
@@ -436,7 +476,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      // Giữ nguyên giờ, chỉ cập nhật ngày
       fromDate.value = DateTime(
         picked.year,
         picked.month,
@@ -444,7 +483,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
         currentDate.hour,
         currentDate.minute,
       );
-      // Nếu toDate nhỏ hơn fromDate, cập nhật toDate
       if (toDate.value != null && toDate.value!.isBefore(fromDate.value!)) {
         toDate.value = DateTime(
           picked.year,
@@ -488,7 +526,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
-      // Giữ nguyên giờ, chỉ cập nhật ngày
       toDate.value = DateTime(
         picked.year,
         picked.month,
@@ -520,16 +557,12 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   TimeOffCreateRequest _buildRequestData() {
-    print('📝 [TimeOffCreate] _buildRequestData() - Bắt đầu build request');
-
-    // Lấy UserID từ ProfileController
     int userId = 0;
     if (Get.isRegistered<ProfileController>()) {
       final profileController = Get.find<ProfileController>();
       userId = profileController.userProfile.value?.userId ?? 0;
     }
 
-    // Build ls_Detail từ workCodeList
     final selectedWorkCodes = workCodeList
         .where((item) => item.days > 0)
         .toList();
@@ -540,18 +573,19 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
         )
         .toList();
 
-    // Vacation_Reason: Lấy từ selectedVacationReasonCode hoặc selectedLeaveTypeCode
     String vacationReasonCode = selectedVacationReasonCode.value;
     if (vacationReasonCode.isEmpty) {
       vacationReasonCode = selectedLeaveTypeCode.value;
     }
 
+    final finalFromDate =
+        fromDate.value ?? DateTime.now().add(const Duration(days: 1));
+    final finalToDate = toDate.value ?? finalFromDate;
+
     final request = TimeOffCreateRequest(
       vRegId: 0, // Create mới
-      fromDate:
-          fromDate.value ??
-          DateTime.now().add(const Duration(days: 1)), // Mặc định là ngày mai
-      toDate: toDate.value,
+      fromDate: finalFromDate,
+      toDate: finalToDate,
       domInt: leaveLocationCode.value,
       description: reasonController.text,
       vacationReason: vacationReasonCode,
@@ -565,14 +599,21 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       jsonAttachFiles: uploadedFiles.toList(),
     );
 
-    print(
-      '✅ [TimeOffCreate] Request built với ${uploadedFiles.length} file(s)',
-    );
     return request;
   }
 
   Future<void> onSubmit() async {
-    // Validation: Nếu Nơi nghỉ = "NO" và Trạng thái = "YES" thì Lý do bắt buộc
+    if (selectedLeaveType.value.isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Vui lòng chọn loại phép',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
+
     if (isReasonRequired && reasonController.text.trim().isEmpty) {
       Get.snackbar(
         'Lỗi',
@@ -626,7 +667,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
     List<ApprovalItem> approvalsFromApi,
   ) async {
     try {
-      // Lấy email từ ProfileController
       String? email;
       if (Get.isRegistered<ProfileController>()) {
         final profileController = Get.find<ProfileController>();
@@ -661,13 +701,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       await handleApiCallVoid(
         apiCall: () =>
             createAflVosUsecase.call(request: request, email: emailWithDefault),
-        onSuccess: () {
-          print('✅ [CreateAflVos] Gửi thành công');
-        },
-        onError: (error) {
-          print('❌ [CreateAflVos] Lỗi: $error');
-          // Không hiển thị lỗi cho user, chỉ log
-        },
+        showErrorSnackbar: false,
       );
     } catch (e) {
       print('❌ [CreateAflVos] Exception: $e');
@@ -675,6 +709,30 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   }
 
   Future<void> onSaveDraft() async {
+    // Validation: Loại phép là bắt buộc
+    if (selectedLeaveType.value.isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Vui lòng chọn loại phép',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
+
+    // Validation: Lý do là bắt buộc
+    if (isReasonRequired && reasonController.text.trim().isEmpty) {
+      Get.snackbar(
+        'Lỗi',
+        'Vui lòng nhập lý do nghỉ phép',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
+
     if (fromDate.value == null) {
       fromDate.value = DateTime.now().add(const Duration(days: 1));
     }
@@ -723,24 +781,16 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
   // Upload files to server
   Future<void> uploadFiles() async {
     if (attachedFiles.isEmpty) {
-      print('ℹ️ [TimeOffCreate] uploadFiles() - Không có file để upload');
       return;
     }
 
-    print(
-      '📤 [TimeOffCreate] uploadFiles() - Bắt đầu upload ${attachedFiles.length} file(s)',
-    );
     isUploading.value = true;
 
     await handleApiCall<List<FileAttachment>>(
       apiCall: () => uploadFilesUsecase.call(attachedFiles.toList()),
       onSuccess: (data) {
-        print('✅ [TimeOffCreate] Upload thành công ${data.length} file(s)');
         uploadedFiles.addAll(data);
-        attachedFiles.clear(); // Clear local files after upload
-        print(
-          '📊 [TimeOffCreate] Tổng số files đã upload: ${uploadedFiles.length}',
-        );
+        attachedFiles.clear();
         Get.snackbar(
           'Thành công',
           'Upload ${data.length} file thành công',
@@ -748,7 +798,6 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
         );
       },
       onError: (error) {
-        print('❌ [TimeOffCreate] Upload thất bại: $error');
         Get.snackbar(
           'Lỗi',
           'Upload file thất bại: $error',

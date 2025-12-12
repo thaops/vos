@@ -12,6 +12,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_leave_ty
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_statuses_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_vacation_reasons_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_work_codes_usecase.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/usecases/get_personal_vacation_usecase.dart';
 import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/usecases/send_approve_request_usecase.dart';
@@ -124,6 +125,12 @@ class TimeOffCreateBinding extends Bindings {
       ),
     );
 
+    Get.lazyPut<GetPersonalVacationUsecase>(
+      () => GetPersonalVacationUsecase(
+        repository: Get.find<TimeOffCreateRepository>(),
+      ),
+    );
+
     Get.lazyPut<TimeOffCreateController>(
       () => TimeOffCreateController(
         getLeaveTypesUsecase: Get.find<GetLeaveTypesUsecase>(),
@@ -139,6 +146,7 @@ class TimeOffCreateBinding extends Bindings {
         uploadFilesUsecase: Get.find<UploadFilesUsecase>(),
         createAflVosUsecase: Get.find<CreateAflVosUsecase>(),
         getTimeOffDetailUsecase: Get.find<GetTimeOffDetailUsecase>(),
+        getPersonalVacationUsecase: Get.find<GetPersonalVacationUsecase>(),
       ),
     );
   }

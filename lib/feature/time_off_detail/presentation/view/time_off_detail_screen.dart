@@ -26,7 +26,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBarWidget(
-        title: 'Chi tiết',
+        title: 'Xem xét yêu cầu duyệt',
         backgroundColor: AppColors.primary,
       ),
       body: Obx(() {
@@ -53,11 +53,13 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final maxContentWidth =
-                constraints.maxWidth > 1100 ? 1100.0 : constraints.maxWidth;
+            final maxContentWidth = constraints.maxWidth > 1100
+                ? 1100.0
+                : constraints.maxWidth;
             final isWide = maxContentWidth >= 820;
-            final fieldWidth =
-                isWide ? (maxContentWidth - 16) / 2 : maxContentWidth;
+            final fieldWidth = isWide
+                ? (maxContentWidth - 16) / 2
+                : maxContentWidth;
 
             return RefreshIndicator(
               onRefresh: controller.onRefresh,
@@ -76,7 +78,9 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                         SizedBox(height: 20.h),
                         if (timeOff.attachFiles != null &&
                             timeOff.attachFiles!.isNotEmpty)
-                          FileAttachmentsSection(attachments: timeOff.attachFiles!),
+                          FileAttachmentsSection(
+                            attachments: timeOff.attachFiles!,
+                          ),
                         SizedBox(height: 20.h),
                         _buildApprovalProcessSection(timeOff),
                         SizedBox(height: 20.h),
@@ -94,18 +98,15 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   }
 
   // Section 1: Thông tin chung (Form Detail Section)
-  Widget _buildGeneralInfoSection(TimeOff timeOff, {required double fieldWidth}) {
+  Widget _buildGeneralInfoSection(
+    TimeOff timeOff, {
+    required double fieldWidth,
+  }) {
     final items = [
       _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
-      _buildInfoRow(
-        label: 'Cơ quan / Đơn vị',
-        value: timeOff.level2Name ?? '',
-      ),
+      _buildInfoRow(label: 'Cơ quan / Đơn vị', value: timeOff.level2Name ?? ''),
       _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
-      _buildInfoRow(
-        label: 'Thời gian nghỉ',
-        value: _formatDateRange(timeOff),
-      ),
+      _buildInfoRow(label: 'Thời gian nghỉ', value: _formatDateRange(timeOff)),
       _buildInfoRow(
         label: 'Lần nghỉ thứ',
         value: timeOff.vacationNo?.toString() ?? '',
@@ -116,7 +117,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       ),
       _buildInfoRow(label: 'Nơi nghỉ', value: timeOff.domIntName ?? 'N/A'),
       _buildInfoRow(
-        label: 'Lý do',
+        label: 'Mô tả chi tiết',
         value: timeOff.description ?? '',
         isMultiline: true,
       ),

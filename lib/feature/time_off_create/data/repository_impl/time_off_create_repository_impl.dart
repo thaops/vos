@@ -13,6 +13,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_r
 import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/vacation_reason.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/work_code.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/personal_vacation.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/repositories/time_off_create_repository.dart';
 
 class TimeOffCreateRepositoryImpl implements TimeOffCreateRepository {
@@ -95,5 +96,12 @@ class TimeOffCreateRepositoryImpl implements TimeOffCreateRepository {
       vRegId: vRegId,
       email: email,
     );
+  }
+
+  @override
+  Future<ApiResult<PersonalVacation>> getPersonalVacation({
+    required int hrId,
+  }) async {
+    return await remoteDataSource.getPersonalVacation(hrId: hrId);
   }
 }

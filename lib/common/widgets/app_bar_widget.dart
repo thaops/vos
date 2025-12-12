@@ -68,13 +68,13 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         ? (screenWidth * 0.12).clamp(50.0, 80.0)
         : (screenWidth * 0.25).clamp(80.0, 120.0);
 
-    // Responsive button constraints - nhỏ hơn khi landscape
+    // Responsive button constraints - đảm bảo touch target tối thiểu
     final buttonConstraints = isLandscape
-        ? const BoxConstraints(minWidth: 32, minHeight: 32)
-        : const BoxConstraints(minWidth: 40, minHeight: 40);
+        ? const BoxConstraints(minWidth: 40, minHeight: 40)
+        : const BoxConstraints(minWidth: 48, minHeight: 48);
 
-    // Responsive leading width - nhỏ hơn khi landscape
-    final leadingWidth = isLandscape ? 40.0 : 48.0;
+    // Responsive leading width - chuẩn Material Design
+    final leadingWidth = isLandscape ? 56.0 : 56.0;
 
     // Responsive title spacing - nhỏ hơn khi landscape
     final titleSpacing = isLandscape ? 4.0 : 8.0;
@@ -86,17 +86,21 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: isBack != false,
       leading: isBack == false
           ? (sizeBox ?? const SizedBox(width: 0))
-          : IconButton(
-              onPressed: () {
-                Get.back(result: isTrueBack ?? false);
-              },
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: AppColors.white,
-                size: iconSize,
+          : Padding(
+              padding: EdgeInsets.only(left: isLandscape ? 4.0 : 8.0),
+              child: IconButton(
+                onPressed: () {
+                  Get.back(result: isTrueBack ?? false);
+                },
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                  color: AppColors.white,
+                  size: iconSize,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: buttonConstraints,
+                splashRadius: isLandscape ? 20.0 : 24.0,
               ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
             ),
       leadingWidth: isBack == false ? 0 : leadingWidth,
       centerTitle: isTitleCenter,
@@ -115,37 +119,49 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         if (badgeIcon != null) badgeIcon!,
         if (iconRightthird != null)
-          IconButton(
-            onPressed: functionThird,
-            icon: Icon(
-              iconRightthird,
-              color: colorThird ?? AppColors.white,
-              size: iconSize,
+          Padding(
+            padding: EdgeInsets.only(right: isLandscape ? 4.0 : 8.0),
+            child: IconButton(
+              onPressed: functionThird,
+              icon: Icon(
+                iconRightthird,
+                color: colorThird ?? AppColors.white,
+                size: iconSize,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: buttonConstraints,
+              splashRadius: isLandscape ? 20.0 : 24.0,
             ),
-            padding: EdgeInsets.zero,
-            constraints: buttonConstraints,
           ),
         if (iconRightSecond != null)
-          IconButton(
-            onPressed: functionSecond,
-            icon: Icon(
-              iconRightSecond,
-              color: colorSecond ?? AppColors.white,
-              size: iconSize,
+          Padding(
+            padding: EdgeInsets.only(right: isLandscape ? 4.0 : 8.0),
+            child: IconButton(
+              onPressed: functionSecond,
+              icon: Icon(
+                iconRightSecond,
+                color: colorSecond ?? AppColors.white,
+                size: iconSize,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: buttonConstraints,
+              splashRadius: isLandscape ? 20.0 : 24.0,
             ),
-            padding: EdgeInsets.zero,
-            constraints: buttonConstraints,
           ),
         if (iconRightfirst != null)
-          IconButton(
-            onPressed: functionfirst,
-            icon: Icon(
-              iconRightfirst,
-              color: colorfirst ?? AppColors.white,
-              size: iconSize,
+          Padding(
+            padding: EdgeInsets.only(right: isLandscape ? 4.0 : 8.0),
+            child: IconButton(
+              onPressed: functionfirst,
+              icon: Icon(
+                iconRightfirst,
+                color: colorfirst ?? AppColors.white,
+                size: iconSize,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: buttonConstraints,
+              splashRadius: isLandscape ? 20.0 : 24.0,
             ),
-            padding: EdgeInsets.zero,
-            constraints: buttonConstraints,
           ),
       ],
     );

@@ -33,10 +33,11 @@ class HomeFunctionController extends GetxController {
         final errorMsg = result.error ?? 'Không thể tải danh sách chức năng';
         print('❌ Load home functions failed: $errorMsg');
         
-        // Kiểm tra nếu token expired thì tự động đăng xuất
+        // Kiểm tra nếu token expired thì hủy liên kết để người dùng liên kết lại
         if (_isTokenExpiredError(errorMsg)) {
-          print('🔒 Token expired detected in home functions, signing out...');
-          SignOutClear().signOut();
+          print('🔒 Token expired detected in home functions, unlinking auth...');
+          await SignOutClear().unlinkAuth();
+          error.value = 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại tài khoản.';
           return;
         }
         
@@ -47,10 +48,11 @@ class HomeFunctionController extends GetxController {
       final errorMsg = e.toString();
       print('❌ Load home functions exception: $e');
       
-      // Kiểm tra nếu token expired thì tự động đăng xuất
+      // Kiểm tra nếu token expired thì hủy liên kết để người dùng liên kết lại
       if (_isTokenExpiredError(errorMsg)) {
-        print('🔒 Token expired detected in home functions exception, signing out...');
-        SignOutClear().signOut();
+        print('🔒 Token expired detected in home functions exception, unlinking auth...');
+        await SignOutClear().unlinkAuth();
+        error.value = 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại tài khoản.';
         return;
       }
       

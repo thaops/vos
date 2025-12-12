@@ -91,19 +91,17 @@ class ProfileHeaderCard extends StatelessWidget {
           // Primary Email
           Obx(() {
             String email;
-            // ✅ Chỉ hiển thị viagsEmail nếu thực sự có liên kết
             if (controller.isViagsLinked.value &&
                 controller.viagsEmail.value.isNotEmpty) {
               email = controller.viagsEmail.value;
             } else if (user.email.isNotEmpty) {
-              // ✅ Nếu không có liên kết VIAGS, hiển thị email từ userProfile
               email = user.email;
             } else {
-              email = 'nguyenvana@gmail.com';
+              email = '';
             }
             return Text(
               email,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 16.sp, color: Colors.black),
               textAlign: TextAlign.center,
             );
           }),

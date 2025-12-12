@@ -241,7 +241,7 @@ class DioApi {
 
   dioLib.Response _handleResponse(dioLib.Response response) {
     if (response.statusCode == HttpStatusCodes.STATUS_CODE_UNAUTHORIZED) {
-      SignOutClear().signOut();
+      SignOutClear().unlinkAuth();
       throw Exception('Unauthorized');
     }
     return response;

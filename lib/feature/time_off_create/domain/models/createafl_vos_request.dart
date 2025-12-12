@@ -43,40 +43,19 @@ class CreateAflVosRequest {
   }) {
     // 1. LeaveDateRange: luôn ưu tiên from/to date, rơi back sang details nếu cần
     final leaveDateRange = <List<String>>[];
-    final totalDays = timeOff.details?.fold<double>(
+    final totalDays =
+        timeOff.details?.fold<double>(
           0.0,
           (sum, detail) => sum + detail.soLuong,
         ) ??
         0.0;
     if (timeOff.fromDate != null) {
       final startDate = timeOff.fromDate!;
-      final inferredDays = totalDays > 0 ? totalDays.ceil() : 1;
-      final endDate = timeOff.toDate ??
-          startDate.add(Duration(
-            days: inferredDays - 1,
-          ));
 
-      // Format date với time: startDate từ 00:00:00, endDate đến 23:59:59
-      final startDateTime = DateTime(
-        startDate.year,
-        startDate.month,
-        startDate.day,
-        0, // 00 giờ
-        0, // 00 phút
-        0, // 00 giây
-      );
-      final endDateTime = DateTime(
-        endDate.year,
-        endDate.month,
-        endDate.day,
-        23, // 23 giờ
-        59, // 59 phút
-        59, // 59 giây
-      );
 
-      final startStr = DateFormat('yyyy-MM-dd HH:mm:ss').format(startDateTime);
-      final endStr = DateFormat('yyyy-MM-dd HH:mm:ss').format(endDateTime);
-      leaveDateRange.add([startStr, endStr]);
+      // Chỉ gửi ngày (yyyy-MM-dd), bỏ phần giờ
+      final startStr = DateFormat('yyyy-MM-dd').format(startDate);
+      leaveDateRange.add([startStr]);
     }
 
     // 2. LeaveTimes: ưu tiên tổng detail, fallback theo khoảng ngày
@@ -118,7 +97,8 @@ class CreateAflVosRequest {
 
     // 7. Approvals: chỉ dùng override khi có dữ liệu, không thì fallback processes
     // Step bắt đầu từ 0 (theo format mới)
-    final approvals = (approvalsOverride != null && approvalsOverride.isNotEmpty)
+    final approvals =
+        (approvalsOverride != null && approvalsOverride.isNotEmpty)
         ? approvalsOverride
         : processes.asMap().entries.map((entry) {
             final index = entry.key;
@@ -192,13 +172,7 @@ class AttachmentItem {
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'Name': name,
-      'Type': type,
-      'Url': url,
-      'Size': size,
-      'Uid': uid,
-    };
+    return {'Name': name, 'Type': type, 'Url': url, 'Size': size, 'Uid': uid};
   }
 }
 
@@ -229,4 +203,3 @@ class ApprovalItem {
     };
   }
 }
-

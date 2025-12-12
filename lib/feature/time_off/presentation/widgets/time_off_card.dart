@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:vos_flutter/common/utils/date_utils.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
@@ -106,7 +107,7 @@ class TimeOffCard extends StatelessWidget {
               SizedBox(height: 8.h),
               _buildInfoItem(
                 icon: Icons.note,
-                label: 'Lý do',
+                label: 'Mô tả chi tiết',
                 value: timeOff.description ?? 'Không có',
               ),
               SizedBox(height: 12.h),
@@ -240,18 +241,15 @@ class TimeOffCard extends StatelessWidget {
           'Chưa chuyển cho cán bộ phê duyệt',
         );
 
-    // Kiểm tra đơn có thể thu hồi (Chờ phê duyệt, Đã phê duyệt)
     final canRecall =
         approveStatus == 'IN' || approveStatus == 'FN' || approveStatus == 'HF';
     final statusXX = statusCode == 'XX' || statusCode == 'RJ';
     final StatusBK = statusCode == 'BK';
 
-    // Đơn "Soạn thảo": Gửi phê duyệt, Chỉnh sửa, Hủy (3 nút cùng hàng)
     if (isDraft) {
       return Row(
         children: [
-          // Gửi phê duyệt
-          if (onSendApprove != null) ...[
+          if (onSendApprove != null && !statusXX) ...[
             Expanded(
               child: ElevatedButton(
                 onPressed: onSendApprove,
@@ -367,21 +365,11 @@ class TimeOffCard extends StatelessWidget {
 
   String _formatDateTime(DateTime? date) {
     if (date == null) return 'N/A';
-    return DateUtilsCustom.formatStringDate(
-      date.toIso8601String(),
-      isHour: true,
-    );
+    // Format: dd/MM/yyyy HH:mm (ví dụ: 29/07/2025 15:23)
+    return DateFormat('dd/MM/yyyy HH:mm').format(date);
   }
 
   String _formatVacationType() {
-    if (timeOff.details == null || timeOff.details!.isEmpty) {
-      return timeOff.vacationReasonName ?? 'Không có';
-    }
-
-    final types = timeOff.details!
-        .map((d) => '${d.jobName}: ${d.soLuong} ngày')
-        .join(', ');
-
-    return types;
+    return timeOff.vacationReasonName ?? '';
   }
 }

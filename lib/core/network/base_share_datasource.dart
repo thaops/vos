@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
@@ -24,13 +25,26 @@ abstract class BaseShareDataSource {
       print('Error getting token from ProfileController: $e');
     }
 
-    // Fallback: Lấy từ Services
+    // Fallback: lấy từ cache (GetStorage)
     try {
-      // Lưu ý: getAccessToken() là async, nhưng ở đây không thể dùng await
-      // Nên sẽ trả về empty và để ShareApiRepository xử lý
-      // Hoặc có thể dùng synchronous method nếu có
+      final storage = GetStorage();
+
+      final cachedProfile = storage.read('user_profile_data');
+      if (cachedProfile is Map) {
+        final token =
+            (cachedProfile['Token'] as String?) ??
+            (cachedProfile['token'] as String?);
+        if (token != null && token.isNotEmpty) {
+          return token;
+        }
+      }
+
+      final accessToken = storage.read<String>('accessToken');
+      if (accessToken != null && accessToken.isNotEmpty) {
+        return accessToken;
+      }
     } catch (e) {
-      print('Error getting token from Services: $e');
+      print('Error getting token from cache: $e');
     }
 
     return '';

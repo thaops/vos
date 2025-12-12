@@ -14,6 +14,7 @@ import 'package:vos_flutter/feature/time_off_create/data/models/time_off_create_
 import 'package:vos_flutter/feature/time_off_create/data/models/send_approve_result_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/vacation_reason_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/data/models/work_code_dto.dart';
+import 'package:vos_flutter/feature/time_off_create/data/models/personal_vacation_dto.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/updateafl_vos_request.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
@@ -22,6 +23,7 @@ import 'package:vos_flutter/feature/time_off_create/domain/models/leave_type.dar
 import 'package:vos_flutter/feature/time_off_create/domain/models/status.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/vacation_reason.dart';
 import 'package:vos_flutter/feature/time_off_create/domain/models/work_code.dart';
+import 'package:vos_flutter/feature/time_off_create/domain/models/personal_vacation.dart';
 
 abstract class TimeOffCreateRemoteDataSource {
   Future<ApiResult<List<LeaveType>>> getLeaveTypes();
@@ -45,6 +47,7 @@ abstract class TimeOffCreateRemoteDataSource {
     required int vRegId,
     required String email,
   });
+  Future<ApiResult<PersonalVacation>> getPersonalVacation({required int hrId});
 }
 
 class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
@@ -98,7 +101,7 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
 
             final dto = StatusDto.fromJson(item);
             statuses.add(dto.toDomain());
-          } catch (e, stackTrace) {
+          } catch (e) {
             continue;
           }
         }
@@ -352,7 +355,9 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       final accessToken = await services.getAccessToken();
 
       // Validate email
-      final emailWithDefault = _isValidEmail(email) ? email : _getEmailFromCache();
+      final emailWithDefault = _isValidEmail(email)
+          ? email
+          : _getEmailFromCache();
       if (emailWithDefault.isEmpty) {
         return ApiResult.error('Email không được tìm thấy');
       }
@@ -377,10 +382,7 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       final response = await dioApi.dio.request(
         url,
         data: request.toJson(),
-        options: dioLib.Options(
-          method: 'PATCH',
-          headers: headers,
-        ),
+        options: dioLib.Options(method: 'PATCH', headers: headers),
       );
 
       print("UpdateAflVos response: ${response.data}");
@@ -393,5 +395,29 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
     } catch (e) {
       return ApiResult.error(e.toString());
     }
+  }
+
+  @override
+  Future<ApiResult<PersonalVacation>> getPersonalVacation({
+    required int hrId,
+  }) async {
+    return shareApiRepository.callShareGet<PersonalVacation>(
+      functionCode: 'Pesonal_Vacation_GET',
+      token: getToken(),
+      data: {'HR_ID': hrId},
+      parser: (json) {
+        if (json is! List || json.isEmpty) {
+          throw Exception('Personal vacation data trống hoặc sai định dạng');
+        }
+
+        final item = json.first;
+        if (item is! Map<String, dynamic>) {
+          throw Exception('Personal vacation item không hợp lệ');
+        }
+
+        final dto = PersonalVacationDto.fromJson(item);
+        return dto.toDomain();
+      },
+    );
   }
 }
