@@ -37,9 +37,7 @@ class ProfileScreen extends GetView<ProfileController> {
               final hasGoogleUser = controller.googleUser.value != null;
               final hasUserProfile = controller.userProfile.value != null;
 
-              if (!hasGoogleUser && !hasUserProfile) {
-                return const NotLoggedInState();
-              }
+          
 
               return SingleChildScrollView(
                 child: Column(
@@ -67,9 +65,7 @@ class ProfileScreen extends GetView<ProfileController> {
                     ),
                     SizedBox(height: 32.h),
                     Obx(() {
-                      final shouldShowLogout =
-                          !controller.isAwaitingApproval.value &&
-                          controller.isViagsLinked.value;
+                      final shouldShowLogout = controller.isViagsLinked.value;
 
                       if (!shouldShowLogout) {
                         return const SizedBox.shrink();

@@ -25,11 +25,6 @@ class ProfileContent extends StatelessWidget {
           SizedBox(height: 16.h),
 
           Obx(() {
-            // Nếu awaiting approval = true → ẩn tất cả liên quan đến VIAGS
-            if (controller.isAwaitingApproval.value) {
-              return const SizedBox.shrink();
-            }
-
             if (controller.isViagsLinked.value) {
               return Column(
                 children: [

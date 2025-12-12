@@ -165,7 +165,7 @@ void _lazyLoadCheckAwaitingApproval() {
 
       final result = await checkAwaitingApproval
           .checkAwaitingApproval(
-            platform: Platform.isIOS ? "iOS" : "Android",
+            platform: Platform.isIOS ? "iOS" : Platform.isAndroid ? "Android" : "MacOS",
             appId: packageInfo.packageName,
             appBuild: packageInfo.buildNumber,
             appVersion: packageInfo.version,

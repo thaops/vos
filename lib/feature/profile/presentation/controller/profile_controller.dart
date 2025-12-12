@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
 import 'package:vos_flutter/feature/banner/presentation/controller/banner_controller.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/feature/profile/domain/models/user_profile.dart';
@@ -46,9 +45,6 @@ class ProfileController extends GetxController {
   // Flag để track trạng thái nhân viên (reactive)
   final RxBool isEmployee = false.obs;
 
-  // Flag để track trạng thái awaiting approval (reactive)
-  final RxBool isAwaitingApproval = false.obs;
-
   // Error message khi link VIAGS thất bại
   final RxString linkViagsError = ''.obs;
 
@@ -59,7 +55,6 @@ class ProfileController extends GetxController {
     _loadGoogleUserAsync();
     loadViagsStatus();
     loadEmployeeStatus();
-    loadAwaitingApprovalStatus();
   }
 
   /// Load user profile từ repository
@@ -125,25 +120,7 @@ class ProfileController extends GetxController {
     loadEmployeeStatus();
   }
 
-  /// Load trạng thái awaiting approval
-  Future<void> loadAwaitingApprovalStatus() async {
-    try {
-      final checkAwaitingService =
-          await CheckAwaitingServices.createCheckAwaitingServices();
-      final isAwaiting = await checkAwaitingService.getawaiting();
-      isAwaitingApproval.value = isAwaiting;
-    } catch (e) {
-      print('Error loading awaiting approval status: $e');
-      isAwaitingApproval.value = false;
-    }
-  }
-
-  /// Reload trạng thái awaiting approval từ storage (public method để gọi từ bên ngoài)
-  void reloadAwaitingApprovalStatus() {
-    loadAwaitingApprovalStatus();
-  }
-
-  /// Load Google user async (check awaiting và tạo guest user nếu cần)
+  /// Load Google user async
   Future<void> _loadGoogleUserAsync() async {
     try {
       final box = Hive.box('google_user_box');
@@ -155,38 +132,9 @@ class ProfileController extends GetxController {
         );
         print('✅ Loaded Google user: ${googleUser.value?.displayName}');
       } else {
-        // ✅ Nếu không có Google user, check awaiting
-        // Nếu awaiting = true → tạo guest user
-        try {
-          final checkAwaitingService =
-              await CheckAwaitingServices.createCheckAwaitingServices();
-          final isAwaiting = await checkAwaitingService.getawaiting();
-
-          if (isAwaiting) {
-            // Tạo guest user với avatar mặc định và name "Người dùng khách"
-            final guestUser = GoogleUserDto(
-              uid: 'guest_${DateTime.now().millisecondsSinceEpoch}',
-              displayName: 'Người dùng khách',
-              email: null,
-              photoURL: null, // null để hiển thị placeholder icon
-              idToken: null,
-              createdAt: DateTime.now(),
-            );
-
-            // Lưu vào Hive để dùng lại
-            await box.put('current_user', guestUser.toJson());
-            googleUser.value = guestUser;
-            print('✅ Created guest user: ${guestUser.displayName}');
-          } else {
-            // Storage đã xóa (sau logout) → clear reactive value
-            googleUser.value = null;
-            print('⚠️ No Google user found in Hive');
-          }
-        } catch (e) {
-          // Nếu check awaiting lỗi → clear
-          googleUser.value = null;
-          print('⚠️ Error checking awaiting status: $e');
-        }
+        // Storage đã xóa (sau logout) → clear reactive value
+        googleUser.value = null;
+        print('⚠️ No Google user found in Hive');
       }
     } catch (e) {
       print('❌ Error loading Google user: $e');
