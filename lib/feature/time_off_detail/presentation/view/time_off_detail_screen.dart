@@ -13,13 +13,12 @@ import 'package:vos_flutter/feature/time_off_detail/presentation/widgets/file_at
 class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   const TimeOffDetailScreen({super.key});
 
-  // Color Palette theo design spec
-  static const _colorTextDark = Color(0xFF212121); // Đen - xám đậm
-  static const _colorTextGray = Color(0xFF666666); // Xám trung tính
-  static const _colorBackground = Color(0xFFF5F5F5); // Xám background
-  static const _colorStatusApproved = Color(0xFF4CAF50); // Xanh "Đã duyệt"
-  static const _colorStatusProcessing = Color(0xFFFF9800); // Cam "Đang xử lý"
-  static const _colorStatusRejected = Color(0xFFE53935); // Đỏ "Từ chối"
+  static const _colorTextDark = Color(0xFF212121);
+  static const _colorTextGray = Color(0xFF666666);
+  static const _colorBackground = Color(0xFFF5F5F5);
+  static const _colorStatusApproved = Color(0xFF4CAF50); 
+  static const _colorStatusProcessing = Color(0xFFFF9800); 
+  static const _colorStatusRejected = Color(0xFFE53935); 
 
   @override
   Widget build(BuildContext context) {
@@ -102,13 +101,28 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     TimeOff timeOff, {
     required double fieldWidth,
   }) {
+    final creatorProcess =
+        (timeOff.processes != null && timeOff.processes!.isNotEmpty)
+        ? timeOff.processes!.first
+        : null;
+
     final items = [
+      _buildInfoRow(
+        label: 'Người tạo đơn',
+        value: _formatPersonWithHrId(timeOff, creatorProcess),
+      ),
+      _buildInfoRow(
+        label: "Người nghỉ",
+        value: _formatPersonWithHrId(timeOff, creatorProcess),
+      ),
+      _buildInfoRow(label: "Email", value: creatorProcess?.email ?? ''),
       _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
       _buildInfoRow(label: 'Cơ quan / Đơn vị', value: timeOff.level2Name ?? ''),
       _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
-      _buildInfoRow(label: 'Thời gian nghỉ', value: _formatDateRange(timeOff)),
+      _buildInfoRow(label: 'Đội / Tổ:', value: timeOff.level3Name ?? ''),
+      _buildInfoRow(label: 'Từ ngày', value: _formatDateRange(timeOff)),
       _buildInfoRow(
-        label: 'Lần nghỉ thứ',
+        label: 'Thời gian nghỉ',
         value: timeOff.vacationNo?.toString() ?? '',
       ),
       _buildInfoRow(
@@ -126,7 +140,10 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           label: 'Tiêu chuẩn phép',
           value: timeOff.phepTon!.toStringAsFixed(0),
         ),
-      _buildInfoRow(label: 'Tổng ngày nghỉ', value: "Chưa có"),
+      _buildInfoRow(
+        label: 'Tổng ngày phép nghỉ',
+        value: timeOff.vacationNo?.toString() ?? '',
+      ),
       if (timeOff.overtimeTon != null)
         _buildInfoRow(
           label: 'Tồn OT',
@@ -408,5 +425,17 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       date.toIso8601String(),
       isHour: true,
     );
+  }
+
+  String _formatPersonWithHrId(TimeOff timeOff, TimeOffProcess? process) {
+    final hrIdStr = timeOff.hrId != null && timeOff.hrId! > 0
+        ? '${timeOff.hrId}'
+        : '';
+    final name = process?.fullName ?? '';
+
+    if (hrIdStr.isNotEmpty && name.isNotEmpty) {
+      return '$hrIdStr - $name';
+    }
+    return hrIdStr.isNotEmpty ? hrIdStr : name;
   }
 }

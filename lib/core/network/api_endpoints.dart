@@ -15,6 +15,8 @@ class ApiEndpoints {
   // CreateAflVos API (dùng chung API key và Cookie với File Upload)
   static const String createAflVosBaseUrl =
       'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos/createafl_vos';
+  static const String revokeRequestVosBaseUrl =
+      'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos';
   static const String vosApiKey = fileUploadApiKey;
   static const String vosCookie = fileUploadCookie;
 }

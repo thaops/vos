@@ -180,19 +180,19 @@ class TimeOffController extends BaseController with ApiResultMixin {
     );
 
     if (confirmed == true) {
-      _recallTimeOff(timeOff);
+      await _callUpdateAflVos(timeOff);
     }
   }
 
-  void _recallTimeOff(TimeOff timeOff) async {
-    await handleApiCall<void>(
-      apiCall: () => recallTimeOffUsecase.call(timeOff.vRegId),
-      onSuccess: (_) async {
-        await _callUpdateAflVos(timeOff);
-        loadTimeOffList();
-      },
-    );
-  }
+  // void _recallTimeOff(TimeOff timeOff) async {
+  //   await handleApiCall<void>(
+  //     apiCall: () => recallTimeOffUsecase.call(timeOff.vRegId),
+  //     onSuccess: (_) async {
+  //       await _callUpdateAflVos(timeOff);
+  //       loadTimeOffList();
+  //     },
+  //   );
+  // }
 
   Future<void> _callUpdateAflVos(TimeOff timeOff) async {
     try {
@@ -202,36 +202,29 @@ class TimeOffController extends BaseController with ApiResultMixin {
         email = profileController.userProfile.value?.email;
       }
 
-      // Dùng email mặc định nếu null
       final emailWithDefault = email ?? 'phongdh@viags.vn';
 
-      // Load TimeOff detail để lấy đầy đủ thông tin (processes, attachFiles)
-      final detailResult = await getTimeOffDetailUsecase.call(vRegId: timeOff.vRegId);
+      final detailResult = await getTimeOffDetailUsecase.call(
+        vRegId: timeOff.vRegId,
+      );
       if (!detailResult.isSuccess || detailResult.data == null) {
-        print('⚠️ [UpdateAflVos] Không load được detail, bỏ qua');
         return;
       }
 
       final TimeOff timeOffDetail = detailResult.data!;
       final processes = timeOffDetail.processes ?? [];
       if (processes.isEmpty) {
-        print('⚠️ [UpdateAflVos] Không có processes, bỏ qua');
         return;
       }
 
-      // Lấy VAppId từ process đầu tiên (step 1)
-      // TimeOffProcess không có vAppId, nên dùng approveNo
-      // Nếu có thể lấy từ nơi khác (ví dụ từ SendApproveResult), có thể truyền vào vAppIdOverride
       final firstProcess = processes.first;
-      final vAppId = firstProcess.approveNo; // Tạm thời dùng approveNo
+      final vAppId = firstProcess.approveNo; 
 
-      // Map data
       final request = UpdateAflVosRequest.fromTimeOff(
         timeOff: timeOffDetail,
         processes: processes,
         vAppIdOverride: vAppId,
       );
-      // Call API
       await handleApiCallVoid(
         apiCall: () => updateAflVosUsecase.call(
           request: request,
@@ -239,20 +232,17 @@ class TimeOffController extends BaseController with ApiResultMixin {
           email: emailWithDefault,
         ),
         onSuccess: () {
-          print('✅ [UpdateAflVos] Gửi thành công');
+          print('[UpdateAflVos] Gửi thành công');
           loadTimeOffList();
         },
         onError: (error) {
-          print('❌ [UpdateAflVos] Lỗi: $error');
-          // Không hiển thị lỗi cho user, chỉ log
+          print('[UpdateAflVos] Lỗi: $error');
         },
       );
     } catch (e) {
-      print('❌ [UpdateAflVos] Exception: $e');
     }
   }
 
-  // Gửi phê duyệt
   Future<void> sendApproveRequest(TimeOff timeOff) async {
     final confirmed = await TimeOffConfirmDialog.show(
       type: TimeOffDialogType.sendApprove,
@@ -264,7 +254,6 @@ class TimeOffController extends BaseController with ApiResultMixin {
       await handleApiCall<SendApproveResult>(
         apiCall: () => sendApproveRequestUsecase.call(timeOff.vRegId),
         onSuccess: (result) async {
-          // ✅ Gọi API mới sau khi thành công
           await _callCreateAflVos(timeOff, result.approvals);
 
           SuccessDialog.show(
@@ -286,48 +275,41 @@ class TimeOffController extends BaseController with ApiResultMixin {
     List<ApprovalItem> approvalsFromApi,
   ) async {
     try {
-      // Lấy email từ ProfileController
       String? email;
       if (Get.isRegistered<ProfileController>()) {
         final profileController = Get.find<ProfileController>();
         email = profileController.userProfile.value?.email;
       }
 
-      // Dùng email mặc định nếu null
       final emailWithDefault = email ?? 'phongdh@viags.vn';
 
-      // Lấy processes từ timeOff (cần load detail nếu chưa có)
       final processes = timeOff.processes ?? [];
       if (processes.isEmpty) {
-        print('⚠️ [CreateAflVos] Không có processes, bỏ qua');
+        print('[CreateAflVos] Không có processes, bỏ qua');
         return;
       }
 
-      // Map data
       final request = CreateAflVosRequest.fromTimeOff(
         timeOff: timeOff,
         processes: processes,
         approvalsOverride: approvalsFromApi,
       );
 
-      // Call API
       await handleApiCallVoid(
         apiCall: () =>
             createAflVosUsecase.call(request: request, email: emailWithDefault),
         onSuccess: () {
-          print('✅ [CreateAflVos] Gửi thành công');
+          print('[CreateAflVos] Gửi thành công');
         },
         onError: (error) {
-          print('❌ [CreateAflVos] Lỗi: $error');
-          // Không hiển thị lỗi cho user, chỉ log
+          print('[CreateAflVos] Lỗi: $error');
         },
       );
     } catch (e) {
-      print('❌ [CreateAflVos] Exception: $e');
+      print('[CreateAflVos] Exception: $e');
     }
   }
 
-  // Chỉnh sửa - chuyển sang màn hình update
   void navigateToUpdate(TimeOff timeOff) {
     Get.toNamed(
       AppRouter.timeOffUpdate,
@@ -339,7 +321,6 @@ class TimeOffController extends BaseController with ApiResultMixin {
     });
   }
 
-  // Kiểm tra đơn có phải "Soạn thảo" không
   bool isDraft(TimeOff timeOff) {
     final approveStatus = timeOff.approveStatus ?? '-';
     final approveProcessName = timeOff.appoveProcessName ?? '';
@@ -349,13 +330,10 @@ class TimeOffController extends BaseController with ApiResultMixin {
         approveProcessName.toLowerCase().contains(
           'chưa chuyển cho cán bộ phê duyệt',
         );
-    print(
-      '🔍 [isDraft] approveStatus: $approveStatus, approveProcessName: $approveProcessName, result: $result',
-    );
+
     return result;
   }
 
-  // Kiểm tra đơn có thể hủy không (Chờ phê duyệt, Đã phê duyệt)
   bool canCancel(TimeOff timeOff) {
     final approveStatus = timeOff.approveStatus ?? '-';
     final statusName = timeOff.statusName ?? '';

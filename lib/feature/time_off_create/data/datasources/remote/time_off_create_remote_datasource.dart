@@ -365,12 +365,12 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
       // Encode email và build URL
       final encodedEmail = Uri.encodeComponent(emailWithDefault);
       final url =
-          'https://viagsapi-eoffice-dev.azurewebsites.net/api/vos/updatestatus_vos/$vRegId?userEmail=$encodedEmail';
+          '${ApiEndpoints.revokeRequestVosBaseUrl}/revoke-request-vos/$vRegId?userEmail=$encodedEmail';
 
       // Headers với Authorization Bearer token
       final headers = {
         'accept': '*/*',
-        'Authorization': 'Bearer $accessToken',
+        // 'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
         'X-API-KEY': ApiEndpoints.vosApiKey,
         'Cookie': ApiEndpoints.vosCookie,
@@ -385,12 +385,10 @@ class TimeOffCreateRemoteDataSourceImpl extends BaseShareDataSource
         options: dioLib.Options(method: 'PATCH', headers: headers),
       );
 
-      print("UpdateAflVos response: ${response.data}");
-
-      if (response.statusCode == 200) {
-        return ApiResult.success(null);
+      if (response.data['StatusCode'] == 200) {
+        return ApiResult.success(response.data['Data'] ?? '');
       } else {
-        return ApiResult.error(response.statusMessage ?? 'Unknown error');
+        return ApiResult.error(response.data['Message'] ?? 'Unknown error');
       }
     } catch (e) {
       return ApiResult.error(e.toString());

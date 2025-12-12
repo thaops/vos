@@ -41,7 +41,7 @@ class CreateAflVosRequest {
     required List<TimeOffProcess> processes,
     List<ApprovalItem>? approvalsOverride,
   }) {
-    // 1. LeaveDateRange: luôn ưu tiên from/to date, rơi back sang details nếu cần
+    // 1. LeaveDateRange: dùng fromDate + LeaveTimes để suy ra endDate, kèm giờ
     final leaveDateRange = <List<String>>[];
     final totalDays =
         timeOff.details?.fold<double>(
@@ -49,54 +49,48 @@ class CreateAflVosRequest {
           (sum, detail) => sum + detail.soLuong,
         ) ??
         0.0;
-    if (timeOff.fromDate != null) {
-      final startDate = timeOff.fromDate!;
-
-
-      // Chỉ gửi ngày (yyyy-MM-dd), bỏ phần giờ
-      final startStr = DateFormat('yyyy-MM-dd').format(startDate);
-      leaveDateRange.add([startStr]);
-    }
-
-    // 2. LeaveTimes: ưu tiên tổng detail, fallback theo khoảng ngày
-    // Đảm bảo luôn trả về string (0.5 -> "0.5")
-    final String leaveTimes;
+    final double leaveTimesNum;
     if (totalDays > 0) {
-      // Format số thập phân, loại bỏ trailing zeros không cần thiết
-      // Ví dụ: 0.5 -> "0.5", 1.0 -> "1", 2.5 -> "2.5"
-      final formatted = totalDays.toString();
-      // Loại bỏ ".0" ở cuối nếu là số nguyên
-      leaveTimes = formatted.replaceAll(RegExp(r'\.0$'), '');
+      leaveTimesNum = totalDays;
     } else if (timeOff.fromDate != null) {
       final endDate = timeOff.toDate ?? timeOff.fromDate!;
-      final dayCount = endDate.difference(timeOff.fromDate!).inDays + 1;
-      leaveTimes = dayCount.toString();
+      leaveTimesNum = (endDate.difference(timeOff.fromDate!).inDays + 1)
+          .toDouble();
     } else {
-      leaveTimes = '0';
+      leaveTimesNum = 0;
     }
 
-    // 3. LeavePlace: Từ domIntName
+    // Đảm bảo luôn trả về string (0.5 -> "0.5", 1.0 -> "1")
+    final leaveTimes = leaveTimesNum.toString().replaceAll(RegExp(r'\.0$'), '');
+
+    if (timeOff.fromDate != null) {
+      final startDate = timeOff.fromDate!;
+      final daysToAdd = leaveTimesNum <= 1 ? 0 : leaveTimesNum.ceil() - 1;
+      final computedEndDate = startDate.add(Duration(days: daysToAdd));
+      final endDate = timeOff.toDate ?? computedEndDate;
+
+      final formatter = DateFormat('yyyy-MM-dd HH:mm');
+      final startStr = formatter.format(startDate);
+      final endStr = formatter.format(endDate);
+      leaveDateRange.add([startStr, endStr]);
+    }
+
     final leavePlace = timeOff.domIntName ?? '';
 
-    // 4. Reason: Từ description
     final reason = timeOff.description ?? '';
 
-    // 5. IsOverseas: Check từ domInt (có thể là 'INT' = nước ngoài)
     final isOverseas = timeOff.domInt?.toUpperCase() == 'INT';
 
-    // 6. Attachments: Map từ attachFiles
     final attachments = (timeOff.attachFiles ?? []).map((file) {
       return AttachmentItem(
         name: file.fileName,
         type: _getFileType(file.fileName),
         url: file.fileUrl,
         size: _parseFileSize(file.fileSize),
-        uid: file.fileName, // Dùng fileName làm uid nếu không có fileId
+        uid: file.fileName,
       );
     }).toList();
 
-    // 7. Approvals: chỉ dùng override khi có dữ liệu, không thì fallback processes
-    // Step bắt đầu từ 0 (theo format mới)
     final approvals =
         (approvalsOverride != null && approvalsOverride.isNotEmpty)
         ? approvalsOverride

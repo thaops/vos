@@ -157,7 +157,7 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       tomorrow.year,
       tomorrow.month,
       tomorrow.day,
-      0,
+      8,
       0,
     );
     toDate.value = DateTime(
@@ -578,14 +578,45 @@ class TimeOffCreateController extends BaseController with ApiResultMixin {
       vacationReasonCode = selectedLeaveTypeCode.value;
     }
 
-    final finalFromDate =
+    final baseFromDate =
         fromDate.value ?? DateTime.now().add(const Duration(days: 1));
-    final finalToDate = toDate.value ?? finalFromDate;
+    final finalFromDate = DateTime(
+      baseFromDate.year,
+      baseFromDate.month,
+      baseFromDate.day,
+      baseFromDate.hour,
+      baseFromDate.minute,
+    );
+
+    // Giờ mặc định 08:00 nếu user chưa chọn giờ (hour & minute đều 0)
+    final normalizedFromDate =
+        (baseFromDate.hour == 0 && baseFromDate.minute == 0)
+        ? DateTime(
+            baseFromDate.year,
+            baseFromDate.month,
+            baseFromDate.day,
+            8,
+            0,
+          )
+        : finalFromDate;
+
+    final leaveTimes = totalDays;
+    final baseToDate = toDate.value ?? normalizedFromDate;
+    final daysToAdd = leaveTimes.ceil().clamp(0, 365);
+    final computedToDate = leaveTimes <= 1
+        ? baseToDate
+        : DateTime(
+            normalizedFromDate.year,
+            normalizedFromDate.month,
+            normalizedFromDate.day,
+            baseToDate.hour,
+            baseToDate.minute,
+          ).add(Duration(days: daysToAdd - 1));
 
     final request = TimeOffCreateRequest(
       vRegId: 0, // Create mới
-      fromDate: finalFromDate,
-      toDate: finalToDate,
+      fromDate: normalizedFromDate,
+      toDate: computedToDate,
       domInt: leaveLocationCode.value,
       description: reasonController.text,
       vacationReason: vacationReasonCode,
