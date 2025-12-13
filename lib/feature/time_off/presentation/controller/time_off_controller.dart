@@ -47,7 +47,18 @@ class TimeOffController extends BaseController with ApiResultMixin {
 
   List<int> get yearList {
     final currentYear = DateTime.now().year;
-    return List.generate(6, (index) => currentYear - index);
+    // Tạo danh sách: 2 năm tương lai + năm hiện tại + 2 năm quá khứ
+    // Kết quả: [2027, 2026, 2025, 2024, 2023] (nếu hiện tại là 2025)
+    final years = <int>[];
+    // Thêm 2 năm tương lai (từ cao xuống thấp)
+    years.add(currentYear + 2);
+    years.add(currentYear + 1);
+    // Thêm năm hiện tại
+    years.add(currentYear);
+    // Thêm 2 năm quá khứ
+    years.add(currentYear - 1);
+    years.add(currentYear - 2);
+    return years;
   }
 
   RxList<String> get yearOptions {
@@ -93,7 +104,8 @@ class TimeOffController extends BaseController with ApiResultMixin {
 
   Future<void> loadTimeOffList() async {
     await handleApiCall<List<TimeOff>>(
-      apiCall: () => getTimeOffListUsecase.call(vRegId: 0, year: 0),
+      apiCall: () =>
+          getTimeOffListUsecase.call(vRegId: 0, year: selectedYear.value),
       onSuccess: (data) {
         allTimeOffList.assignAll(data);
         applyStatusFilter();
@@ -124,7 +136,7 @@ class TimeOffController extends BaseController with ApiResultMixin {
     if (year == null) return;
     selectedYear.value = year;
     selectedYearId.value = yearId;
-    applyStatusFilter();
+    loadTimeOffList();
   }
 
   void onStatusFilterChanged(String? statusCode) {

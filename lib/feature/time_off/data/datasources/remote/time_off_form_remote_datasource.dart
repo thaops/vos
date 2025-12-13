@@ -376,15 +376,13 @@ class TimeOffFormRemoteDataSourceImpl extends BaseShareDataSource
         'Cookie': ApiEndpoints.vosCookie,
       };
 
-      print("UpdateAflVos request: ${request.toJson()}");
       print("UpdateAflVos url: $url");
 
       final response = await dioApi.dio.request(
         url,
-        data: request.toJson(),
         options: dioLib.Options(method: 'PATCH', headers: headers),
       );
-
+      print("UpdateAflVos response: ${response.data}");
       if (response.data['StatusCode'] == 200) {
         return ApiResult.success(response.data['Data'] ?? '');
       } else {

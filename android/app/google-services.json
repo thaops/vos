@@ -82,6 +82,14 @@
           }
         },
         {
+          "client_id": "119692400826-ish248oet0r1flgmhqhbkqls4324gq0c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.viags.vosapp",
+            "certificate_hash": "4710e243b83ee19eedc4b957cf73445714b7bda4"
+          }
+        },
+        {
           "client_id": "119692400826-n08nbj7nus0g39ivs2d524dijc91tpsl.apps.googleusercontent.com",
           "client_type": 3
         }
