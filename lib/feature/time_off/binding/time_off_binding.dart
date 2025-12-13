@@ -1,27 +1,25 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
 import 'package:vos_flutter/core/network/share_api_repository.dart';
+import 'package:vos_flutter/feature/time_off/data/datasources/remote/file_upload_remote_datasource.dart';
+import 'package:vos_flutter/feature/time_off/data/datasources/remote/time_off_form_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off/data/datasources/remote/time_off_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off/data/repository_impl/time_off_repository_impl.dart';
+import 'package:vos_flutter/feature/time_off/data/repository_impl/time_off_form_repository_impl.dart';
+import 'package:vos_flutter/feature/time_off/domain/repositories/time_off_form_repository.dart';
 import 'package:vos_flutter/feature/time_off/domain/repositories/time_off_repository.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/createafl_vos_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/recall_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/send_approve_request_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/update_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/updateafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_list_usecase.dart';
 import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_status_usecase.dart';
 import 'package:vos_flutter/feature/time_off/presentation/controller/time_off_controller.dart';
-import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/file_upload_remote_datasource.dart';
-import 'package:vos_flutter/feature/time_off_create/data/datasources/remote/time_off_create_remote_datasource.dart';
-import 'package:vos_flutter/feature/time_off_create/data/repository_impl/time_off_create_repository_impl.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/repositories/time_off_create_repository.dart';
-import 'package:vos_flutter/feature/time_off_update/data/repository_impl/time_off_update_repository_impl.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/repositories/time_off_update_repository.dart';
 import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/usecases/updateafl_vos_usecase.dart';
 import 'package:vos_flutter/feature/time_off_detail/data/datasources/remote/time_off_detail_remote_datasource.dart';
 import 'package:vos_flutter/feature/time_off_detail/data/repository_impl/time_off_detail_repository_impl.dart';
 import 'package:vos_flutter/feature/time_off_detail/domain/repositories/time_off_detail_repository.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/usecases/recall_time_off_usecase.dart';
 
 class TimeOffBinding extends Bindings {
   @override
@@ -40,9 +38,8 @@ class TimeOffBinding extends Bindings {
       ),
     );
 
-    // ✅ Thêm TimeOffCreateRemoteDataSource (cần cho TimeOffUpdateRepository)
-    Get.lazyPut<TimeOffCreateRemoteDataSource>(
-      () => TimeOffCreateRemoteDataSourceImpl(
+    Get.lazyPut<TimeOffFormRemoteDataSource>(
+      () => TimeOffFormRemoteDataSourceImpl(
         shareApiRepository: Get.find<ShareApiRepository>(),
       ),
     );
@@ -59,10 +56,9 @@ class TimeOffBinding extends Bindings {
       ),
     );
 
-    // ✅ Thêm TimeOffUpdateRepository
-    Get.lazyPut<TimeOffUpdateRepository>(
-      () => TimeOffUpdateRepositoryImpl(
-        remoteDataSource: Get.find<TimeOffCreateRemoteDataSource>(),
+    Get.lazyPut<TimeOffFormRepository>(
+      () => TimeOffFormRepositoryImpl(
+        remoteDataSource: Get.find<TimeOffFormRemoteDataSource>(),
         fileUploadDataSource: Get.find<FileUploadRemoteDataSource>(),
       ),
     );
@@ -86,22 +82,12 @@ class TimeOffBinding extends Bindings {
       ),
     );
 
-    // ✅ Thêm TimeOffCreateRepository (cần cho CreateAflVosUsecase)
-    Get.lazyPut<TimeOffCreateRepository>(
-      () => TimeOffCreateRepositoryImpl(
-        remoteDataSource: Get.find<TimeOffCreateRemoteDataSource>(),
-        fileUploadDataSource: Get.find<FileUploadRemoteDataSource>(),
-      ),
-    );
-
     Get.lazyPut<CreateAflVosUsecase>(
-      () =>
-          CreateAflVosUsecase(repository: Get.find<TimeOffCreateRepository>()),
+      () => CreateAflVosUsecase(repository: Get.find<TimeOffFormRepository>()),
     );
 
     Get.lazyPut<UpdateAflVosUsecase>(
-      () =>
-          UpdateAflVosUsecase(repository: Get.find<TimeOffCreateRepository>()),
+      () => UpdateAflVosUsecase(repository: Get.find<TimeOffFormRepository>()),
     );
 
     // Use Case
@@ -114,19 +100,17 @@ class TimeOffBinding extends Bindings {
     );
 
     Get.lazyPut<UpdateTimeOffUsecase>(
-      () =>
-          UpdateTimeOffUsecase(repository: Get.find<TimeOffUpdateRepository>()),
+      () => UpdateTimeOffUsecase(repository: Get.find<TimeOffFormRepository>()),
     );
 
     Get.lazyPut<SendApproveRequestUsecase>(
       () => SendApproveRequestUsecase(
-        repository: Get.find<TimeOffUpdateRepository>(),
+        repository: Get.find<TimeOffFormRepository>(),
       ),
     );
 
     Get.lazyPut<RecallTimeOffUsecase>(
-      () =>
-          RecallTimeOffUsecase(repository: Get.find<TimeOffUpdateRepository>()),
+      () => RecallTimeOffUsecase(repository: Get.find<TimeOffFormRepository>()),
     );
 
     // Controller

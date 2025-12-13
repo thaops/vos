@@ -16,9 +16,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   static const _colorTextDark = Color(0xFF212121);
   static const _colorTextGray = Color(0xFF666666);
   static const _colorBackground = Color(0xFFF5F5F5);
-  static const _colorStatusApproved = Color(0xFF4CAF50);
-  static const _colorStatusProcessing = Color(0xFFFF9800);
-  static const _colorStatusRejected = Color(0xFFE53935);
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +102,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         (timeOff.processes != null && timeOff.processes!.isNotEmpty)
         ? timeOff.processes!.first
         : null;
+    final timeOffQuantityText = _formatTimeOffQuantity(timeOff);
 
     final items = [
       _buildInfoRow(
@@ -121,10 +119,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
       _buildInfoRow(label: 'Đội / Tổ:', value: timeOff.level3Name ?? ''),
       _buildInfoRow(label: 'Từ ngày', value: _formatDateRange(timeOff)),
-      _buildInfoRow(
-        label: 'Thời gian nghỉ',
-        value: timeOff.vacationNo?.toString() ?? '',
-      ),
+      _buildInfoRow(label: 'Thời gian nghỉ', value: timeOffQuantityText),
       _buildInfoRow(
         label: 'Loại phép',
         value: timeOff.vacationReasonName ?? 'N/A',
@@ -140,10 +135,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           label: 'Tiêu chuẩn phép',
           value: timeOff.phepTon!.toStringAsFixed(0),
         ),
-      _buildInfoRow(
-        label: 'Tổng ngày phép nghỉ',
-        value: timeOff.vacationNo?.toString() ?? '',
-      ),
+      _buildInfoRow(label: 'Tổng ngày phép nghỉ', value: timeOffQuantityText),
       if (timeOff.overtimeTon != null)
         _buildInfoRow(
           label: 'Tồn OT',
@@ -158,6 +150,15 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           .map((item) => SizedBox(width: fieldWidth, child: item))
           .toList(),
     );
+  }
+
+  String _formatTimeOffQuantity(TimeOff timeOff) {
+    final total = timeOff.totalTimeOff;
+    if (total == 0) return '0';
+    final text = total.toStringAsFixed(2);
+    return text
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
   }
 
   // Section 2: Quy trình phê duyệt (Timeline)

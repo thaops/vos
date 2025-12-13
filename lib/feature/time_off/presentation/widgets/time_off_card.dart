@@ -15,6 +15,9 @@ class TimeOffCard extends StatelessWidget {
   final VoidCallback? onSendApprove;
   final VoidCallback? onEdit;
   final Map<String, String>? statusNameByCode;
+  final bool isRecallLoading;
+  final bool isCancelLoading;
+  final bool isSendApproveLoading;
 
   const TimeOffCard({
     super.key,
@@ -24,6 +27,9 @@ class TimeOffCard extends StatelessWidget {
     this.onSendApprove,
     this.onEdit,
     this.statusNameByCode,
+    this.isRecallLoading = false,
+    this.isCancelLoading = false,
+    this.isSendApproveLoading = false,
   });
 
   @override
@@ -236,7 +242,7 @@ class TimeOffCard extends StatelessWidget {
           if (onSendApprove != null && !statusXX) ...[
             Expanded(
               child: ElevatedButton(
-                onPressed: onSendApprove,
+                onPressed: isSendApproveLoading ? null : onSendApprove,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -246,12 +252,30 @@ class TimeOffCard extends StatelessWidget {
                   ),
                   elevation: 0,
                 ),
-                child: Text(
-                  'Gửi phê duyệt',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (isSendApproveLoading) ...[
+                      SizedBox(
+                        width: 16.w,
+                        height: 16.w,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                    ],
+                    Text(
+                      isSendApproveLoading ? 'Đang gửi...' : 'Gửi phê duyệt',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -285,7 +309,7 @@ class TimeOffCard extends StatelessWidget {
           if (onCancel != null && !statusXX) ...[
             Expanded(
               child: OutlinedButton(
-                onPressed: onCancel,
+                onPressed: isCancelLoading ? null : onCancel,
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: Colors.red.shade300, width: 1.5),
                   padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -293,13 +317,31 @@ class TimeOffCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                 ),
-                child: Text(
-                  'Hủy',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.red.shade700,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (isCancelLoading) ...[
+                      SizedBox(
+                        width: 16.w,
+                        height: 16.w,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.red.shade700,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                    ],
+                    Text(
+                      isCancelLoading ? 'Đang hủy...' : 'Hủy',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -313,7 +355,7 @@ class TimeOffCard extends StatelessWidget {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton(
-          onPressed: onRecall,
+          onPressed: isRecallLoading ? null : onRecall,
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: Colors.red.shade300, width: 1.5),
             padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -321,14 +363,32 @@ class TimeOffCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8.r),
             ),
           ),
-          child: Text(
-            'Thu hồi',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.red.shade600,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isRecallLoading) ...[
+                SizedBox(
+                  width: 16.w,
+                  height: 16.w,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.red.shade600,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+              ],
+              Text(
+                isRecallLoading ? 'Đang thu hồi...' : 'Thu hồi',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red.shade600,
+                ),
+              ),
+            ],
           ),
         ),
       );

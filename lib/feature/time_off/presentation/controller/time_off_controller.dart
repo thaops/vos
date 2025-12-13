@@ -9,17 +9,17 @@ import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_list_u
 import 'package:vos_flutter/feature/time_off/domain/usecases/get_time_off_status_usecase.dart';
 import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
 import 'package:vos_flutter/feature/time_off/presentation/widgets/time_off_confirm_dialog.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/createafl_vos_request.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/updateafl_vos_request.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/work_code_detail.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/usecases/createafl_vos_usecase.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/usecases/updateafl_vos_usecase.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/usecases/recall_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/createafl_vos_request.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/updateafl_vos_request.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/time_off_create_request.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/work_code_detail.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/createafl_vos_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/updateafl_vos_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/send_approve_request_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/update_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/recall_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/send_approve_result.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
 class TimeOffController extends BaseController with ApiResultMixin {
@@ -34,6 +34,9 @@ class TimeOffController extends BaseController with ApiResultMixin {
 
   final RxList<TimeOff> timeOffList = <TimeOff>[].obs;
   final RxList<TimeOff> allTimeOffList = <TimeOff>[].obs;
+  final RxSet<int> recallingVRegIds = <int>{}.obs;
+  final RxSet<int> cancellingVRegIds = <int>{}.obs;
+  final RxSet<int> sendingApproveVRegIds = <int>{}.obs;
   final RxString selectedStatusFilter = 'Tất cả'.obs;
   final RxString selectedStatusCode = 'ALL'.obs;
   final RxInt selectedYear = DateTime.now().year.obs;
@@ -143,6 +146,8 @@ class TimeOffController extends BaseController with ApiResultMixin {
   }
 
   Future<void> cancelTimeOff(TimeOff timeOff) async {
+    if (cancellingVRegIds.contains(timeOff.vRegId)) return;
+
     final confirmed = await TimeOffConfirmDialog.show(
       type: TimeOffDialogType.cancel,
       title: 'Hủy đơn',
@@ -150,11 +155,16 @@ class TimeOffController extends BaseController with ApiResultMixin {
     );
 
     if (confirmed == true) {
-      _cancelTimeOff(timeOff);
+      cancellingVRegIds.add(timeOff.vRegId);
+      try {
+        await _cancelTimeOff(timeOff);
+      } finally {
+        cancellingVRegIds.remove(timeOff.vRegId);
+      }
     }
   }
 
-  void _cancelTimeOff(TimeOff timeOff) async {
+  Future<void> _cancelTimeOff(TimeOff timeOff) async {
     final request = TimeOffCreateRequest(
       vRegId: timeOff.vRegId,
       fromDate: timeOff.fromDate ?? DateTime.now(),
@@ -179,13 +189,15 @@ class TimeOffController extends BaseController with ApiResultMixin {
 
     await handleApiCall<void>(
       apiCall: () => updateTimeOffUsecase.call(request),
-      onSuccess: (id) {
+      onSuccess: (_) {
         loadTimeOffList();
       },
     );
   }
 
   Future<void> recallTimeOff(TimeOff timeOff) async {
+    if (recallingVRegIds.contains(timeOff.vRegId)) return;
+
     final confirmed = await TimeOffConfirmDialog.show(
       type: TimeOffDialogType.recall,
       title: 'Thu hồi',
@@ -193,7 +205,12 @@ class TimeOffController extends BaseController with ApiResultMixin {
     );
 
     if (confirmed == true) {
-      await _callUpdateAflVos(timeOff);
+      recallingVRegIds.add(timeOff.vRegId);
+      try {
+        await _callUpdateAflVos(timeOff);
+      } finally {
+        recallingVRegIds.remove(timeOff.vRegId);
+      }
     }
   }
 
@@ -245,17 +262,16 @@ class TimeOffController extends BaseController with ApiResultMixin {
           email: emailWithDefault,
         ),
         onSuccess: () {
-          print('[UpdateAflVos] Gửi thành công');
           loadTimeOffList();
         },
-        onError: (error) {
-          print('[UpdateAflVos] Lỗi: $error');
-        },
+        onError: (_) {},
       );
-    } catch (e) {}
+    } catch (_) {}
   }
 
   Future<void> sendApproveRequest(TimeOff timeOff) async {
+    if (sendingApproveVRegIds.contains(timeOff.vRegId)) return;
+
     final confirmed = await TimeOffConfirmDialog.show(
       type: TimeOffDialogType.sendApprove,
       title: 'Gửi phê duyệt',
@@ -263,22 +279,28 @@ class TimeOffController extends BaseController with ApiResultMixin {
     );
 
     if (confirmed == true) {
-      await handleApiCall<SendApproveResult>(
-        apiCall: () => sendApproveRequestUsecase.call(timeOff.vRegId),
-        onSuccess: (result) async {
-          await _callCreateAflVos(timeOff, result.approvals);
+      sendingApproveVRegIds.add(timeOff.vRegId);
+      try {
+        final result = await handleApiCall<SendApproveResult>(
+          apiCall: () => sendApproveRequestUsecase.call(timeOff.vRegId),
+        );
 
-          SuccessDialog.show(
-            context: Get.context!,
-            title: 'Thành công',
-            message: 'Gửi phê duyệt thành công',
-            buttonText: 'Đóng',
-            onClose: () {
-              loadTimeOffList();
-            },
-          );
-        },
-      );
+        if (result == null) return;
+
+        await _callCreateAflVos(timeOff, result.approvals);
+
+        SuccessDialog.show(
+          context: Get.context!,
+          title: 'Thành công',
+          message: 'Gửi phê duyệt thành công',
+          buttonText: 'Đóng',
+          onClose: () {
+            loadTimeOffList();
+          },
+        );
+      } finally {
+        sendingApproveVRegIds.remove(timeOff.vRegId);
+      }
     }
   }
 
@@ -297,7 +319,6 @@ class TimeOffController extends BaseController with ApiResultMixin {
 
       final processes = timeOff.processes ?? [];
       if (processes.isEmpty) {
-        print('[CreateAflVos] Không có processes, bỏ qua');
         return;
       }
 
@@ -310,16 +331,10 @@ class TimeOffController extends BaseController with ApiResultMixin {
       await handleApiCallVoid(
         apiCall: () =>
             createAflVosUsecase.call(request: request, email: emailWithDefault),
-        onSuccess: () {
-          print('[CreateAflVos] Gửi thành công');
-        },
-        onError: (error) {
-          print('[CreateAflVos] Lỗi: $error');
-        },
+        onSuccess: () {},
+        onError: (_) {},
       );
-    } catch (e) {
-      print('[CreateAflVos] Exception: $e');
-    }
+    } catch (_) {}
   }
 
   void navigateToUpdate(TimeOff timeOff) {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/file_attachment.dart';
 
 class TimeOff {
   final int vRegId;
@@ -75,6 +75,15 @@ class TimeOff {
     this.phepTon,
     this.overtimeTon,
   });
+
+  // Tổng số ngày/giờ nghỉ từ chi tiết, fallback về vacationNo nếu không có chi tiết
+  double get totalTimeOff {
+    final detailList = details;
+    if (detailList == null || detailList.isEmpty) {
+      return (vacationNo ?? 0).toDouble();
+    }
+    return detailList.fold<double>(0, (sum, item) => sum + item.soLuong);
+  }
 
   // Helper để check có thể hủy không
   bool get canCancel {

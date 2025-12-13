@@ -11,6 +11,7 @@ class FormDropdownField extends StatelessWidget {
   final RxString selectedId;
   final Function(String?) onChanged;
   final bool required;
+  final String? errorText;
 
   const FormDropdownField({
     super.key,
@@ -20,6 +21,7 @@ class FormDropdownField extends StatelessWidget {
     required this.selectedId,
     required this.onChanged,
     this.required = false,
+    this.errorText,
   });
 
   @override
@@ -53,6 +55,7 @@ class FormDropdownField extends StatelessWidget {
             selectedId: selectedId.value.isEmpty ? null : selectedId.value,
             selectedName: selectedId.value.isEmpty ? null : selectedId.value,
             onProjectSelected: onChanged,
+            errorText: errorText,
             searchable: false, // Tắt chức năng search, chỉ xổ xuống bình thường
           ),
         ),

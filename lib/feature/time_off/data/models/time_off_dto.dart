@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
-import 'package:vos_flutter/feature/time_off_create/data/models/file_attachment_dto.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
+import 'package:vos_flutter/feature/time_off/data/models/file_attachment_dto.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/file_attachment.dart';
 
 class TimeOffDto {
   final int vRegId;

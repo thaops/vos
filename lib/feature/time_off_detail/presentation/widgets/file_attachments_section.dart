@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vos_flutter/common/widgets/text_widget.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/file_attachment.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/file_attachment.dart';
 
 class FileAttachmentsSection extends StatelessWidget {
   final List<FileAttachment> attachments;

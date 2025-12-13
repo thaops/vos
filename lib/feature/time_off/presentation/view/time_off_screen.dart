@@ -136,6 +136,15 @@ class TimeOffScreen extends GetView<TimeOffController> {
                                         return TimeOffCard(
                                           timeOff: item,
                                           statusNameByCode: statusNameMap,
+                                          isRecallLoading: controller
+                                              .recallingVRegIds
+                                              .contains(item.vRegId),
+                                          isCancelLoading: controller
+                                              .cancellingVRegIds
+                                              .contains(item.vRegId),
+                                          isSendApproveLoading: controller
+                                              .sendingApproveVRegIds
+                                              .contains(item.vRegId),
                                           onCancel: controller.isDraft(item)
                                               ? () => controller.cancelTimeOff(
                                                   item,
@@ -167,6 +176,15 @@ class TimeOffScreen extends GetView<TimeOffController> {
                                         return TimeOffCard(
                                           timeOff: item,
                                           statusNameByCode: statusNameMap,
+                                          isRecallLoading: controller
+                                              .recallingVRegIds
+                                              .contains(item.vRegId),
+                                          isCancelLoading: controller
+                                              .cancellingVRegIds
+                                              .contains(item.vRegId),
+                                          isSendApproveLoading: controller
+                                              .sendingApproveVRegIds
+                                              .contains(item.vRegId),
                                           onCancel: controller.isDraft(item)
                                               ? () => controller.cancelTimeOff(
                                                   item,

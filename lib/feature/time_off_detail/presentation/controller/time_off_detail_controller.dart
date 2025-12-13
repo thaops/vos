@@ -4,14 +4,14 @@ import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/mixins/api_result_mixin.dart';
 import 'package:vos_flutter/common/widgets/success_dialog.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/time_off_create_request.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/work_code_detail.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/time_off_create_request.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/work_code_detail.dart';
 import 'package:vos_flutter/feature/time_off_detail/domain/models/time_off_detail_args.dart';
 import 'package:vos_flutter/feature/time_off_detail/domain/usecases/get_time_off_detail_usecase.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/usecases/send_approve_request_usecase.dart';
-import 'package:vos_flutter/feature/time_off_update/domain/usecases/update_time_off_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/send_approve_request_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/update_time_off_usecase.dart';
 import 'package:vos_flutter/feature/time_off_update/domain/models/time_off_update_args.dart';
-import 'package:vos_flutter/feature/time_off_create/domain/models/send_approve_result.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/send_approve_result.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
 class TimeOffDetailController extends BaseController with ApiResultMixin {
@@ -109,39 +109,38 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     }
   }
 
-
-    String buildStatusTag(String status) {
-    switch (status) {
+  String buildStatusTag(String status) {
+    switch (status.toLowerCase()) {
       case '--':
-        return 'Chưa chuyển cho cán bộ phê duyệt';
-      case 'IN':
-        return 'Đang trong quá trình phê duyệt';
-      case 'FN':
-        return 'Được phê duyệt';
-      case 'RJ':
-        return 'Từ chối';
-      case 'BK':
-        return 'Thu hồi';
-      case 'OK':
+        return 'Chưa chuyển phê duyệt';
+      case 'ok':
         return 'Chưa phê duyệt';
+      case 'rj':
+        return 'Từ chối';
+      case 'in':
+        return 'Đang trong quá trình phê duyệt';
+      case 'fn':
+        return 'Đã phê duyệt';
+      case 'bk':
+        return 'Thu hồi';
       default:
         return '--';
     }
   }
 
   Color buildStatusColor(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case '--':
         return Colors.grey;
-      case 'IN':
+      case 'in':
         return Colors.orange;
-      case 'FN':
+      case 'fn':
         return Colors.green;
-      case 'RJ':
+      case 'rj':
         return Colors.red;
-      case 'BK':
+      case 'bk':
         return Colors.blueGrey;
-      case 'OK':
+      case 'ok':
         return Colors.grey;
       default:
         return Colors.grey;
@@ -181,7 +180,8 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
         contactInfor: timeOff.contactInfor ?? '',
         status: timeOff.status ?? '',
         recUserID: timeOff.hrId ?? 0,
-        lsDetail: timeOff.details
+        lsDetail:
+            timeOff.details
                 ?.map(
                   (detail) => WorkCodeDetail(
                     jobCode: detail.jobCode,
@@ -243,7 +243,8 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
         contactInfor: timeOff.contactInfor ?? '',
         status: 'XX',
         recUserID: timeOff.hrId ?? 0,
-        lsDetail: timeOff.details
+        lsDetail:
+            timeOff.details
                 ?.map(
                   (detail) => WorkCodeDetail(
                     jobCode: detail.jobCode,
@@ -271,4 +272,3 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     }
   }
 }
-
