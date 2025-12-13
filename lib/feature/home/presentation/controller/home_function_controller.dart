@@ -36,7 +36,7 @@ class HomeFunctionController extends GetxController {
         // Kiểm tra nếu token expired thì hủy liên kết để người dùng liên kết lại
         if (_isTokenExpiredError(errorMsg)) {
           print('🔒 Token expired detected in home functions, unlinking auth...');
-          await SignOutClear().unlinkAuth();
+          await SignOutClear().unlinkViagsOnly();
           error.value = 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại tài khoản.';
           return;
         }
@@ -51,7 +51,7 @@ class HomeFunctionController extends GetxController {
       // Kiểm tra nếu token expired thì hủy liên kết để người dùng liên kết lại
       if (_isTokenExpiredError(errorMsg)) {
         print('🔒 Token expired detected in home functions exception, unlinking auth...');
-        await SignOutClear().unlinkAuth();
+        await SignOutClear().unlinkViagsOnly();
         error.value = 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại tài khoản.';
         return;
       }

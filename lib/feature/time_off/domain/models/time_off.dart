@@ -113,19 +113,91 @@ class TimeOff {
       return appoveProcessName ?? 'Chưa có thông tin';
     }
 
-    final approvedCount = processes!.where((p) => p.status == 'OK').length;
-    final totalCount = processes!.length;
+    // Tránh case status có ký tự trắng lạ (newline, tab, NBSP...) làm sai match -> luôn 0/x
+    String _normalize(String value) =>
+        value.replaceAll(RegExp(r'\s+'), '').trim().toLowerCase();
+
+    /// Canonicalize status về bộ mã chuẩn: -- / ok / in / fn / rj / bk
+    /// Thực tế API đang trả "YES/NO" ở ls_process cho một số môi trường.
+    String canonicalStatus(String raw) {
+      final s = _normalize(raw);
+      switch (s) {
+        case 'yes':
+        case 'true':
+        case '1':
+          return 'fn'; // đã duyệt
+        case 'no':
+        case 'false':
+        case '0':
+          return 'ok'; // chưa duyệt / chờ phê duyệt
+        default:
+          return s;
+      }
+    }
+
+    final sortedProcesses = [...processes!]
+      ..sort((a, b) => a.approveNo.compareTo(b.approveNo));
+
+    final statuses = sortedProcesses
+        .map((p) => canonicalStatus(p.status))
+        .toList();
+    final totalCount = sortedProcesses.length;
+
+    // Theo status mapping: fn = đã phê duyệt, in/ok = đang/chưa phê duyệt, -- = chưa chuyển
+    final approvedCount = sortedProcesses
+        .where((p) => canonicalStatus(p.status) == 'fn')
+        .length;
+
+    // Debug log (chỉ chạy debug mode, và chỉ log 1 lần / vRegId để tránh spam)
+    assert(() {
+      if (_approvalProgressLoggedVRegIds.add(vRegId)) {
+        final raw = sortedProcesses
+            .map((p) => '${p.approveNo}:${p.status}')
+            .join(' | ');
+        final normalized = statuses.join(',');
+        debugPrint(
+          '[TimeOff][approvalProgressText] vRegId=$vRegId '
+          'approved=$approvedCount/$totalCount '
+          'raw=[$raw] canonical=[$normalized] approveStatus=$approveStatus',
+        );
+      }
+      return true;
+    }());
+
+    // Nếu bị từ chối/thu hồi thì vẫn giữ số bước đã duyệt để progress không bị sai (vd: 1/2)
+    if (statuses.contains('rj')) {
+      return '$approvedCount/$totalCount: Từ chối';
+    }
+
+    if (statuses.contains('bk')) {
+      return '$approvedCount/$totalCount: Thu hồi';
+    }
 
     if (approvedCount < totalCount) {
-      final currentApprover = processes!.firstWhere(
-        (p) => p.status != 'OK' && p.status != 'XX',
-        orElse: () => processes!.first,
-      );
-      return '$approvedCount/$totalCount: ${currentApprover.fullName} đang duyệt';
+      final currentApprover = sortedProcesses.firstWhere((p) {
+        final s = canonicalStatus(p.status);
+        return s != 'fn' && s != 'rj' && s != 'bk';
+      }, orElse: () => sortedProcesses.first);
+      final currentStatus = canonicalStatus(currentApprover.status);
+      final fullName = currentApprover.fullName.trim();
+
+      // Mapping theo TimeOffDetailController.buildStatusTag:
+      // --: chưa chuyển phê duyệt, ok: chờ phê duyệt, in: đang trong quá trình phê duyệt
+      final suffix = switch (currentStatus) {
+        '--' => 'chưa chuyển phê duyệt',
+        'ok' => 'chờ phê duyệt',
+        'in' => 'đang duyệt',
+        _ => 'đang duyệt',
+      };
+
+      final prefix = fullName.isEmpty ? '' : '$fullName ';
+      return '$approvedCount/$totalCount: $prefix$suffix';
     }
 
     return '$approvedCount/$totalCount: Đã phê duyệt';
   }
+
+  static final Set<int> _approvalProgressLoggedVRegIds = <int>{};
 }
 
 // Model cho chi tiết loại nghỉ
@@ -166,14 +238,40 @@ class TimeOffProcess {
   });
 
   factory TimeOffProcess.fromJson(Map<String, dynamic> json) {
+    int readInt(List<String> keys, {int fallback = 0}) {
+      for (final key in keys) {
+        final v = json[key];
+        if (v is int) return v;
+        if (v is num) return v.toInt();
+        if (v is String) return int.tryParse(v) ?? fallback;
+      }
+      return fallback;
+    }
+
+    String readString(List<String> keys, {String fallback = ''}) {
+      for (final key in keys) {
+        final v = json[key];
+        if (v == null) continue;
+        if (v is String) return v;
+        return v.toString();
+      }
+      return fallback;
+    }
+
     return TimeOffProcess(
-      approveNo: json['ApproveNo'] ?? 0,
-      fullName: json['FullName'] ?? '',
-      email: json['Email'] ?? '',
+      approveNo: readInt(['ApproveNo', 'approveNo', 'approve_no']),
+      fullName: readString(['FullName', 'fullName', 'full_name']),
+      email: readString(['Email', 'email']),
       recdate: json['Recdate'] != null
           ? DateTime.tryParse(json['Recdate'])
           : null,
-      status: json['Status'] ?? '--',
+      status: readString([
+        'Status',
+        'status',
+        'ApproveStatus',
+        'approveStatus',
+        'approve_status',
+      ], fallback: '--'),
     );
   }
 }

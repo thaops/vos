@@ -16,7 +16,6 @@ mixin ApiResultMixin on BaseController {
     try {
       setStatus(ControllerStatus.loading);
       final result = await apiCall();
-
       if (result.isSuccess) {
         setStatus(ControllerStatus.success);
 
@@ -117,7 +116,7 @@ mixin ApiResultMixin on BaseController {
   }
 
   Future<void> _handleTokenExpired() async {
-    await SignOutClear().unlinkAuth();
+    await SignOutClear().unlinkViagsOnly();
     setStatus(
       ControllerStatus.error,
       error: 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại.',

@@ -8,6 +8,7 @@ import 'package:vos_flutter/common/shared/cache/my_id.dart';
 import 'package:vos_flutter/common/shared/auth/controller_cache_clear.dart';
 import 'package:vos_flutter/router/app_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
 class SignOutClear extends GetxService {
   /// Clear tất cả dữ liệu và cache khi đăng xuất
@@ -55,7 +56,9 @@ class SignOutClear extends GetxService {
       final String? savedBaseUrl = storage.read<String>('base_url');
       final bool? isManualEnv = storage.read<bool>('manual_environment_set');
       final String? savedViagsName = storage.read<String>('saved_viags_name');
-      final String? savedViagsPassword = storage.read<String>('saved_viags_password');
+      final String? savedViagsPassword = storage.read<String>(
+        'saved_viags_password',
+      );
       await storage.erase();
 
       // Khôi phục manual environment nếu có
@@ -103,7 +106,9 @@ class SignOutClear extends GetxService {
         final GetStorage storage = GetStorage();
         // Giữ lại VIAGS credentials
         final String? savedViagsName = storage.read<String>('saved_viags_name');
-        final String? savedViagsPassword = storage.read<String>('saved_viags_password');
+        final String? savedViagsPassword = storage.read<String>(
+          'saved_viags_password',
+        );
         await storage.erase();
         // Khôi phục credentials
         if (savedViagsName != null && savedViagsName.isNotEmpty) {
@@ -135,7 +140,9 @@ class SignOutClear extends GetxService {
       final String? savedBaseUrl = storage.read<String>('base_url');
       final bool? isManualEnv = storage.read<bool>('manual_environment_set');
       final String? savedViagsName = storage.read<String>('saved_viags_name');
-      final String? savedViagsPassword = storage.read<String>('saved_viags_password');
+      final String? savedViagsPassword = storage.read<String>(
+        'saved_viags_password',
+      );
       await storage.erase();
 
       // Khôi phục manual environment nếu có
@@ -208,6 +215,48 @@ class SignOutClear extends GetxService {
       // để người dùng tự liên kết lại mà không mất cấu hình.
     } catch (e) {
       print('❌ Error during unlink auth: $e');
+    }
+  }
+
+  /// Huỷ liên kết VIAGS (VACS) giống nút "Huỷ liên kết" trong Profile.
+  /// - Chỉ clear dữ liệu VIAGS: user_profile_data, viags_linked, viags_email, is_employee
+  /// - Giữ nguyên Google/Firebase login và các cấu hình khác
+  /// - Điều hướng về Main (để UI trở về trạng thái chưa liên kết một cách nhất quán)
+  Future<void> unlinkViagsOnly() async {
+    try {
+      // Ưu tiên gọi flow chuẩn của ProfileController để update reactive state ngay lập tức
+      if (Get.isRegistered<ProfileController>()) {
+        final controller = Get.find<ProfileController>();
+        await controller.unlinkViagsAccount();
+      } else {
+        // Fallback: chỉ clear storage keys (khi ProfileController chưa được register)
+        final GetStorage storage = GetStorage();
+
+        // Giữ lại VIAGS credentials để người dùng link lại nhanh (giống local datasource)
+        final String? savedName = storage.read<String>('saved_viags_name');
+        final String? savedPassword = storage.read<String>(
+          'saved_viags_password',
+        );
+
+        await storage.remove('user_profile_data');
+        await storage.remove('viags_linked');
+        await storage.remove('viags_email');
+        await storage.remove('is_employee');
+
+        if (savedName != null && savedName.isNotEmpty) {
+          await storage.write('saved_viags_name', savedName);
+        }
+        if (savedPassword != null && savedPassword.isNotEmpty) {
+          await storage.write('saved_viags_password', savedPassword);
+        }
+      }
+
+      // Điều hướng về Main sau khi đã unlink VIAGS (tránh kẹt ở screen cần VIAGS)
+      if (Get.context != null && Get.currentRoute != AppRouter.main) {
+        await Get.offAllNamed(AppRouter.main);
+      }
+    } catch (e) {
+      print('❌ Error during unlink VIAGS only: $e');
     }
   }
 

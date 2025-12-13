@@ -32,7 +32,7 @@ class BannerController extends GetxController {
         // Kiểm tra nếu token expired thì hủy liên kết để người dùng liên kết lại
         if (_isTokenExpiredError(errorMsg)) {
           print('🔒 Token expired detected in banner, unlinking auth...');
-          await SignOutClear().unlinkAuth();
+          await SignOutClear().unlinkViagsOnly();
           error.value = 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại tài khoản.';
           return;
         }
@@ -46,7 +46,7 @@ class BannerController extends GetxController {
       // Kiểm tra nếu token expired thì hủy liên kết để người dùng liên kết lại
       if (_isTokenExpiredError(errorMsg)) {
         print('🔒 Token expired detected in banner exception, unlinking auth...');
-        await SignOutClear().unlinkAuth();
+        await SignOutClear().unlinkViagsOnly();
         error.value = 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại tài khoản.';
         return;
       }

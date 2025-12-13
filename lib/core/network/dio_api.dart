@@ -28,7 +28,6 @@ class DioApi {
 
   // Bộ nhớ cache
   static final Map<String, dynamic> _cache = {};
-  static DateTime? _tokenCacheTime;
 
   Future<void> _buildHeader() async {
     try {
@@ -241,7 +240,8 @@ class DioApi {
 
   dioLib.Response _handleResponse(dioLib.Response response) {
     if (response.statusCode == HttpStatusCodes.STATUS_CODE_UNAUTHORIZED) {
-      SignOutClear().unlinkAuth();
+      // 401 từ VACS/VIAGS: chỉ huỷ liên kết VIAGS, không signOut Google/Firebase
+      SignOutClear().unlinkViagsOnly();
       throw Exception('Unauthorized');
     }
     return response;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/img/img.dart';
 import 'package:vos_flutter/common/utils/date_utils.dart';
@@ -79,8 +80,8 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                           ),
                         SizedBox(height: 20.h),
                         _buildApprovalProcessSection(timeOff),
-                        SizedBox(height: 20.h),
-                        _buildCommentSection(timeOff),
+                        // SizedBox(height: 20.h),
+                        // _buildCommentSection(timeOff),
                       ],
                     ),
                   ),
@@ -135,7 +136,10 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           label: 'Tiêu chuẩn phép',
           value: timeOff.phepTon!.toStringAsFixed(0),
         ),
-      _buildInfoRow(label: 'Tổng ngày phép nghỉ', value: timeOffQuantityText),
+      _buildInfoRow(
+        label: 'Tổng ngày phép nghỉ',
+        value: timeOff.vacationNo?.toString() ?? '0',
+      ),
       if (timeOff.overtimeTon != null)
         _buildInfoRow(
           label: 'Tồn OT',
@@ -293,7 +297,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                       if (process.recdate != null) ...[
                         SizedBox(height: 4.h),
                         Text(
-                          _formatDateTime(process.recdate),
+                          "Ngày duyệt: ${_formatDateTime(process.recdate)}",
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: _colorTextGray,
@@ -405,10 +409,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   // Helper: Format DateTime
   String _formatDateTime(DateTime? date) {
     if (date == null) return 'N/A';
-    return DateUtilsCustom.formatStringDate(
-      date.toIso8601String(),
-      isHour: true,
-    );
+    return DateFormat('dd/MM/yyyy HH:mm').format(date);
   }
 
   String _formatPersonWithHrId(TimeOff timeOff, TimeOffProcess? process) {

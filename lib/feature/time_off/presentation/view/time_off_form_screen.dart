@@ -257,6 +257,7 @@ class TimeOffFormScreen extends GetView<TimeOffFormController> {
           CustomTextField(
             controller: controller.reasonController,
             hintText: 'Mô tả lý do nghỉ phép...',
+            textCapitalization: TextCapitalization.sentences,
             minLines: 5,
             maxLines: 6,
             paddingVertical: 0,
@@ -296,6 +297,7 @@ class TimeOffFormScreen extends GetView<TimeOffFormController> {
             child: CustomTextField(
               controller: controller,
               hintText: label,
+              textCapitalization: TextCapitalization.sentences,
               borderRadius: 8,
               fontSize: 14,
               paddingVertical: 0,
@@ -312,6 +314,7 @@ class TimeOffFormScreen extends GetView<TimeOffFormController> {
           CustomTextField(
             controller: controller,
             hintText: label,
+            textCapitalization: TextCapitalization.sentences,
             borderRadius: 8,
             fontSize: 14,
             paddingVertical: 0,

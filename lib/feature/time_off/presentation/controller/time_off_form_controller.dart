@@ -777,7 +777,7 @@ class TimeOffFormController extends BaseController
         description: reasonController.text,
         vacationReason: vacationReasonCode,
         contactPerson: contactInfoController.text.isEmpty
-            ? 'Không có'
+            ? ''
             : contactInfoController.text,
         contactInfor: addressController.text,
         status: selectedStatusCode.value,
@@ -795,7 +795,7 @@ class TimeOffFormController extends BaseController
       description: reasonController.text,
       vacationReason: vacationReasonCode,
       contactPerson: contactInfoController.text.isEmpty
-          ? 'Không có'
+          ? ''
           : contactInfoController.text,
       contactInfor: addressController.text,
       status: selectedStatusCode.value,
