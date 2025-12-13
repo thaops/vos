@@ -247,6 +247,20 @@ class _DaysInputFieldState extends State<_DaysInputField> {
     return days == days.toInt() ? '${days.toInt()}' : days.toStringAsFixed(1);
   }
 
+  TextInputFormatter _decimalInputFormatter() {
+    return TextInputFormatter.withFunction((oldValue, newValue) {
+      final text = newValue.text;
+      if (text.isEmpty) return newValue;
+
+      // Cho phép số và một dấu chấm, tối đa 1 chữ số sau dấu chấm
+      final regex = RegExp(r'^\d*\.?\d{0,1}$');
+      if (regex.hasMatch(text)) {
+        return newValue;
+      }
+      return oldValue;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -254,9 +268,7 @@ class _DaysInputFieldState extends State<_DaysInputField> {
       child: TextField(
         controller: _controller,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'^\\d*\\.?\\d{0,1}')),
-        ],
+        inputFormatters: [_decimalInputFormatter()],
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontSize: 16,

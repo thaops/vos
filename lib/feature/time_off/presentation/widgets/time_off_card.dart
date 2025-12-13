@@ -234,7 +234,7 @@ class TimeOffCard extends StatelessWidget {
     final canRecall =
         approveStatus == 'IN' || approveStatus == 'FN' || approveStatus == 'HF';
     final statusXX = statusCode == 'XX' || statusCode == 'RJ';
-    final StatusBK = statusCode == 'BK';
+    final StatusIn = approveStatus == 'IN';
 
     if (isDraft) {
       return Row(
@@ -351,7 +351,7 @@ class TimeOffCard extends StatelessWidget {
     }
 
     // Đơn "Chờ phê duyệt", "Đã phê duyệt": Thu hồi
-    if (canRecall && onRecall != null && !StatusBK) {
+    if (StatusIn) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton(
