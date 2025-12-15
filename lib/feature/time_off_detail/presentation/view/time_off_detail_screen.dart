@@ -111,6 +111,12 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       final personalVacation = profileController.personalVacation.value;
       final userProfile = profileController.userProfile.value;
 
+      // Nếu personalVacation chưa được load, thử load lại
+      if (personalVacation == null && userProfile != null) {
+        // Load personalVacation nếu chưa có
+        profileController.loadPersonalVacation();
+      }
+
       // Lấy HR_No từ cache PersonalVacation hoặc fallback về UserProfile
       final hrNoStr = personalVacation?.hrNo.isNotEmpty == true
           ? personalVacation!.hrNo
@@ -151,17 +157,16 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         ),
       ];
 
-      // Ưu tiên dùng PersonalVacation, fallback về TimeOff nếu không có
+      // paidLeaveYear có thể null trong domain model
       final paidLeaveYear = personalVacation?.paidLeaveYear;
-      final paidLeaveUsedTotal = personalVacation?.paidLeaveUsedTotal
-          .toDouble();
-      final overTimeRemain = personalVacation?.overTimeRemain.toDouble();
 
-      print('paidLeaveYear: $paidLeaveYear');
-      print('paidLeaveUsedTotal: $paidLeaveUsedTotal');
-      print('overTimeRemain: $overTimeRemain');
+      final paidLeaveUsedTotal = personalVacation != null
+          ? personalVacation.paidLeaveUsedTotal.toDouble()
+          : null;
+      final overTimeRemain = personalVacation != null
+          ? personalVacation.overTimeRemain.toDouble()
+          : null;
 
-      // Thêm thông tin phép vào items
       final allItems = List<Widget>.from(items);
       if (paidLeaveYear != null) {
         allItems.add(
@@ -354,47 +359,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           ),
         ],
       ),
-    );
-  }
-
-  // Section 3: Thông tin trao đổi (Comment Section)
-  Widget _buildCommentSection(TimeOff timeOff) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Thông tin trao đổi',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primary,
-          ),
-        ),
-        SizedBox(height: 16.h),
-        // Placeholder: Chưa có comment
-        Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 24.h),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.chat_bubble_outline,
-                  size: 48.sp,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Chưa có thông tin trao đổi',
-                  style: TextStyle(fontSize: 14.sp, color: _colorTextGray),
-                ),
-              ],
-            ),
-          ),
-        ),
-        // Input comment (có thể implement sau khi có API)
-        // SizedBox(height: 16.h),
-        // _buildCommentInput(),
-      ],
     );
   }
 
