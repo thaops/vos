@@ -16,6 +16,11 @@ import 'package:vos_flutter/feature/vacation/data/datasources/remote/vacation_re
 import 'package:vos_flutter/feature/vacation/data/repository_impl/vacation_repository_impl.dart';
 import 'package:vos_flutter/feature/vacation/domain/repositories/vacation_repository.dart';
 import 'package:vos_flutter/feature/vacation/domain/usecases/get_vacation_list_usecase.dart';
+import 'package:vos_flutter/feature/time_off/data/datasources/remote/time_off_form_remote_datasource.dart';
+import 'package:vos_flutter/feature/time_off/data/datasources/remote/file_upload_remote_datasource.dart';
+import 'package:vos_flutter/feature/time_off/data/repository_impl/time_off_form_repository_impl.dart';
+import 'package:vos_flutter/feature/time_off/domain/repositories/time_off_form_repository.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/get_personal_vacation_usecase.dart';
 
 class ProfileBinding extends Bindings {
   @override
@@ -86,6 +91,28 @@ class ProfileBinding extends Bindings {
       () => GetVacationListUsecase(repository: Get.find<VacationRepository>()),
     );
 
+    // TimeOffFormRepository for PersonalVacation
+    Get.lazyPut<TimeOffFormRemoteDataSource>(
+      () => TimeOffFormRemoteDataSourceImpl(
+        shareApiRepository: Get.find<ShareApiRepository>(),
+      ),
+    );
+
+    Get.lazyPut<FileUploadRemoteDataSource>(
+      () => FileUploadRemoteDataSourceImpl(),
+    );
+
+    Get.lazyPut<TimeOffFormRepository>(
+      () => TimeOffFormRepositoryImpl(
+        remoteDataSource: Get.find<TimeOffFormRemoteDataSource>(),
+        fileUploadDataSource: Get.find<FileUploadRemoteDataSource>(),
+      ),
+    );
+
+    Get.lazyPut<GetPersonalVacationUsecase>(
+      () => GetPersonalVacationUsecase(repository: Get.find<TimeOffFormRepository>()),
+    );
+
     // Controller
     Get.lazyPut<ProfileController>(
       () => ProfileController(
@@ -96,6 +123,7 @@ class ProfileBinding extends Bindings {
         checkViagsStatusUsecase: Get.find<CheckViagsStatusUsecase>(),
         checkEmployeeStatusUsecase: Get.find<CheckEmployeeStatusUsecase>(),
         getVacationListUsecase: Get.find<GetVacationListUsecase>(),
+        getPersonalVacationUsecase: Get.find<GetPersonalVacationUsecase>(),
       ),
     );
   }

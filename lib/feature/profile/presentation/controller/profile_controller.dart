@@ -13,6 +13,8 @@ import 'package:vos_flutter/feature/profile/domain/usecases/unlink_viags_account
 import 'package:vos_flutter/feature/profile/domain/usecases/logout_usecase.dart';
 import 'package:vos_flutter/feature/vacation/domain/usecases/get_vacation_list_usecase.dart';
 import 'package:vos_flutter/feature/vacation/domain/models/vacation.dart';
+import 'package:vos_flutter/feature/time_off/domain/usecases/get_personal_vacation_usecase.dart';
+import 'package:vos_flutter/feature/time_off/domain/models/personal_vacation.dart';
 
 class ProfileController extends GetxController {
   final GetUserProfileUsecase getUserProfileUsecase;
@@ -22,6 +24,7 @@ class ProfileController extends GetxController {
   final CheckViagsStatusUsecase checkViagsStatusUsecase;
   final CheckEmployeeStatusUsecase checkEmployeeStatusUsecase;
   final GetVacationListUsecase? getVacationListUsecase;
+  final GetPersonalVacationUsecase? getPersonalVacationUsecase;
 
   ProfileController({
     required this.getUserProfileUsecase,
@@ -31,6 +34,7 @@ class ProfileController extends GetxController {
     required this.checkViagsStatusUsecase,
     required this.checkEmployeeStatusUsecase,
     this.getVacationListUsecase,
+    this.getPersonalVacationUsecase,
   });
 
   // Reactive variables
@@ -56,6 +60,7 @@ class ProfileController extends GetxController {
   final RxList<Vacation> vacationList = <Vacation>[].obs;
   final RxDouble phepTon = 0.0.obs; // Tồn phép
   final RxDouble overtimeTon = 0.0.obs; // Tồn OT
+  final Rx<PersonalVacation?> personalVacation = Rx<PersonalVacation?>(null);
 
   @override
   void onInit() {
@@ -255,6 +260,9 @@ class ProfileController extends GetxController {
 
         // Gọi API vacation và cache data
         await loadVacationData();
+        
+        // Gọi API PersonalVacation để lấy thông tin phép chi tiết và cache HR_No
+        await loadPersonalVacation();
 
         return true;
       } else {
@@ -407,6 +415,54 @@ class ProfileController extends GetxController {
       phepTon.value = 0.0;
       overtimeTon.value = 0.0;
       vacationList.clear();
+    }
+  }
+
+  /// Load PersonalVacation data (thông tin phép chi tiết) và cache HR_No
+  Future<void> loadPersonalVacation() async {
+    if (getPersonalVacationUsecase == null) {
+      print('⚠️ GetPersonalVacationUsecase not injected, skipping personal vacation load');
+      return;
+    }
+
+    // Đảm bảo userProfile đã có và có hrId
+    final profile = userProfile.value;
+    if (profile == null) {
+      print('⚠️ userProfile is null, cannot load personal vacation data');
+      return;
+    }
+
+    // Nếu HR_ID = 0 hoặc null, dùng giá trị mặc định 1752
+    final hrId = profile.hrId > 0 ? profile.hrId : 1752;
+    if (profile.hrId <= 0) {
+      print(
+        '⚠️ HR_ID from profile is ${profile.hrId}, using default HR_ID: 1752',
+      );
+    } else {
+      print('📤 [ProfileController] Loading personal vacation data for HR_ID: $hrId');
+    }
+
+    try {
+      final result = await getPersonalVacationUsecase!.call(hrId: hrId);
+
+      if (result.isSuccess && result.data != null) {
+        // Cache PersonalVacation
+        personalVacation.value = result.data;
+        
+        print(
+          '✅ Loaded personal vacation data: HR_No=${result.data!.hrNo}, '
+          'PaidLeaveYear=${result.data!.paidLeaveYear}, '
+          'PaidLeaveUsedTotal=${result.data!.paidLeaveUsedTotal}, '
+          'PaidLeaveRemain=${result.data!.paidLeaveRemain}, '
+          'OverTimeRemain=${result.data!.overTimeRemain}',
+        );
+      } else {
+        print('⚠️ No personal vacation data found or API error: ${result.error}');
+        personalVacation.value = null;
+      }
+    } catch (e) {
+      print('❌ Error loading personal vacation data: $e');
+      personalVacation.value = null;
     }
   }
 }

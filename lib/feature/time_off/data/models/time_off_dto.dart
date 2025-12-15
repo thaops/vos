@@ -6,6 +6,7 @@ import 'package:vos_flutter/feature/time_off/domain/models/file_attachment.dart'
 class TimeOffDto {
   final int vRegId;
   final int? hrId;
+  final String? hrNo;
   final String? fromDate;
   final String? toDate;
   final String? dateReg;
@@ -44,6 +45,7 @@ class TimeOffDto {
   TimeOffDto({
     required this.vRegId,
     this.hrId,
+    this.hrNo,
     this.fromDate,
     this.toDate,
     this.dateReg,
@@ -82,6 +84,7 @@ class TimeOffDto {
     return TimeOffDto(
       vRegId: json['VReg_ID'] as int? ?? 0,
       hrId: json['HR_ID'] as int?,
+      hrNo: json['HR_No'] as String?,
       fromDate: json['FromDate'] as String?,
       toDate: json['ToDate'] as String?,
       dateReg: json['DateReg'] as String?,
@@ -191,6 +194,7 @@ class TimeOffDto {
     return TimeOff(
       vRegId: vRegId,
       hrId: hrId,
+      hrNo: hrNo,
       fromDate: (fromDate?.isNotEmpty == true)
           ? DateTime.tryParse(fromDate!)
           : null,

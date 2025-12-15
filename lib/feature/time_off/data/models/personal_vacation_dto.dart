@@ -17,10 +17,10 @@ class PersonalVacationDto {
   final String? departments;
   final String? codeJobTitle;
   final String? jobTitleNameVN;
-  final double? paidLeaveYear;
+  final double? paidLeaveYear; // Tiêu chuẩn phép
   final double? paidLeaveUsedTotal;
   final double? paidLeaveRemain;
-  final double? paidLeaveRemainEarly;
+  final double? paidLeaveRemainEarly; // Tồn phép sớm
   final double? overTimeRemain;
 
   PersonalVacationDto({
@@ -121,6 +121,8 @@ class PersonalVacationDto {
       paidLeaveRemain: paidLeaveRemain?.toInt() ?? 0,
       overTimeRemain: overTimeRemain?.toInt() ?? 0,
       paidLeaveUsedTotal: paidLeaveUsedTotal?.toInt() ?? 0,
+      paidLeaveYear: paidLeaveYear,
+      paidLeaveRemainEarly: paidLeaveRemainEarly,
     );
   }
 

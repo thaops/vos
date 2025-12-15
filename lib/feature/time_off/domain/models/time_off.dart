@@ -4,6 +4,7 @@ import 'package:vos_flutter/feature/time_off/domain/models/file_attachment.dart'
 class TimeOff {
   final int vRegId;
   final int? hrId;
+  final String? hrNo;
   final DateTime? fromDate;
   final DateTime? toDate;
   final DateTime? dateReg;
@@ -42,6 +43,7 @@ class TimeOff {
   const TimeOff({
     required this.vRegId,
     this.hrId,
+    this.hrNo,
     this.fromDate,
     this.toDate,
     this.dateReg,

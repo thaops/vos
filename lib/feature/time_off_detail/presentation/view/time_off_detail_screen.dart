@@ -10,6 +10,7 @@ import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
 import 'package:vos_flutter/feature/time_off_detail/presentation/controller/time_off_detail_controller.dart';
 import 'package:vos_flutter/feature/time_off_detail/presentation/widgets/file_attachments_section.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
 class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   const TimeOffDetailScreen({super.key});
@@ -105,55 +106,96 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         : null;
     final timeOffQuantityText = _formatTimeOffQuantity(timeOff);
 
-    final items = [
-      _buildInfoRow(
-        label: 'Người tạo đơn',
-        value: _formatPersonWithHrId(timeOff, creatorProcess),
-      ),
-      _buildInfoRow(
-        label: "Người nghỉ",
-        value: _formatPersonWithHrId(timeOff, creatorProcess),
-      ),
-      _buildInfoRow(label: "Email", value: creatorProcess?.email ?? ''),
-      _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
-      _buildInfoRow(label: 'Cơ quan / Đơn vị', value: timeOff.level2Name ?? ''),
-      _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
-      _buildInfoRow(label: 'Đội / Tổ:', value: timeOff.level3Name ?? ''),
-      _buildInfoRow(label: 'Từ ngày', value: _formatDateRange(timeOff)),
-      _buildInfoRow(label: 'Thời gian nghỉ', value: timeOffQuantityText),
-      _buildInfoRow(
-        label: 'Loại phép',
-        value: timeOff.vacationReasonName ?? 'N/A',
-      ),
-      _buildInfoRow(label: 'Nơi nghỉ', value: timeOff.domIntName ?? 'N/A'),
-      _buildInfoRow(
-        label: 'Mô tả chi tiết',
-        value: timeOff.description ?? '',
-        isMultiline: true,
-      ),
-      if (timeOff.phepTon != null)
-        _buildInfoRow(
-          label: 'Tiêu chuẩn phép',
-          value: timeOff.phepTon!.toStringAsFixed(0),
-        ),
-      _buildInfoRow(
-        label: 'Tổng ngày phép nghỉ',
-        value: timeOff.vacationNo?.toString() ?? '0',
-      ),
-      if (timeOff.overtimeTon != null)
-        _buildInfoRow(
-          label: 'Tồn OT',
-          value: timeOff.overtimeTon!.toStringAsFixed(0),
-        ),
-    ];
+    return Obx(() {
+      final profileController = Get.find<ProfileController>();
+      final personalVacation = profileController.personalVacation.value;
+      final userProfile = profileController.userProfile.value;
 
-    return Wrap(
-      spacing: 12.w,
-      runSpacing: 16.h,
-      children: items
-          .map((item) => SizedBox(width: fieldWidth, child: item))
-          .toList(),
-    );
+      // Lấy HR_No từ cache PersonalVacation hoặc fallback về UserProfile
+      final hrNoStr = personalVacation?.hrNo.isNotEmpty == true
+          ? personalVacation!.hrNo
+          : (userProfile?.hrNo.isNotEmpty == true
+                ? userProfile!.hrNo
+                : (userProfile?.hrId != null && userProfile!.hrId > 0
+                      ? '${userProfile.hrId}'
+                      : ''));
+
+      final items = [
+        _buildInfoRow(
+          label: 'Người tạo đơn',
+          value: _formatPersonWithHrNo(hrNoStr, creatorProcess),
+        ),
+        _buildInfoRow(
+          label: "Người nghỉ",
+          value: _formatPersonWithHrNo(hrNoStr, creatorProcess),
+        ),
+        _buildInfoRow(label: "Email", value: creatorProcess?.email ?? ''),
+        _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
+        _buildInfoRow(
+          label: 'Cơ quan / Đơn vị',
+          value: timeOff.level2Name ?? '',
+        ),
+        _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
+        _buildInfoRow(label: 'Đội / Tổ:', value: timeOff.level3Name ?? ''),
+        _buildInfoRow(label: 'Từ ngày', value: _formatDateRange(timeOff)),
+        _buildInfoRow(label: 'Thời gian nghỉ', value: timeOffQuantityText),
+        _buildInfoRow(
+          label: 'Loại phép',
+          value: timeOff.vacationReasonName ?? 'N/A',
+        ),
+        _buildInfoRow(label: 'Nơi nghỉ', value: timeOff.domIntName ?? 'N/A'),
+        _buildInfoRow(
+          label: 'Mô tả chi tiết',
+          value: timeOff.description ?? '',
+          isMultiline: true,
+        ),
+      ];
+
+      // Ưu tiên dùng PersonalVacation, fallback về TimeOff nếu không có
+      final paidLeaveYear = personalVacation?.paidLeaveYear;
+      final paidLeaveUsedTotal = personalVacation?.paidLeaveUsedTotal
+          .toDouble();
+      final overTimeRemain = personalVacation?.overTimeRemain.toDouble();
+
+      print('paidLeaveYear: $paidLeaveYear');
+      print('paidLeaveUsedTotal: $paidLeaveUsedTotal');
+      print('overTimeRemain: $overTimeRemain');
+
+      // Thêm thông tin phép vào items
+      final allItems = List<Widget>.from(items);
+      if (paidLeaveYear != null) {
+        allItems.add(
+          _buildInfoRow(
+            label: 'Tiêu chuẩn phép',
+            value: paidLeaveYear.toStringAsFixed(0),
+          ),
+        );
+      }
+      if (paidLeaveUsedTotal != null) {
+        allItems.add(
+          _buildInfoRow(
+            label: 'Tổng ngày phép nghỉ',
+            value: paidLeaveUsedTotal.toStringAsFixed(0),
+          ),
+        );
+      }
+      if (overTimeRemain != null) {
+        allItems.add(
+          _buildInfoRow(
+            label: 'Tồn OT',
+            value: overTimeRemain.toStringAsFixed(0),
+          ),
+        );
+      }
+
+      return Wrap(
+        spacing: 12.w,
+        runSpacing: 16.h,
+        children: allItems
+            .map((item) => SizedBox(width: fieldWidth, child: item))
+            .toList(),
+      );
+    });
   }
 
   String _formatTimeOffQuantity(TimeOff timeOff) {
@@ -412,16 +454,13 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     return DateFormat('dd/MM/yyyy HH:mm').format(date);
   }
 
-  String _formatPersonWithHrId(TimeOff timeOff, TimeOffProcess? process) {
-    final hrIdStr = timeOff.hrId != null && timeOff.hrId! > 0
-        ? '${timeOff.hrId}'
-        : '';
+  String _formatPersonWithHrNo(String hrNoStr, TimeOffProcess? process) {
     final name = process?.fullName ?? '';
 
-    if (hrIdStr.isNotEmpty && name.isNotEmpty) {
-      return '$hrIdStr - $name';
+    if (hrNoStr.isNotEmpty && name.isNotEmpty) {
+      return '$hrNoStr - $name';
     }
-    return hrIdStr.isNotEmpty ? hrIdStr : name;
+    return hrNoStr.isNotEmpty ? hrNoStr : name;
   }
 
   bool _isApprovedStatus(String status) {

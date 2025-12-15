@@ -7,6 +7,8 @@ class PersonalVacation {
   final int paidLeaveRemain;
   final int overTimeRemain;
   final int paidLeaveUsedTotal;
+  final double? paidLeaveYear; // Tiêu chuẩn phép
+  final double? paidLeaveRemainEarly; // Tồn phép sớm
 
   PersonalVacation({
     required this.hrId,
@@ -17,6 +19,8 @@ class PersonalVacation {
     required this.paidLeaveRemain,
     required this.overTimeRemain,
     required this.paidLeaveUsedTotal,
+    this.paidLeaveYear,
+    this.paidLeaveRemainEarly,
   });
 }
 
