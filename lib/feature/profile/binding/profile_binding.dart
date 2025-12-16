@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart' as dioLib;
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
 import 'package:vos_flutter/core/network/share_api_repository.dart';
 import 'package:vos_flutter/feature/profile/data/datasources/local/profile_local_datasource.dart';
 import 'package:vos_flutter/feature/profile/data/datasources/remote/profile_remote_datasource.dart';
@@ -113,6 +115,17 @@ class ProfileBinding extends Bindings {
       () => GetPersonalVacationUsecase(repository: Get.find<TimeOffFormRepository>()),
     );
 
+    // GetStorage (nếu chưa được register)
+    if (!Get.isRegistered<GetStorage>()) {
+      Get.lazyPut<GetStorage>(() => GetStorage(), fenix: true);
+    }
+
+    // CheckAwaitingServices
+    Get.lazyPut<CheckAwaitingServices>(
+      () => CheckAwaitingServices(Get.find<GetStorage>()),
+      fenix: true,
+    );
+
     // Controller
     Get.lazyPut<ProfileController>(
       () => ProfileController(
@@ -122,6 +135,7 @@ class ProfileBinding extends Bindings {
         logoutUsecase: Get.find<LogoutUsecase>(),
         checkViagsStatusUsecase: Get.find<CheckViagsStatusUsecase>(),
         checkEmployeeStatusUsecase: Get.find<CheckEmployeeStatusUsecase>(),
+        checkAwaitingServices: Get.find<CheckAwaitingServices>(),
         getVacationListUsecase: Get.find<GetVacationListUsecase>(),
         getPersonalVacationUsecase: Get.find<GetPersonalVacationUsecase>(),
       ),

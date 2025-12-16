@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
 import 'package:vos_flutter/feature/banner/presentation/controller/banner_controller.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/feature/profile/domain/models/user_profile.dart';
@@ -25,6 +26,7 @@ class ProfileController extends GetxController {
   final CheckEmployeeStatusUsecase checkEmployeeStatusUsecase;
   final GetVacationListUsecase? getVacationListUsecase;
   final GetPersonalVacationUsecase? getPersonalVacationUsecase;
+  final CheckAwaitingServices checkAwaitingServices;
 
   ProfileController({
     required this.getUserProfileUsecase,
@@ -33,6 +35,7 @@ class ProfileController extends GetxController {
     required this.logoutUsecase,
     required this.checkViagsStatusUsecase,
     required this.checkEmployeeStatusUsecase,
+    required this.checkAwaitingServices,
     this.getVacationListUsecase,
     this.getPersonalVacationUsecase,
   });
@@ -53,6 +56,9 @@ class ProfileController extends GetxController {
   // Flag để track trạng thái nhân viên (reactive)
   final RxBool isEmployee = false.obs;
 
+  // Flag để track trạng thái awaiting (reactive)
+  final RxBool isAwaiting = false.obs;
+
   // Error message khi link VOS thất bại
   final RxString linkViagsError = ''.obs;
 
@@ -69,6 +75,7 @@ class ProfileController extends GetxController {
     _loadGoogleUserAsync();
     loadViagsStatus();
     loadEmployeeStatus();
+    loadAwaitingStatus();
   }
 
   /// Load user profile từ repository
@@ -139,6 +146,21 @@ class ProfileController extends GetxController {
   /// Reload trạng thái nhân viên từ storage (public method để gọi từ bên ngoài)
   void reloadEmployeeStatus() {
     loadEmployeeStatus();
+  }
+
+  /// Load trạng thái awaiting từ storage
+  Future<void> loadAwaitingStatus() async {
+    try {
+      final awaiting = await checkAwaitingServices.getawaiting();
+      isAwaiting.value = awaiting;
+    } catch (e) {
+      isAwaiting.value = false;
+    }
+  }
+
+  /// Reload trạng thái awaiting từ storage (public method để gọi từ bên ngoài)
+  void reloadAwaitingStatus() {
+    loadAwaitingStatus();
   }
 
   /// Load Google user async

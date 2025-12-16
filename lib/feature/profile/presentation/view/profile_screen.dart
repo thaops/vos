@@ -84,7 +84,8 @@ class ProfileScreen extends GetView<ProfileController> {
                           SizedBox(height: 16.h),
                           Obx(() {
                             final shouldShowLogout =
-                                controller.isViagsLinked.value;
+                                controller.isViagsLinked.value &&
+                                !controller.isAwaiting.value;
 
                             if (!shouldShowLogout) {
                               return const SizedBox.shrink();
