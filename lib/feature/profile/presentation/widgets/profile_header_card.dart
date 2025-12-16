@@ -84,22 +84,12 @@ class ProfileHeaderCard extends StatelessWidget {
 
           SizedBox(height: 8.h),
           // Primary Email
-          Obx(() {
-            String email;
-            if (controller.isViagsLinked.value &&
-                controller.viagsEmail.value.isNotEmpty) {
-              email = controller.viagsEmail.value;
-            } else if (user.email.isNotEmpty) {
-              email = user.email;
-            } else {
-              email = '';
-            }
-            return Text(
-              email,
+          if (user.jobTitleNameVN.isNotEmpty)
+            Text(
+              user.jobTitleNameVN,
               style: TextStyle(fontSize: 16.sp, color: Colors.black),
               textAlign: TextAlign.center,
-            );
-          }),
+            ),
         ],
       ),
     );

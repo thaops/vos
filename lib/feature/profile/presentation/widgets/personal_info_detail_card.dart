@@ -30,12 +30,12 @@ class PersonalInfoDetailCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 _buildInfoRow('Mã nhân viên', user.userCode),
-                _buildInfoRow('Chức vụ', user.jobTitleNameVN),
+                // _buildInfoRow('Chức vụ', user.jobTitleNameVN),
                 // _buildInfoRow('Tổ đội', user.depNameVN),
-                // _buildInfoRow(
-                //   'Email',
-                //   user.email.isNotEmpty ? user.email : 'N/A',
-                // ),
+                _buildInfoRow(
+                  'Email',
+                  user.email.isNotEmpty ? user.email : 'N/A',
+                ),
                 _buildInfoRow(
                   'Số điện thoại',
                   user.phone.isNotEmpty ? user.phone : 'N/A',

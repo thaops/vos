@@ -3,18 +3,18 @@ import 'package:vos_flutter/feature/time_off/domain/models/time_off.dart';
 
 class CreateAflVosRequest {
   final List<List<String>> leaveDateRange;
-  final String leaveTimes;
+  final String totalLeaveDay;
   final String leavePlace;
   final String reason;
   final bool isOverseas;
   final List<AttachmentItem> attachments;
   final int vRegId;
   final int hrId;
-  final List<ApprovalItem> approvals;
+  final List<ApprovalStep> approvals;
 
   CreateAflVosRequest({
     required this.leaveDateRange,
-    required this.leaveTimes,
+    required this.totalLeaveDay,
     required this.leavePlace,
     required this.reason,
     required this.isOverseas,
@@ -27,7 +27,7 @@ class CreateAflVosRequest {
   Map<String, dynamic> toJson() {
     return {
       'LeaveDateRange': leaveDateRange,
-      'LeaveTimes': leaveTimes.toString(), // Đảm bảo luôn là string
+      'TotalLeaveDay': totalLeaveDay.toString(), // Đảm bảo luôn là string
       'LeavePlace': leavePlace,
       'Reason': reason,
       'IsOverseas': isOverseas,
@@ -42,6 +42,11 @@ class CreateAflVosRequest {
   factory CreateAflVosRequest.fromTimeOff({
     required TimeOff timeOff,
     required List<TimeOffProcess> processes,
+
+    /// approvalsOverride: danh sách ApprovalItem lấy từ API phê duyệt
+    /// (SendApproveResult.approvals). Hàm sẽ tự wrap thành List<ApprovalStep>
+    /// đúng format JSON:
+    /// "Approvals": [{ "Step": 0, "Ls_Approval": [ { ...ApprovalItem } ] }, ...]
     List<ApprovalItem>? approvalsOverride,
     DateTime? overrideFromDate,
     DateTime? overrideToDate,
@@ -55,29 +60,33 @@ class CreateAflVosRequest {
           (sum, detail) => sum + detail.soLuong,
         ) ??
         0.0;
-    final double leaveTimesNum;
+    final double totalLeaveDayNum;
     if (totalDays > 0) {
-      leaveTimesNum = totalDays;
+      totalLeaveDayNum = totalDays;
     } else if (timeOff.fromDate != null) {
       final endDate = timeOff.toDate ?? timeOff.fromDate!;
-      leaveTimesNum = (endDate.difference(timeOff.fromDate!).inDays + 1)
+      totalLeaveDayNum = (endDate.difference(timeOff.fromDate!).inDays + 1)
           .toDouble();
     } else {
-      leaveTimesNum = 0;
+      totalLeaveDayNum = 0;
     }
 
     // Đảm bảo luôn trả về string (0.5 -> "0.5", 1.0 -> "1")
-    final leaveTimes = leaveTimesNum.toString().replaceAll(RegExp(r'\.0$'), '');
+    final totalLeaveDay = totalLeaveDayNum.toString().replaceAll(
+      RegExp(r'\.0$'),
+      '',
+    );
 
     final DateTime? baseFromDate = overrideFromDate ?? timeOff.fromDate;
 
     if (baseFromDate != null) {
       final startDate = baseFromDate;
-      final daysToAdd = leaveTimesNum <= 1 ? 0 : leaveTimesNum.ceil() - 1;
+      final daysToAdd = totalLeaveDayNum <= 1 ? 0 : totalLeaveDayNum.ceil() - 1;
       final computedEndDate = startDate.add(Duration(days: daysToAdd));
       final endDate = overrideToDate ?? timeOff.toDate ?? computedEndDate;
 
-      final formatter = DateFormat('yyyy-MM-dd HH:mm');
+      // Format có kèm giây: yyyy-MM-dd HH:mm:ss
+      final formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
       final startStr = formatter.format(startDate);
       final endStr = formatter.format(endDate);
       leaveDateRange.add([startStr, endStr]);
@@ -99,24 +108,34 @@ class CreateAflVosRequest {
       );
     }).toList();
 
-    final approvals =
-        (approvalsOverride != null && approvalsOverride.isNotEmpty)
-        ? approvalsOverride
-        : processes.asMap().entries.map((entry) {
-            final index = entry.key;
-            final process = entry.value;
-            return ApprovalItem(
-              step: index, // Step bắt đầu từ 0
-              name: process.fullName,
-              email: process.email,
-              position: '', // Cần lấy từ đâu đó, có thể để trống
-              vAppId: 0, // Mặc định là 0, sẽ được set từ API response nếu có
-            );
-          }).toList();
+    // Build danh sách Approvals theo priority:
+    // 1. Nếu có approvalsOverride từ API → dùng, mỗi item = 1 step.
+    // 2. Nếu không có → build từ processes.
+    final List<ApprovalStep> approvals;
+    if (approvalsOverride != null && approvalsOverride.isNotEmpty) {
+      approvals = approvalsOverride.asMap().entries.map((entry) {
+        final index = entry.key;
+        final item = entry.value;
+        return ApprovalStep(step: index, lsApproval: [item]);
+      }).toList();
+    } else {
+      approvals = processes.asMap().entries.map((entry) {
+        final index = entry.key;
+        final process = entry.value;
+        final approvalItem = ApprovalItem(
+          dutyType: 'MAIN',
+          name: process.fullName,
+          email: process.email,
+          position: '', // Có thể cập nhật nếu backend trả thêm
+          vAppId: 0, // Mặc định 0, backend sẽ cập nhật nếu cần
+        );
+        return ApprovalStep(step: index, lsApproval: [approvalItem]);
+      }).toList();
+    }
 
     return CreateAflVosRequest(
       leaveDateRange: leaveDateRange,
-      leaveTimes: leaveTimes,
+      totalLeaveDay: totalLeaveDay,
       leavePlace: leavePlace,
       reason: reason,
       isOverseas: isOverseas,
@@ -179,26 +198,38 @@ class AttachmentItem {
   }
 }
 
-class ApprovalItem {
+class ApprovalStep {
   final int step;
-  final String name;
-  final String email;
-  final String position;
-  final int? vAppId;
-  final int? approveNo;
+  final List<ApprovalItem> lsApproval;
 
-  ApprovalItem({
-    required this.step,
-    required this.name,
-    required this.email,
-    required this.position,
-    this.vAppId,
-    this.approveNo,
-  });
+  ApprovalStep({required this.step, required this.lsApproval});
 
   Map<String, dynamic> toJson() {
     return {
       'Step': step,
+      'Ls_Approval': lsApproval.map((e) => e.toJson()).toList(),
+    };
+  }
+}
+
+class ApprovalItem {
+  final String dutyType;
+  final String name;
+  final String email;
+  final String position;
+  final int? vAppId;
+
+  ApprovalItem({
+    required this.dutyType,
+    required this.name,
+    required this.email,
+    required this.position,
+    this.vAppId,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'DutyType': dutyType,
       'Name': name,
       'Email': email,
       'Position': position,

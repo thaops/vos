@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
-import 'package:vos_flutter/common/img/img.dart';
 import 'package:vos_flutter/common/utils/date_utils.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
@@ -17,7 +16,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
 
   static const _colorTextDark = Color(0xFF212121);
   static const _colorTextGray = Color(0xFF666666);
-  static const _colorBackground = Color(0xFFF5F5F5);
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +93,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     );
   }
 
-  // Section 1: Thông tin chung (Form Detail Section)
   Widget _buildGeneralInfoSection(
     TimeOff timeOff, {
     required double fieldWidth,
@@ -111,13 +108,10 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       final personalVacation = profileController.personalVacation.value;
       final userProfile = profileController.userProfile.value;
 
-      // Nếu personalVacation chưa được load, thử load lại
       if (personalVacation == null && userProfile != null) {
-        // Load personalVacation nếu chưa có
         profileController.loadPersonalVacation();
       }
 
-      // Lấy HR_No từ cache PersonalVacation hoặc fallback về UserProfile
       final hrNoStr = personalVacation?.hrNo.isNotEmpty == true
           ? personalVacation!.hrNo
           : (userProfile?.hrNo.isNotEmpty == true
@@ -165,7 +159,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       if (paidLeaveUsedTotal != null) {
         allItems.add(
           _buildInfoRow(
-            label: 'Tổng ngày phép nghỉ',
+            label: 'Tổng phép nghỉ',
             value: paidLeaveUsedTotal.toStringAsFixed(0),
           ),
         );
@@ -215,7 +209,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         .replaceFirst(RegExp(r'\.$'), '');
   }
 
-  // Section 2: Quy trình phê duyệt (Timeline)
   Widget _buildApprovalProcessSection(TimeOff timeOff) {
     if (timeOff.processes == null || timeOff.processes!.isEmpty) {
       return SizedBox.shrink();
@@ -234,27 +227,44 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         ),
         SizedBox(height: 16.h),
         ...(() {
-          // Nhóm các bước có cùng ApproveNo vào chung một step
           final grouped = <int, List<TimeOffProcess>>{};
+          var maxApproveNo = 0;
           for (final process in timeOff.processes!) {
             grouped.putIfAbsent(process.approveNo, () => []).add(process);
+            if (process.approveNo > maxApproveNo) {
+              maxApproveNo = process.approveNo;
+            }
           }
+
+          int? totalStepsFromProcess;
+          final rawProcess = timeOff.appoveProcess;
+          if (rawProcess != null && rawProcess.trim().isNotEmpty) {
+            final match = RegExp(r'\d+').firstMatch(rawProcess);
+            if (match != null) {
+              totalStepsFromProcess = int.tryParse(match.group(0)!);
+            }
+          }
+
+          final totalStepsForDisplay = totalStepsFromProcess ?? maxApproveNo;
+
           final groupedProcesses = grouped.values.toList();
           final approvedCount = timeOff.processes!
               .where((p) => _isApprovedStatus(p.status))
               .length;
+          final length = timeOff.processes!.length;
 
           return groupedProcesses.asMap().entries.map((entry) {
             final index = entry.key;
             final processes = entry.value;
             final isLast = index == groupedProcesses.length - 1;
-            final totalSteps = groupedProcesses.length;
+            final totalSteps = totalStepsForDisplay;
 
             return _buildTimelineStep(
               processes: processes,
               stepNumber: index + 1,
               totalSteps: totalSteps,
               approvedCount: approvedCount,
+              length: length,
               isLast: isLast,
               index: index,
             );
@@ -269,13 +279,20 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     required int stepNumber,
     required int totalSteps,
     required int approvedCount,
+    required int length,
     required bool isLast,
     required int index,
   }) {
     // Header step: "3/5: Thủ trưởng CQ/ĐV"
     final names = processes.map((p) => p.fullName).join(', ');
-    final stepHeader = '$stepNumber/$totalSteps: $names';
+    final stepHeader = '$stepNumber/$length';
     final groupStatus = _resolveGroupStatus(processes);
+    final totalMembers = processes.length;
+    final approvedInGroup = processes
+        .where((p) => _isApprovedStatus(p.status))
+        .length;
+    final groupProgressText = '$approvedInGroup/$totalMembers';
+    final baseStatusTag = controller.buildStatusTag(groupStatus, index);
 
     return Container(
       decoration: BoxDecoration(
@@ -289,14 +306,17 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         children: [
           // Step header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                stepHeader,
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w500,
-                  color: _colorTextDark,
+              Expanded(
+                child: Text(
+                  stepHeader,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w500,
+                    color: _colorTextDark,
+                  ),
                 ),
               ),
               SizedBox(width: 8.w),
@@ -313,7 +333,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                   ),
                 ),
                 child: Text(
-                  controller.buildStatusTag(groupStatus, index),
+                  baseStatusTag,
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w500,
@@ -327,16 +347,40 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           // Card người phê duyệt
           ...processes.map((process) {
             return Container(
-              margin: EdgeInsets.only(top: process == processes.first ? 0 : 8.h),
+              margin: EdgeInsets.only(
+                top: process == processes.first ? 0 : 8.h,
+              ),
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: _colorBackground,
+                color: controller
+                    .buildStatusColor(process.status)
+                    .withOpacity(0.1),
+                border: Border.all(
+                  color: controller.buildStatusColor(process.status),
+                  width: 1.w,
+                ),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Row(
                 children: [
-                  // Avatar
-                  Image.asset(Img.avatarTimeOff),
+                  // Avatar icon
+                  Container(
+                    width: 40.w,
+                    height: 40.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary.withOpacity(0.1),
+                      border: Border.all(
+                        color: AppColors.primary.withOpacity(0.2),
+                        width: 1.w,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.person,
+                      size: 22.sp,
+                      color: AppColors.primary,
+                    ),
+                  ),
                   SizedBox(width: 12.w),
                   // Thông tin
                   Expanded(
@@ -374,27 +418,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                       ],
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color:
-                          controller.buildStatusColor(process.status).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(2.r),
-                      border: Border.all(
-                        color: controller.buildStatusColor(process.status),
-                      ),
-                    ),
-                    child: Text(
-                      controller.buildStatusTag(process.status, index),
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w500,
-                        color: controller.buildStatusColor(process.status),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             );
@@ -406,10 +429,37 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
 
   String _resolveGroupStatus(List<TimeOffProcess> processes) {
     if (processes.isEmpty) return '--';
-    final firstStatus = processes.first.status;
-    final hasDifferentStatus =
-        processes.any((process) => process.status != firstStatus);
-    return hasDifferentStatus ? '--' : firstStatus;
+
+    // Chuẩn hóa status về uppercase để so sánh an toàn
+    final statuses = processes.map((p) => (p.status).toUpperCase()).toList();
+
+    final bool allDash = statuses.every((s) => s == '--');
+    final bool allFn = statuses.every((s) => s == 'FN');
+    final bool allOk = statuses.every((s) => s == 'OK');
+    final bool hasRj = statuses.contains('RJ');
+
+    // 1) Tất cả là '--' → chưa gửi phê duyệt
+    if (allDash) {
+      return '--';
+    }
+
+    // 2) Có ít nhất 1 'RJ' → cả group bị từ chối
+    if (hasRj) {
+      return 'RJ';
+    }
+
+    // 3) Tất cả là 'FN' → cả group đã duyệt
+    if (allFn) {
+      return 'FN';
+    }
+
+    // 4) Tất cả là 'OK' → chưa phê duyệt
+    if (allOk) {
+      return 'OK';
+    }
+
+    // 5) Các trường hợp còn lại → đang trong quá trình phê duyệt
+    return 'IN';
   }
 
   // Helper: Info Row (Label-Value Layout)

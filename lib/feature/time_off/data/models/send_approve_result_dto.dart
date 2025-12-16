@@ -8,19 +8,13 @@ class SendApproveResultDto {
   final int vRegId;
   final List<ApprovalItem> approvals;
 
-  SendApproveResultDto({
-    required this.vRegId,
-    required this.approvals,
-  });
+  SendApproveResultDto({required this.vRegId, required this.approvals});
 
   factory SendApproveResultDto.fromMap(Map<String, dynamic> map) {
     final vRegId = ShareJsonHelper.getInt(map, 'VReg_ID');
     final approvals = _parseApprovals(map);
 
-    return SendApproveResultDto(
-      vRegId: vRegId,
-      approvals: approvals,
-    );
+    return SendApproveResultDto(vRegId: vRegId, approvals: approvals);
   }
 
   SendApproveResult toDomain() {
@@ -52,26 +46,27 @@ class SendApproveResultDto {
 
     if (listData == null) return [];
 
-    return listData.asMap().entries.map((entry) {
-      final index = entry.key;
-      final item = entry.value;
-      if (item is! Map<String, dynamic>) {
-        return null;
-      }
+    return listData
+        .asMap()
+        .entries
+        .map((entry) {
+          final item = entry.value;
+          if (item is! Map<String, dynamic>) {
+            return null;
+          }
 
-      final approveNo = _tryParseInt(item['ApproveNo']);
-      // Step bắt đầu từ 0 (theo format mới)
-      final step = index;
-
-      return ApprovalItem(
-        step: step,
-        name: item['FullName']?.toString() ?? '',
-        email: item['Email']?.toString() ?? '',
-        position: item['Name_Job_Title']?.toString() ?? '',
-        vAppId: _tryParseInt(item['VApp_ID']) ?? 0, // Mặc định là 0 nếu không có
-        approveNo: approveNo,
-      );
-    }).whereType<ApprovalItem>().toList();
+          return ApprovalItem(
+            dutyType: item['DutyType']?.toString() ?? 'MAIN',
+            name: item['FullName']?.toString() ?? '',
+            email: item['Email']?.toString() ?? '',
+            position: item['Name_Job_Title']?.toString() ?? '',
+            vAppId:
+                _tryParseInt(item['VApp_ID']) ??
+                0, // Mặc định là 0 nếu không có
+          );
+        })
+        .whereType<ApprovalItem>()
+        .toList();
   }
 
   static int? _tryParseInt(dynamic value) {
