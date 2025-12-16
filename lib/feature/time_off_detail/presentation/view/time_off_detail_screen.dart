@@ -127,13 +127,14 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                       : ''));
 
       final items = [
-        _buildInfoRow(
-          label: 'Người tạo đơn',
-          value: _formatPersonWithHrNo(hrNoStr, creatorProcess),
-        ),
+        // _buildInfoRow(
+        //   label: 'Người tạo đơn',
+        //   value: _formatPersonWithHrNo(hrNoStr, creatorProcess),
+        // ),
         _buildInfoRow(
           label: "Người nghỉ",
           value: _formatPersonWithHrNo(hrNoStr, creatorProcess),
+          size: 16,
         ),
         _buildInfoRow(label: "Email", value: creatorProcess?.email ?? ''),
         _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
@@ -141,8 +142,8 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           label: 'Cơ quan / Đơn vị',
           value: timeOff.level2Name ?? '',
         ),
-        _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
-        _buildInfoRow(label: 'Đội / Tổ:', value: timeOff.level3Name ?? ''),
+        // _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
+        // _buildInfoRow(label: 'Đội / Tổ:', value: timeOff.level3Name ?? ''),
         _buildInfoRow(label: 'Từ ngày', value: _formatDateRange(timeOff)),
         _buildInfoRow(label: 'Thời gian nghỉ', value: timeOffQuantityText),
         _buildInfoRow(
@@ -369,6 +370,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     required String label,
     required String value,
     bool isMultiline = false,
+    int? size = 14,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,7 +381,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           child: Text(
             '$label:',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: size?.sp,
               fontWeight: FontWeight.w400,
               color: _colorTextGray,
             ),
@@ -391,7 +393,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           child: Text(
             value,
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: size?.sp,
               fontWeight: FontWeight.w500,
               color: _colorTextDark,
             ),

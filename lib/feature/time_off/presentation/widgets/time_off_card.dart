@@ -110,7 +110,7 @@ class TimeOffCard extends StatelessWidget {
   Widget _buildHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      
+
       children: [
         Text(
           _formatDateRange(),
@@ -207,7 +207,7 @@ class TimeOffCard extends StatelessWidget {
                     color: const Color(0xFF111111),
                     fontWeight: FontWeight.w500,
                   ),
-                  maxLines: 1,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
