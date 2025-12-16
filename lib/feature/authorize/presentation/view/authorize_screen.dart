@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
+import 'package:vos_flutter/common/widgets/success_dialog.dart';
+import 'package:vos_flutter/feature/time_off/presentation/widgets/time_off_confirm_dialog.dart';
 import 'package:vos_flutter/feature/authorize/domain/models/authorize.dart';
 import 'package:vos_flutter/feature/authorize/presentation/controller/authorize_controller.dart';
 import 'package:vos_flutter/feature/authorize/presentation/widgets/authorize_card.dart';
@@ -51,7 +53,8 @@ class AuthorizeScreen extends GetView<AuthorizeController> {
                 if (list.isEmpty)
                   Expanded(
                     child: _EmptyState(
-                      hasFilter: controller.statusFilter.value != 'all' ||
+                      hasFilter:
+                          controller.statusFilter.value != 'all' ||
                           controller.searchText.value.isNotEmpty,
                       onRefresh: controller.loadAuthorizes,
                     ),
@@ -72,33 +75,33 @@ class AuthorizeScreen extends GetView<AuthorizeController> {
                                     ? SliverGrid(
                                         gridDelegate:
                                             const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          mainAxisSpacing: 10,
-                                          crossAxisSpacing: 12,
-                                          childAspectRatio: 1.5,
-                                        ),
-                                        delegate: SliverChildBuilderDelegate(
-                                          (context, index) {
-                                            final authorize = list[index];
-                                            return _AuthorizeItem(
-                                              authorize: authorize,
-                                              controller: controller,
-                                            );
-                                          },
-                                          childCount: list.length,
-                                        ),
+                                              crossAxisCount: 2,
+                                              mainAxisSpacing: 10,
+                                              crossAxisSpacing: 12,
+                                              childAspectRatio: 1.5,
+                                            ),
+                                        delegate: SliverChildBuilderDelegate((
+                                          context,
+                                          index,
+                                        ) {
+                                          final authorize = list[index];
+                                          return _AuthorizeItem(
+                                            authorize: authorize,
+                                            controller: controller,
+                                          );
+                                        }, childCount: list.length),
                                       )
                                     : SliverList(
-                                        delegate: SliverChildBuilderDelegate(
-                                          (context, index) {
-                                            final authorize = list[index];
-                                            return _AuthorizeItem(
-                                              authorize: authorize,
-                                              controller: controller,
-                                            );
-                                          },
-                                          childCount: list.length,
-                                        ),
+                                        delegate: SliverChildBuilderDelegate((
+                                          context,
+                                          index,
+                                        ) {
+                                          final authorize = list[index];
+                                          return _AuthorizeItem(
+                                            authorize: authorize,
+                                            controller: controller,
+                                          );
+                                        }, childCount: list.length),
                                       ),
                               ),
                             ],
@@ -123,49 +126,53 @@ class _FilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-      color: Colors.white,
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller.searchController,
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: controller.searchText.value.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: controller.clearSearch,
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF006884),
+    return Obx(() {
+      final hasSearch = controller.searchText.value.isNotEmpty;
+      final statuses = [
+        const {'code': 'all', 'name': 'Tất cả'},
+        ...controller.statuses.toList(),
+      ];
+
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        color: Colors.white,
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller.searchController,
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: hasSearch
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: controller.clearSearch,
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
                   ),
-                ),
-                filled: true,
-                fillColor: Colors.grey[50],
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16.w,
-                  vertical: 12.h,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                    borderSide: const BorderSide(color: Color(0xFF006884)),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 12.h,
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(width: 12.w),
-          Obx(
-            () => Container(
+            SizedBox(width: 12.w),
+            Container(
               width: 48.w,
               height: 48.w,
               decoration: BoxDecoration(
@@ -184,11 +191,7 @@ class _FilterBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 itemBuilder: (context) {
-                  final items = [
-                    const {'code': 'all', 'name': 'Tất cả'},
-                    ...controller.statuses,
-                  ];
-                  return items.map((status) {
+                  return statuses.map((status) {
                     final code = status['code'] ?? '';
                     final name = code == 'OK'
                         ? 'Đang sử dụng'
@@ -197,36 +200,31 @@ class _FilterBar extends StatelessWidget {
                       value: code,
                       child: SizedBox(
                         width: 140.w,
-                        child: Text(
-                          name,
-                          style: TextStyle(fontSize: 14.sp),
-                        ),
+                        child: Text(name, style: TextStyle(fontSize: 14.sp)),
                       ),
                     );
                   }).toList();
                 },
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }
 
 class _AuthorizeItem extends StatelessWidget {
-  const _AuthorizeItem({
-    required this.authorize,
-    required this.controller,
-  });
+  const _AuthorizeItem({required this.authorize, required this.controller});
 
   final Authorize authorize;
   final AuthorizeController controller;
 
   @override
   Widget build(BuildContext context) {
-    final isCancelling =
-        controller.cancelingIds.contains(authorize.authorizeId);
+    final isCancelling = controller.cancelingIds.contains(
+      authorize.authorizeId,
+    );
     return AuthorizeCard(
       authorize: authorize,
       isCancelling: isCancelling,
@@ -235,41 +233,30 @@ class _AuthorizeItem extends StatelessWidget {
   }
 
   Future<void> _confirmCancel(BuildContext context) async {
-    final confirmed = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Hủy ủy quyền'),
-        content: Text(
-          'Bạn có chắc muốn hủy ủy quyền cho ${authorize.forFullName}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Đóng'),
-          ),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            child: const Text('Đồng ý'),
-          ),
-        ],
-      ),
+    final confirmed = await TimeOffConfirmDialog.show(
+      type: TimeOffDialogType.cancel,
+      title: 'Hủy ủy quyền',
+      message: 'Bạn có chắc muốn hủy ủy quyền cho ${authorize.forFullName}?',
     );
 
     if (confirmed != true) return;
 
     final ok = await controller.cancelAuthorize(authorize);
+    if (!context.mounted) return;
+
     if (ok) {
-      Get.snackbar(
-        'Thành công',
-        'Đã hủy ủy quyền',
-        snackPosition: SnackPosition.BOTTOM,
+      await SuccessDialog.show(
+        context: context,
+        title: 'Thành công',
+        message: 'Hủy ủy quyền thành công',
+        buttonText: 'Đóng',
       );
     } else if (controller.error.value.isNotEmpty) {
-      Get.snackbar(
-        'Lỗi',
-        controller.error.value,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red[900],
+      await SuccessDialog.show(
+        context: context,
+        title: 'Không thành công',
+        message: controller.error.value,
+        buttonText: 'Đóng',
       );
     }
   }
@@ -283,35 +270,10 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          SizedBox(height: 120.h),
-          Icon(
-            Icons.search_off,
-            size: 64.sp,
-            color: Colors.grey[400],
-          ),
-          SizedBox(height: 16.h),
-          Center(
-            child: Text(
-              hasFilter ? 'Không có kết quả phù hợp' : 'Chưa có ủy quyền nào',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16.sp,
-              ),
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Center(
-            child: ElevatedButton(
-              onPressed: onRefresh,
-              child: const Text('Tải lại'),
-            ),
-          ),
-        ],
+    return Center(
+      child: Text(
+        'Không có kết quả phù hợp',
+        style: TextStyle(color: Colors.grey[600], fontSize: 16.sp),
       ),
     );
   }
@@ -339,10 +301,7 @@ class _ErrorState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 16.h),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('Thử lại'),
-            ),
+            ElevatedButton(onPressed: onRetry, child: const Text('Thử lại')),
           ],
         ),
       ),

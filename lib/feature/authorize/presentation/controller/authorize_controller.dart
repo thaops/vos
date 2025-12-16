@@ -62,10 +62,7 @@ class AuthorizeController extends GetxController {
       return;
     }
 
-    await Future.wait([
-      loadStatuses(),
-      loadAuthorizes(),
-    ]);
+    await Future.wait([loadStatuses(), loadAuthorizes()]);
 
     _initializing = false;
   }
@@ -110,8 +107,12 @@ class AuthorizeController extends GetxController {
       isLoading.value = true;
       error.value = '';
 
-      final result =
-          await getAuthorizesUsecase.call(_token!, authorizeId, _hrId ?? 0, year);
+      final result = await getAuthorizesUsecase.call(
+        _token!,
+        authorizeId,
+        _hrId ?? 0,
+        year,
+      );
       if (result.isSuccess && result.data != null) {
         authorizes.value = result.data!;
       } else {
@@ -136,21 +137,11 @@ class AuthorizeController extends GetxController {
 
       if (result.isSuccess && result.data != null && result.data!.isNotEmpty) {
         statuses.value = result.data!;
-      } else {
-        statuses.value = _defaultStatuses();
       }
     } catch (_) {
-      statuses.value = _defaultStatuses();
     } finally {
       isStatusLoading.value = false;
     }
-  }
-
-  List<Map<String, String>> _defaultStatuses() {
-    return const [
-      {'code': 'OK', 'name': 'Đang sử dụng'},
-      {'code': 'XX', 'name': 'Đánh dấu xóa'},
-    ];
   }
 
   void setStatusFilter(String value) {

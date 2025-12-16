@@ -18,11 +18,13 @@ class AuthorizeCreateScreen extends GetView<AuthorizeCreateController> {
       appBar: AppBarWidget(title: 'Tạo mới'),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final maxContentWidth =
-              constraints.maxWidth > 900 ? 900.0 : constraints.maxWidth;
+          final maxContentWidth = constraints.maxWidth > 900
+              ? 900.0
+              : constraints.maxWidth;
           final isWide = maxContentWidth >= 720;
-          final fieldWidth =
-              isWide ? (maxContentWidth - 16) / 2 : maxContentWidth;
+          final fieldWidth = isWide
+              ? (maxContentWidth - 16) / 2
+              : maxContentWidth;
 
           return SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
@@ -100,7 +102,8 @@ class AuthorizeCreateScreen extends GetView<AuthorizeCreateController> {
                               SizedBox(height: 8.h),
                               Obx(
                                 () => DropdownField<String>(
-                                  controller: controller.authorizeTypeController,
+                                  controller:
+                                      controller.authorizeTypeController,
                                   value: controller.selectedAuthorizeType.value,
                                   hint: 'Chọn',
                                   items: controller.authorizeTypes,
@@ -188,29 +191,73 @@ class AuthorizeCreateScreen extends GetView<AuthorizeCreateController> {
   }
 
   Future<void> _selectFromDate(BuildContext context) async {
-    final picked = await showDatePicker(
+    final initial =
+        controller.fromDate.value ??
+        DateTime.now().add(const Duration(days: 1));
+
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate: controller.fromDate.value ?? DateTime.now(),
+      initialDate: initial,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
-      controller.selectFromDate(picked);
-    }
+    if (pickedDate == null) return;
+
+    // Chọn giờ, mặc định 00:00 nếu chưa có
+    final existing = controller.fromDate.value;
+    final initialTime = existing != null
+        ? TimeOfDay.fromDateTime(existing)
+        : const TimeOfDay(hour: 0, minute: 0);
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+    );
+
+    final time = pickedTime ?? initialTime;
+    final dateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      time.hour,
+      time.minute,
+    );
+
+    await controller.selectFromDate(dateTime);
   }
 
   Future<void> _selectToDate(BuildContext context) async {
-    final picked = await showDatePicker(
+    final base =
+        controller.toDate.value ?? controller.fromDate.value ?? DateTime.now();
+
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate:
-          controller.toDate.value ??
-          controller.fromDate.value ??
-          DateTime.now(),
+      initialDate: base,
       firstDate: controller.fromDate.value ?? DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
-      controller.selectToDate(picked);
-    }
+    if (pickedDate == null) return;
+
+    // Chọn giờ, mặc định 23:59 nếu chưa có
+    final existing = controller.toDate.value;
+    final initialTime = existing != null
+        ? TimeOfDay.fromDateTime(existing)
+        : const TimeOfDay(hour: 23, minute: 59);
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+    );
+
+    final time = pickedTime ?? initialTime;
+    final dateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      time.hour,
+      time.minute,
+    );
+
+    await controller.selectToDate(dateTime);
   }
 }

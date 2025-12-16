@@ -45,7 +45,7 @@ class AuthorizeCard extends StatelessWidget {
                   child: Text(
                     authorize.forFullName.isNotEmpty
                         ? authorize.forFullName
-                        : 'Chưa có tên',
+                        : '',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
@@ -55,29 +55,29 @@ class AuthorizeCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                SizedBox(width: 12.w),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? const Color(0xFFE0FFF3)
-                        : Colors.grey.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: isActive
-                          ? const Color(0xFF00B894)
-                          : Colors.grey[700],
-                    ),
-                  ),
-                ),
+                // SizedBox(width: 12.w),
+                // Container(
+                //   padding: EdgeInsets.symmetric(
+                //     horizontal: 12.w,
+                //     vertical: 6.h,
+                //   ),
+                //   decoration: BoxDecoration(
+                //     color: isActive
+                //         ? const Color(0xFFE0FFF3)
+                //         : Colors.grey.withOpacity(0.1),
+                //     borderRadius: BorderRadius.circular(20.r),
+                //   ),
+                //   child: Text(
+                //     statusText,
+                //     style: TextStyle(
+                //       fontSize: 12.sp,
+                //       fontWeight: FontWeight.w600,
+                //       color: isActive
+                //           ? const Color(0xFF00B894)
+                //           : Colors.grey[700],
+                //     ),
+                //   ),
+                // ),
               ],
             ),
             SizedBox(height: 20.h),
@@ -110,19 +110,51 @@ class AuthorizeCard extends StatelessWidget {
             SizedBox(height: 12.h),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: isCancelling || !isActive ? null : onCancel,
-                icon: isCancelling
-                    ? SizedBox(
-                        width: 16.w,
-                        height: 16.w,
-                        child: const CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.cancel_outlined),
-                label: Text(
-                  isActive ? 'Hủy ủy quyền' : 'Đã hủy',
-                  style: TextStyle(
-                    color: isActive ? const Color(0xFFD84315) : Colors.grey,
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: isCancelling || !isActive ? null : onCancel,
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      color: isActive
+                          ? Colors.red.shade300
+                          : Colors.grey.shade400,
+                      width: 1.5,
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 10.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isCancelling) ...[
+                        SizedBox(
+                          width: 16.w,
+                          height: 16.w,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.red.shade700,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                      ],
+                      Text(
+                        isActive
+                            ? (isCancelling ? 'Đang hủy...' : 'Hủy ủy quyền')
+                            : 'Đã hủy',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: isActive
+                              ? Colors.red.shade700
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -218,4 +250,3 @@ class AuthorizeCard extends StatelessWidget {
     }
   }
 }
-

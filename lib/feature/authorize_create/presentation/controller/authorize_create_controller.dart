@@ -3,10 +3,11 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:vos_flutter/common/base/base_controller.dart';
 import 'package:vos_flutter/common/mixins/api_result_mixin.dart';
-import 'package:vos_flutter/feature/authorize_create/domain/usecases/search_authorized_persons_usecase.dart';
-import 'package:vos_flutter/feature/authorize_create/domain/usecases/load_authorize_types_usecase.dart';
-import 'package:vos_flutter/feature/authorize_create/domain/usecases/load_authorize_statuses_usecase.dart';
+import 'package:vos_flutter/common/widgets/success_dialog.dart';
 import 'package:vos_flutter/feature/authorize_create/domain/usecases/create_authorize_usecase.dart';
+import 'package:vos_flutter/feature/authorize_create/domain/usecases/load_authorize_statuses_usecase.dart';
+import 'package:vos_flutter/feature/authorize_create/domain/usecases/load_authorize_types_usecase.dart';
+import 'package:vos_flutter/feature/authorize_create/domain/usecases/search_authorized_persons_usecase.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
 class AuthorizeCreateController extends BaseController with ApiResultMixin {
@@ -42,6 +43,10 @@ class AuthorizeCreateController extends BaseController with ApiResultMixin {
       ? Get.find<ProfileController>().userProfile.value?.token ?? ''
       : '';
 
+  int get hrId => Get.isRegistered<ProfileController>()
+      ? Get.find<ProfileController>().userProfile.value?.hrId ?? 0
+      : 0;
+
   AuthorizeCreateController({
     required this.searchAuthorizedPersonsUsecase,
     required this.loadAuthorizeTypesUsecase,
@@ -52,6 +57,7 @@ class AuthorizeCreateController extends BaseController with ApiResultMixin {
   @override
   void onInit() {
     super.onInit();
+    _initDefaultDates();
     _loadInitialData();
   }
 
@@ -163,23 +169,47 @@ class AuthorizeCreateController extends BaseController with ApiResultMixin {
     }
   }
 
-  Future<void> selectFromDate(DateTime date) async {
-    fromDate.value = date;
-    if (toDate.value != null && toDate.value!.isBefore(date)) {
-      toDate.value = date;
+  void _initDefaultDates() {
+    // Mặc định: ngày mai 00:00 đến 23:59
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+
+    fromDate.value = DateTime(
+      tomorrow.year,
+      tomorrow.month,
+      tomorrow.day,
+      0,
+      0,
+    );
+    toDate.value = DateTime(
+      tomorrow.year,
+      tomorrow.month,
+      tomorrow.day,
+      23,
+      59,
+    );
+  }
+
+  Future<void> selectFromDate(DateTime dateTime) async {
+    fromDate.value = dateTime;
+
+    // Nếu ToDate trước FromDate thì đẩy ToDate cùng ngày, 23:59
+    if (toDate.value != null && toDate.value!.isBefore(dateTime)) {
+      final d = dateTime;
+      toDate.value = DateTime(d.year, d.month, d.day, 23, 59);
     }
   }
 
-  Future<void> selectToDate(DateTime date) async {
-    toDate.value = date;
+  Future<void> selectToDate(DateTime dateTime) async {
+    toDate.value = dateTime;
   }
 
   String? get formattedFromDate => fromDate.value != null
-      ? DateFormat('dd/MM/yyyy').format(fromDate.value!)
+      ? DateFormat('dd/MM/yyyy HH:mm').format(fromDate.value!)
       : null;
 
   String? get formattedToDate => toDate.value != null
-      ? DateFormat('dd/MM/yyyy').format(toDate.value!)
+      ? DateFormat('dd/MM/yyyy HH:mm').format(toDate.value!)
       : null;
 
   Future<void> createAuthorize() async {
@@ -230,12 +260,12 @@ class AuthorizeCreateController extends BaseController with ApiResultMixin {
     try {
       final payload = {
         'Authorize_ID': 0,
-        'HR_ID': 1750,
+        'HR_ID': hrId,
         'forHR_ID': delegateHrId,
-        'FromDate': DateFormat('yyyy-MM-dd').format(fromDate.value!),
+        'FromDate': DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(fromDate.value!),
         'ToDate': toDate.value != null
-            ? DateFormat('yyyy-MM-dd').format(toDate.value!)
-            : '',
+            ? DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(toDate.value!)
+            : '1900-01-01T00:00:00',
         'Description': '',
         'ls_Authorize': selectedAuthorizeType.value,
         'Status': selectedStatus.value,
@@ -243,23 +273,29 @@ class AuthorizeCreateController extends BaseController with ApiResultMixin {
       final result = await createAuthorizeUsecase.call(token, payload);
 
       if (result.isSuccess) {
-        Get.back(result: true);
+        await SuccessDialog.show(
+          context: Get.context!,
+          title: 'Thành công',
+          message: 'Tạo ủy quyền thành công',
+          buttonText: 'Đóng',
+          onClose: () {
+            Get.back(result: true);
+          },
+        );
       } else {
-        Get.snackbar(
-          'Lỗi',
-          result.error ?? 'Tạo ủy quyền thất bại',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.9),
-          colorText: Colors.white,
+        await SuccessDialog.show(
+          context: Get.context!,
+          title: 'Không thành công',
+          message: result.error ?? 'Tạo ủy quyền thất bại',
+          buttonText: 'Đóng',
         );
       }
     } catch (e) {
-      Get.snackbar(
-        'Lỗi',
-        'Có lỗi xảy ra khi tạo ủy quyền: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.9),
-        colorText: Colors.white,
+      await SuccessDialog.show(
+        context: Get.context!,
+        title: 'Không thành công',
+        message: 'Có lỗi xảy ra khi tạo ủy quyền: ${e.toString()}',
+        buttonText: 'Đóng',
       );
     } finally {
       isSubmitting.value = false;

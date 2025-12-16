@@ -39,20 +39,16 @@ class AuthorizeRemoteDataSourceImpl implements AuthorizeRemoteDataSource {
             final item = json[i];
             if (item is! Map<String, dynamic>) continue;
 
-            // Skip items where all values are null
             final allNull = item.values.every((value) => value == null);
             if (allNull) continue;
 
             final authorize = AuthorizeDto.fromJson(item);
             authorizes.add(authorize);
           } catch (e) {
-            // Skip invalid items
             continue;
           }
         }
 
-        // Empty list là trường hợp hợp lệ (user có thể chưa có ủy quyền nào)
-        // UI sẽ xử lý empty state để hiển thị "Chưa có ủy quyền nào"
         return authorizes;
       },
     );
