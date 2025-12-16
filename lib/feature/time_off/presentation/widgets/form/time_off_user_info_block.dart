@@ -58,11 +58,11 @@ class TimeOffUserInfoBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildInfoRow('Tên', name),
-          const SizedBox(height: 6),
+           SizedBox(height: 8.h),
           _buildInfoRow('Chức danh', position),
-          const SizedBox(height: 6),
+           SizedBox(height: 8.h),
           _buildInfoRow('Cơ quan/Đơn vị', department),
-          const SizedBox(height: 6),
+           SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -83,14 +83,14 @@ class TimeOffUserInfoBlock extends StatelessWidget {
       children: [
         TextWidget(
           text: '$label:',
-          fontSize: 14,
+          fontSize: 13,
           color: TimeOffCreateColors.textSecondary,
           fontWeight: FontWeight.w400,
         ),
         SizedBox(width: 8.w),
         TextWidget(
           text: value,
-          fontSize: 14,
+          fontSize: 13,
           color: TimeOffCreateColors.textPrimary,
           fontWeight: FontWeight.w600,
         ),
@@ -107,7 +107,7 @@ class TimeOffUserInfoBlock extends StatelessWidget {
           width: 130.w,
           child: TextWidget(
             text: '$label:',
-            fontSize: 14,
+            fontSize: 13,
             color: TimeOffCreateColors.textSecondary,
             fontWeight: FontWeight.w400,
           ),
@@ -116,7 +116,7 @@ class TimeOffUserInfoBlock extends StatelessWidget {
           fit: FlexFit.loose,
           child: TextWidget(
             text: value,
-            fontSize: 14,
+            fontSize: 13,
             color: TimeOffCreateColors.textPrimary,
             fontWeight: FontWeight.w600,
             maxLines: 2,

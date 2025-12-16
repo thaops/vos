@@ -62,7 +62,9 @@ class TimeOffCard extends StatelessWidget {
             children: [
               // Header: Thời gian nghỉ + Status chip
               _buildHeader(),
-              SizedBox(height: 20.h),
+              SizedBox(height: 4.h),
+              Divider(color: AppColors.grey, thickness: 1),
+              SizedBox(height: 18.h),
 
               // Body: Thông tin chi tiết
               _buildInfoItem(
@@ -76,9 +78,8 @@ class TimeOffCard extends StatelessWidget {
                 label: 'Phê duyệt',
                 value: timeOff.approvalProgressText,
               ),
-              SizedBox(height: 8.h),
-              Divider(color: AppColors.grey, thickness: 1),
-              SizedBox(height: 8.h),
+              SizedBox(height: 12.h),
+
               _buildInfoItem(
                 icon: Icons.note,
                 label: 'Mô tả chi tiết',
@@ -87,7 +88,7 @@ class TimeOffCard extends StatelessWidget {
               SizedBox(height: 12.h),
               _buildInfoItem(
                 icon: Icons.label_outline,
-                label: 'Loại',
+                label: 'Lý do nghỉ',
                 value: _formatVacationType(),
               ),
               SizedBox(height: 12.h),
@@ -113,7 +114,7 @@ class TimeOffCard extends StatelessWidget {
 
       children: [
         Text(
-          _formatDateRange(),
+          "Ngày nghỉ: ${_formatDateRange()}",
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
@@ -142,7 +143,9 @@ class TimeOffCard extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(4.r),
+        border: Border.all(color: textColor, width: 1),
+
       ),
       child: Text(
         statusText,
@@ -182,24 +185,30 @@ class TimeOffCard extends StatelessWidget {
     required String value,
   }) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
+
       children: [
         Icon(icon, size: 18.sp, color: Colors.grey[600]),
         SizedBox(width: 12.w),
         Expanded(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Text(
-                label,
+            Expanded(
+              flex: 1,
+              child:   Text(
+                '$label:',
                 style: TextStyle(
                   fontSize: 12.sp,
                   color: const Color(0xFF666666),
                   fontWeight: FontWeight.w400,
                 ),
-              ),
+              )),
               SizedBox(width: 8.w),
               Expanded(
+                flex: 2,
                 child: Text(
                   value,
                   style: TextStyle(

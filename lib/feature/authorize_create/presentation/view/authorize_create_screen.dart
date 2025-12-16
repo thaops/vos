@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
+import 'package:vos_flutter/core/configs/theme/app_colors.dart';
 import 'package:vos_flutter/feature/authorize_create/presentation/controller/authorize_create_controller.dart';
 import 'package:vos_flutter/feature/authorize_create/presentation/widgets/authorize_form_field_label.dart';
 import 'package:vos_flutter/feature/authorize_create/presentation/widgets/date_picker_field.dart';
@@ -212,6 +213,23 @@ class AuthorizeCreateScreen extends GetView<AuthorizeCreateController> {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: initialTime,
+      builder: (context, child) {
+        final theme = Theme.of(context);
+        return Theme(
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme.copyWith(
+              primary: AppColors.primary,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: MediaQuery(
+            data:
+                MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          ),
+        );
+      },
     );
 
     final time = pickedTime ?? initialTime;
@@ -247,6 +265,23 @@ class AuthorizeCreateScreen extends GetView<AuthorizeCreateController> {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: initialTime,
+      builder: (context, child) {
+        final theme = Theme.of(context);
+        return Theme(
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme.copyWith(
+              primary: AppColors.primary,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: MediaQuery(
+            data:
+                MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          ),
+        );
+      },
     );
 
     final time = pickedTime ?? initialTime;

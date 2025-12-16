@@ -134,7 +134,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         _buildInfoRow(
           label: "Người nghỉ",
           value: _formatPersonWithHrNo(hrNoStr, creatorProcess),
-          size: 16,
+          size: 15,
         ),
         _buildInfoRow(label: "Email", value: creatorProcess?.email ?? ''),
         _buildInfoRow(label: 'Chức danh', value: timeOff.nameLevelTitle ?? ''),
@@ -142,23 +142,8 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           label: 'Cơ quan / Đơn vị',
           value: timeOff.level2Name ?? '',
         ),
-        // _buildInfoRow(label: 'Đơn vị', value: timeOff.level3Name ?? ''),
-        // _buildInfoRow(label: 'Đội / Tổ:', value: timeOff.level3Name ?? ''),
-        _buildInfoRow(label: 'Từ ngày', value: _formatDateRange(timeOff)),
-        _buildInfoRow(label: 'Thời gian nghỉ', value: timeOffQuantityText),
-        _buildInfoRow(
-          label: 'Loại phép',
-          value: timeOff.vacationReasonName ?? 'N/A',
-        ),
-        _buildInfoRow(label: 'Nơi nghỉ', value: timeOff.domIntName ?? 'N/A'),
-        _buildInfoRow(
-          label: 'Mô tả chi tiết',
-          value: timeOff.description ?? '',
-          isMultiline: true,
-        ),
       ];
 
-      // paidLeaveYear có thể null trong domain model
       final paidLeaveYear = personalVacation?.paidLeaveYear;
 
       final paidLeaveUsedTotal = personalVacation != null
@@ -193,6 +178,23 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           ),
         );
       }
+
+      allItems.addAll([
+        _buildInfoRow(
+          label: 'Thời gian nghỉ',
+          value: "${(timeOffQuantityText)} (${_formatDateRange(timeOff)})",
+        ),
+        _buildInfoRow(
+          label: 'Loại phép',
+          value: timeOff.vacationReasonName ?? 'N/A',
+        ),
+        _buildInfoRow(label: 'Nơi nghỉ', value: timeOff.domIntName ?? 'N/A'),
+        _buildInfoRow(
+          label: 'Mô tả chi tiết',
+          value: timeOff.description ?? '',
+          isMultiline: true,
+        ),
+      ]);
 
       return Wrap(
         spacing: 12.w,
@@ -231,36 +233,49 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           ),
         ),
         SizedBox(height: 16.h),
-        ...timeOff.processes!.asMap().entries.map((entry) {
-          final index = entry.key;
-          final process = entry.value;
-          final isLast = index == timeOff.processes!.length - 1;
-          final totalSteps = timeOff.processes!.length;
+        ...(() {
+          // Nhóm các bước có cùng ApproveNo vào chung một step
+          final grouped = <int, List<TimeOffProcess>>{};
+          for (final process in timeOff.processes!) {
+            grouped.putIfAbsent(process.approveNo, () => []).add(process);
+          }
+          final groupedProcesses = grouped.values.toList();
           final approvedCount = timeOff.processes!
               .where((p) => _isApprovedStatus(p.status))
               .length;
 
-          return _buildTimelineStep(
-            process: process,
-            stepNumber: index + 1,
-            totalSteps: totalSteps,
-            approvedCount: approvedCount,
-            isLast: isLast,
-          );
-        }),
+          return groupedProcesses.asMap().entries.map((entry) {
+            final index = entry.key;
+            final processes = entry.value;
+            final isLast = index == groupedProcesses.length - 1;
+            final totalSteps = groupedProcesses.length;
+
+            return _buildTimelineStep(
+              processes: processes,
+              stepNumber: index + 1,
+              totalSteps: totalSteps,
+              approvedCount: approvedCount,
+              isLast: isLast,
+              index: index,
+            );
+          }).toList();
+        }()),
       ],
     );
   }
 
   Widget _buildTimelineStep({
-    required TimeOffProcess process,
+    required List<TimeOffProcess> processes,
     required int stepNumber,
     required int totalSteps,
     required int approvedCount,
     required bool isLast,
+    required int index,
   }) {
     // Header step: "3/5: Thủ trưởng CQ/ĐV"
-    final stepHeader = '$stepNumber/$totalSteps: ${process.fullName}';
+    final names = processes.map((p) => p.fullName).join(', ');
+    final stepHeader = '$stepNumber/$totalSteps: $names';
+    final groupStatus = _resolveGroupStatus(processes);
 
     return Container(
       decoration: BoxDecoration(
@@ -290,19 +305,19 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
                   color: controller
-                      .buildStatusColor(process.status)
+                      .buildStatusColor(groupStatus)
                       .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(2.r),
                   border: Border.all(
-                    color: controller.buildStatusColor(process.status),
+                    color: controller.buildStatusColor(groupStatus),
                   ),
                 ),
                 child: Text(
-                  controller.buildStatusTag(process.status),
+                  controller.buildStatusTag(groupStatus, index),
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w500,
-                    color: controller.buildStatusColor(process.status),
+                    color: controller.buildStatusColor(groupStatus),
                   ),
                 ),
               ),
@@ -310,59 +325,91 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           ),
           SizedBox(height: 8.h),
           // Card người phê duyệt
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: _colorBackground,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Row(
-              children: [
-                // Avatar
-                Image.asset(Img.avatarTimeOff),
-                SizedBox(width: 12.w),
-                // Thông tin
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        process.fullName,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: _colorTextDark,
+          ...processes.map((process) {
+            return Container(
+              margin: EdgeInsets.only(top: process == processes.first ? 0 : 8.h),
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: _colorBackground,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Row(
+                children: [
+                  // Avatar
+                  Image.asset(Img.avatarTimeOff),
+                  SizedBox(width: 12.w),
+                  // Thông tin
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          process.fullName,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: _colorTextDark,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        process.email,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: _colorTextGray,
-                        ),
-                      ),
-                      if (process.recdate != null &&
-                          (process.status ?? '') != '--' &&
-                          (process.status ?? '') != 'OK') ...[
                         SizedBox(height: 4.h),
                         Text(
-                          "Ngày duyệt: ${_formatDateTime(process.recdate)}",
+                          process.email,
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: _colorTextGray,
                           ),
                         ),
+                        if (process.recdate != null &&
+                            process.status != '--' &&
+                            process.status != 'OK') ...[
+                          SizedBox(height: 4.h),
+                          Text(
+                            "Ngày duyệt: ${_formatDateTime(process.recdate)}",
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: _colorTextGray,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
+                  SizedBox(width: 8.w),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color:
+                          controller.buildStatusColor(process.status).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(2.r),
+                      border: Border.all(
+                        color: controller.buildStatusColor(process.status),
+                      ),
+                    ),
+                    child: Text(
+                      controller.buildStatusTag(process.status, index),
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w500,
+                        color: controller.buildStatusColor(process.status),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
+  }
+
+  String _resolveGroupStatus(List<TimeOffProcess> processes) {
+    if (processes.isEmpty) return '--';
+    final firstStatus = processes.first.status;
+    final hasDifferentStatus =
+        processes.any((process) => process.status != firstStatus);
+    return hasDifferentStatus ? '--' : firstStatus;
   }
 
   // Helper: Info Row (Label-Value Layout)
@@ -370,7 +417,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     required String label,
     required String value,
     bool isMultiline = false,
-    int? size = 14,
+    int? size = 13,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,15 +428,15 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           child: Text(
             '$label:',
             style: TextStyle(
-              fontSize: size?.sp,
+              fontSize: 13.sp,
               fontWeight: FontWeight.w400,
               color: _colorTextGray,
             ),
           ),
         ),
-        SizedBox(width: 8.h),
+        SizedBox(width: 4.h),
         Expanded(
-          flex: 4,
+          flex: 5,
           child: Text(
             value,
             style: TextStyle(

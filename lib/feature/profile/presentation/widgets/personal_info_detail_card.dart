@@ -27,14 +27,15 @@ class PersonalInfoDetailCard extends StatelessWidget {
             child: Column(
               spacing: 8.h,
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                _buildInfoRow('Chức vụ', user.jobTitleNameVN),
-                _buildInfoRow('Tổ đội', user.depNameVN),
                 _buildInfoRow('Mã nhân viên', user.userCode),
-                _buildInfoRow(
-                  'Email',
-                  user.email.isNotEmpty ? user.email : 'N/A',
-                ),
+                _buildInfoRow('Chức vụ', user.jobTitleNameVN),
+                // _buildInfoRow('Tổ đội', user.depNameVN),
+                // _buildInfoRow(
+                //   'Email',
+                //   user.email.isNotEmpty ? user.email : 'N/A',
+                // ),
                 _buildInfoRow(
                   'Số điện thoại',
                   user.phone.isNotEmpty ? user.phone : 'N/A',
@@ -58,13 +59,13 @@ class PersonalInfoDetailCard extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Image.asset(Img.copy, width: 14.w, height: 14.w, fit: BoxFit.contain),
           SizedBox(width: 12.w),
           SizedBox(
-            width: 120.w,
+            width: 110.w,
             child: Text(
               label,
               style: TextStyle(
