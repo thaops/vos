@@ -77,7 +77,7 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
         if (errorMsg.isNotEmpty) {
           CustomSnackbar.show(errorMsg);
         } else {
-          CustomSnackbar.show('Không thể liên kết tài khoản VIAGS');
+          CustomSnackbar.show('Không thể liên kết tài khoản VOS');
         }
       }
     } catch (e) {
@@ -99,7 +99,7 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBarWidget(title: 'Liên kết tài khoản VIAGS'),
+      appBar: AppBarWidget(title: 'Liên kết tài khoản VOS'),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,

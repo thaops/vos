@@ -15,7 +15,7 @@ class UnlinkViagsDialog {
           style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Bạn có chắc chắn muốn hủy kết nối với Viags Account?',
+          'Bạn có chắc chắn muốn hủy kết nối với VOS Account?',
           style: TextStyle(fontSize: 16.sp),
         ),
         actions: [
@@ -80,7 +80,7 @@ class UnlinkViagsDialog {
 
       Get.snackbar(
         'Thành công',
-        'Đã hủy kết nối với Viags Account',
+        'Đã hủy kết nối với VOS Account',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green.shade100,
         colorText: Colors.green.shade800,

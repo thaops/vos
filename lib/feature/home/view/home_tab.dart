@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Banner;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/feature/banner/binding/banner_binding.dart';
+import 'package:vos_flutter/feature/banner/domain/models/banner.dart';
 import 'package:vos_flutter/feature/banner/presentation/controller/banner_controller.dart';
 import 'package:vos_flutter/feature/home/binding/home_function_binding.dart';
 import 'package:vos_flutter/feature/home/presentation/controller/home_function_controller.dart';
@@ -21,6 +22,13 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   final ScrollController _scrollController = ScrollController();
+  
+  // ✅ Flutter thuần: State để lưu banner data
+  List<Banner> _banners = [];
+  bool _isLoadingBanners = false;
+  String? _bannerError;
+  String? _userName;
+  String? _avatarUrl;
 
   @override
   void initState() {
@@ -35,15 +43,8 @@ class _HomeTabState extends State<HomeTab> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
-
-      if (Get.isRegistered<ProfileController>()) {
-        final profileController = Get.find<ProfileController>();
-        ever(profileController.userProfile, (userProfile) {
-          if (userProfile != null && userProfile.token.isNotEmpty) {
-            _loadData();
-          }
-        });
-      }
+      _setupBannerListener();
+      _setupProfileListener();
     });
   }
 
@@ -51,6 +52,91 @@ class _HomeTabState extends State<HomeTab> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  // ✅ Flutter thuần: Setup listener cho BannerController
+  void _setupBannerListener() {
+    if (!Get.isRegistered<BannerController>()) {
+      return;
+    }
+
+    try {
+      final bannerController = Get.find<BannerController>();
+      
+      // Listen to banner changes
+      ever(bannerController.banners, (banners) {
+        if (mounted) {
+          setState(() {
+            _banners = List<Banner>.from(banners);
+          });
+        }
+      });
+
+      // Listen to loading state
+      ever(bannerController.isLoading, (isLoading) {
+        if (mounted) {
+          setState(() {
+            _isLoadingBanners = isLoading;
+          });
+        }
+      });
+
+      // Listen to error state
+      ever(bannerController.error, (error) {
+        if (mounted) {
+          setState(() {
+            _bannerError = error.isEmpty ? null : error;
+          });
+        }
+      });
+    } catch (e) {
+      print('⚠️ Error setting up banner listener: $e');
+    }
+  }
+
+  // ✅ Flutter thuần: Setup listener cho ProfileController
+  void _setupProfileListener() {
+    if (!Get.isRegistered<ProfileController>()) {
+      return;
+    }
+
+    try {
+      final profileController = Get.find<ProfileController>();
+      
+      // Listen to user profile changes
+      ever(profileController.userProfile, (userProfile) {
+        if (mounted) {
+          setState(() {
+            if (userProfile != null && userProfile.userName.isNotEmpty) {
+              _userName = userProfile.userName;
+              _avatarUrl = null; // Profile không có avatar URL
+            } else {
+              _userName = null;
+              _avatarUrl = null;
+            }
+          });
+        }
+      });
+
+      // Listen to Google user changes
+      ever(profileController.googleUser, (googleUser) {
+        if (mounted) {
+          setState(() {
+            if (googleUser != null && 
+                googleUser.displayName != null && 
+                googleUser.displayName!.isNotEmpty) {
+              _userName = googleUser.displayName;
+              _avatarUrl = googleUser.photoURL;
+            } else if (_userName == null) {
+              _userName = null;
+              _avatarUrl = null;
+            }
+          });
+        }
+      });
+    } catch (e) {
+      print('⚠️ Error setting up profile listener: $e');
+    }
   }
 
   void _loadData() {
@@ -114,7 +200,14 @@ class _HomeTabState extends State<HomeTab> {
       backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
         children: [
-          BannerSectionWidget(),
+          // ✅ Flutter thuần: Truyền banner data qua constructor
+          BannerSectionWidget(
+            banners: _banners,
+            isLoading: _isLoadingBanners,
+            error: _bannerError,
+            userName: _userName,
+            avatarUrl: _avatarUrl,
+          ),
           Expanded(
             child: SingleChildScrollView(
               controller: _scrollController,

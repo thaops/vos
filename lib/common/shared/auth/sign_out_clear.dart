@@ -252,8 +252,8 @@ class SignOutClear extends GetxService {
       }
 
       // Điều hướng về Main sau khi đã unlink VIAGS (tránh kẹt ở screen cần VIAGS)
-      if (Get.context != null && Get.currentRoute != AppRouter.main) {
-        await Get.offAllNamed(AppRouter.main);
+      if (Get.context != null && Get.currentRoute != AppRouter.linkViags) {
+        await Get.offAllNamed(AppRouter.linkViags);
       }
     } catch (e) {
       print('❌ Error during unlink VIAGS only: $e');

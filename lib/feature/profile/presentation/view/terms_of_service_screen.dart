@@ -26,27 +26,27 @@ class TermsOfServiceScreen extends StatelessWidget {
               title: '1. Sử dụng app',
               content: [
                 'App chỉ dành để xem tin tuyển dụng công khai và văn hóa công ty.',
-                'Không được sử dụng app cho mục đích trái pháp luật hoặc gây hại cho Viags.',
+                'Không được sử dụng app cho mục đích trái pháp luật hoặc gây hại cho VOS.',
               ],
             ),
             _buildSection(
               title: '2. Ứng tuyển',
               content: [
-                'Mọi ứng tuyển được thực hiện qua email của Viags.',
-                'Viags chịu trách nhiệm xử lý thông tin ứng viên. App không lưu trữ thông tin ứng viên.',
+                'Mọi ứng tuyển được thực hiện qua email của VOS.',
+                'VOS chịu trách nhiệm xử lý thông tin ứng viên. App không lưu trữ thông tin ứng viên.',
               ],
             ),
             _buildSection(
               title: '3. Nội dung',
               content: [
-                'Nội dung trong app thuộc sở hữu của Viags.',
+                'Nội dung trong app thuộc sở hữu của VOS.',
                 'Không sao chép, chia sẻ nội dung mà không được phép.',
               ],
             ),
             _buildSection(
               title: '4. Thay đổi',
               content: [
-                'Viags có thể cập nhật app, Privacy Policy, và Terms of Service.',
+                'VOS có thể cập nhật app, Privacy Policy, và Terms of Service.',
                 'Người dùng nên kiểm tra định kỳ.',
               ],
             ),
@@ -54,7 +54,7 @@ class TermsOfServiceScreen extends StatelessWidget {
               title: '5. Giới hạn trách nhiệm',
               content: [
                 'App được cung cấp "as-is".',
-                'Viags không chịu trách nhiệm về việc thất bại trong ứng tuyển hoặc vấn đề phát sinh ngoài app.',
+                'VOS không chịu trách nhiệm về việc thất bại trong ứng tuyển hoặc vấn đề phát sinh ngoài app.',
               ],
             ),
           ];
@@ -91,7 +91,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 16.h),
                       Text(
-                        'Bằng việc sử dụng Viags Mobile App, bạn đồng ý với các điều khoản sau:',
+                        'Bằng việc sử dụng VOS Mobile App, bạn đồng ý với các điều khoản sau:',
                         style: TextStyle(
                           fontSize: 15.sp,
                           color: Colors.grey[700],

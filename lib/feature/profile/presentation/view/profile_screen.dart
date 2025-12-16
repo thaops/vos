@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/widgets/app_bar_widget.dart';
-import 'package:vos_flutter/common/widgets/custom_button.dart';
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/profile/presentation/widgets/google_user_header_card.dart';
@@ -49,7 +48,7 @@ class ProfileScreen extends GetView<ProfileController> {
                         user: controller.googleUser.value!,
                         controller: controller,
                       ),
-                    // Hiển thị trạng thái đã liên kết nếu đã liên kết VIAGS
+                    // Hiển thị trạng thái đã liên kết nếu đã liên kết VOS
                     Obx(() {
                       if (controller.isViagsLinked.value) {
                         return Column(

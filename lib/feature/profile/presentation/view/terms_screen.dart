@@ -29,7 +29,7 @@ class TermsScreen extends StatelessWidget {
             ),
             ProfileMenuItem(
               icon: Icons.info_outline,
-              title: 'Về Viags',
+              title: 'Về VOS',
               onTap: () => Get.toNamed(AppRouter.about),
             ),
             SizedBox(height: 32.h),

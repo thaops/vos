@@ -10,7 +10,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBarWidget(title: 'Về Viags', isBack: true),
+      appBar: AppBarWidget(title: 'Về VOS', isBack: true),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final maxContentWidth =
@@ -57,7 +57,7 @@ class AboutScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'About Viags Mobile App',
+            'About VOS Mobile App',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.bold,
@@ -66,7 +66,7 @@ class AboutScreen extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           Text(
-            'Viags Mobile App cung cấp thông tin tuyển dụng công khai và cập nhật các hoạt động văn hóa, teambuilding nổi bật của công ty Viags.',
+            'VOS Mobile App cung cấp thông tin tuyển dụng công khai và cập nhật các hoạt động văn hóa, teambuilding nổi bật của công ty VOS.',
             style: TextStyle(
               fontSize: 15.sp,
               color: Colors.grey[700],
@@ -152,7 +152,7 @@ class AboutScreen extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Text(
-            'Giúp người dùng tiếp cận thông tin tuyển dụng Viags một cách nhanh chóng và tiện lợi, đồng thời giới thiệu văn hóa công ty.',
+            'Giúp người dùng tiếp cận thông tin tuyển dụng VOS một cách nhanh chóng và tiện lợi, đồng thời giới thiệu văn hóa công ty.',
             style: TextStyle(
               fontSize: 15.sp,
               color: Colors.grey[700],
@@ -186,13 +186,13 @@ class AboutScreen extends StatelessWidget {
           _buildContactItem(
             icon: Icons.language,
             label: 'Website công ty',
-            value: 'www.viags.com',
+            value: 'www.vos.com',
           ),
           SizedBox(height: 12.h),
           _buildContactItem(
             icon: Icons.email,
             label: 'Email liên hệ',
-            value: 'tuyen.dung@viags.com',
+            value: 'tuyen.dung@vos.com',
           ),
         ],
       ),

@@ -23,13 +23,13 @@ class PrivacyPolicyScreen extends StatelessWidget {
               title: '1. Thông tin chúng tôi thu thập',
               content: [
                 'Thông tin không bắt buộc: Chúng tôi không yêu cầu đăng nhập hay thu thập dữ liệu cá nhân trừ khi bạn gửi email ứng tuyển.',
-                'Thông tin khi ứng tuyển: Khi nhấn nút Apply, app sẽ mở ứng dụng email mặc định để gửi email trực tiếp đến Viags. Chúng tôi không lưu hoặc truy cập nội dung email của bạn.',
+                'Thông tin khi ứng tuyển: Khi nhấn nút Apply, app sẽ mở ứng dụng email mặc định để gửi email trực tiếp đến VOS. Chúng tôi không lưu hoặc truy cập nội dung email của bạn.',
               ],
             ),
             _buildSection(
               title: '2. Cách chúng tôi sử dụng thông tin',
               content: [
-                'Chỉ để gửi tin tuyển dụng đến Viags qua email (bạn gửi trực tiếp).',
+                'Chỉ để gửi tin tuyển dụng đến VOS qua email (bạn gửi trực tiếp).',
                 'Không sử dụng thông tin để quảng cáo hoặc chia sẻ với bên thứ ba.',
               ],
             ),
@@ -43,15 +43,15 @@ class PrivacyPolicyScreen extends StatelessWidget {
               title: '4. Bảo vệ dữ liệu',
               content: [
                 'Chúng tôi cam kết không lưu trữ dữ liệu nhạy cảm từ người dùng.',
-                'Mọi dữ liệu gửi qua email được quản lý bởi Viags theo quy định riêng.',
+                'Mọi dữ liệu gửi qua email được quản lý bởi VOS theo quy định riêng.',
               ],
             ),
             _buildSection(
               title: '5. Liên hệ',
               content: [
                 'Nếu có thắc mắc về Privacy Policy, liên hệ:',
-                'Email: tuyen.dung@viags.com',
-                'Website: www.viags.com',
+                'Email: tuyen.dung@vos.com',
+                'Website: www.vos.com',
               ],
             ),
           ];

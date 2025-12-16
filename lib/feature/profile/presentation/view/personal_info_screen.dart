@@ -76,7 +76,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         if (errorMsg.isNotEmpty) {
           CustomSnackbar.show(errorMsg);
         } else {
-          CustomSnackbar.show('Không thể liên kết tài khoản VIAGS');
+          CustomSnackbar.show('Không thể liên kết tài khoản VOS');
         }
       }
     } catch (e) {
@@ -120,7 +120,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 return GoogleUserContent(controller: controller);
               }
 
-              // Nếu không có cả 2, hiển thị form liên kết VIAGS
+              // Nếu không có cả 2, hiển thị form liên kết VOS
               return GestureDetector(
                 onTap: () => FocusScope.of(context).unfocus(),
                 behavior: HitTestBehavior.opaque,

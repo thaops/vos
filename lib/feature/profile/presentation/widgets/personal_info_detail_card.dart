@@ -17,7 +17,7 @@ class PersonalInfoDetailCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 8.h,
         children: [
-          _buildSectionTitle('Thông tin tài khoản Viags'),
+          _buildSectionTitle('Thông tin tài khoản VOS'),
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
@@ -92,12 +92,4 @@ class PersonalInfoDetailCard extends StatelessWidget {
     );
   }
 
-  String _formatDateTime(String dateTimeStr) {
-    try {
-      final dateTime = DateTime.parse(dateTimeStr);
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return dateTimeStr;
-    }
-  }
 }

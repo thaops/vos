@@ -46,17 +46,17 @@ class ProfileController extends GetxController {
   bool _isLoggingOut = false;
   bool get isLoggingOut => _isLoggingOut;
 
-  // Flag để track trạng thái liên kết VIAGS (reactive)
+  // Flag để track trạng thái liên kết VOS (reactive)
   final RxBool isViagsLinked = false.obs;
   final RxString viagsEmail = ''.obs;
 
   // Flag để track trạng thái nhân viên (reactive)
   final RxBool isEmployee = false.obs;
 
-  // Error message khi link VIAGS thất bại
+  // Error message khi link VOS thất bại
   final RxString linkViagsError = ''.obs;
 
-  // Vacation data (phép cá nhân) - cache sau khi link VIAGS thành công
+  // Vacation data (phép cá nhân) - cache sau khi link VOS thành công
   final RxList<Vacation> vacationList = <Vacation>[].obs;
   final RxDouble phepTon = 0.0.obs; // Tồn phép
   final RxDouble overtimeTon = 0.0.obs; // Tồn OT
@@ -100,7 +100,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  /// Load trạng thái liên kết VIAGS
+  /// Load trạng thái liên kết VOS
   Future<void> loadViagsStatus() async {
     try {
       final status = await checkViagsStatusUsecase.call();
@@ -119,7 +119,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  /// Reload trạng thái liên kết VIAGS từ storage (public method để gọi từ bên ngoài)
+  /// Reload trạng thái liên kết VOS từ storage (public method để gọi từ bên ngoài)
   void reloadViagsStatus() {
     loadViagsStatus();
   }
@@ -165,7 +165,7 @@ class ProfileController extends GetxController {
     _loadGoogleUserAsync();
   }
 
-  /// Refresh tất cả data (gọi sau khi link/unlink VIAGS hoặc khi cần reload)
+  /// Refresh tất cả data (gọi sau khi link/unlink VOS hoặc khi cần reload)
   Future<void> refreshAll() async {
     await Future.wait([
       loadUserProfile(),
@@ -216,7 +216,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  /// Liên kết tài khoản VIAGS - sử dụng usecase
+  /// Liên kết tài khoản VOS - sử dụng usecase
   Future<bool> linkViagsAccount(String name, String password) async {
     try {
       isLoading.value = true;
@@ -250,16 +250,16 @@ class ProfileController extends GetxController {
 
         _resetBannerController();
 
-        // Gọi API vacation và cache data
+        // Gọi API vacation và cache data sau khi link VOS
         await loadVacationData();
         
-        // Gọi API PersonalVacation để lấy thông tin phép chi tiết và cache HR_No
+        // Gọi API PersonalVacation để lấy thông tin phép chi tiết và cache HR_No sau khi link VOS
         await loadPersonalVacation();
 
         return true;
       } else {
         // Lưu error message từ server
-        final errorMsg = result.error ?? 'Không thể liên kết tài khoản VIAGS';
+        final errorMsg = result.error ?? 'Không thể liên kết tài khoản VOS';
         linkViagsError.value = errorMsg;
         return false;
       }
@@ -288,7 +288,7 @@ class ProfileController extends GetxController {
     } catch (e) {}
   }
 
-  /// Hủy liên kết tài khoản VIAGS - chỉ xóa profile VACS, giữ lại name và password
+  /// Hủy liên kết tài khoản VOS - chỉ xóa profile VACS, giữ lại name và password
   Future<bool> unlinkViagsAccount() async {
     try {
       isLoading.value = true;
@@ -299,7 +299,7 @@ class ProfileController extends GetxController {
         // Xóa userProfile
         userProfile.value = null;
 
-        // ✅ Clear VIAGS status và email ngay lập tức
+        // ✅ Clear VOS status và email ngay lập tức
         isViagsLinked.value = false;
         viagsEmail.value = '';
 
@@ -308,7 +308,7 @@ class ProfileController extends GetxController {
         phepTon.value = 0.0;
         overtimeTon.value = 0.0;
 
-        // Reload VIAGS status để đảm bảo đồng bộ với storage
+        // Reload VOS status để đảm bảo đồng bộ với storage
         await loadViagsStatus();
         // Employee status sẽ tự động update vì userProfile đã được xóa
         isEmployee.value = false;
@@ -327,7 +327,7 @@ class ProfileController extends GetxController {
   String get userCode => userProfile.value?.userCode ?? '';
   String get companyName => userProfile.value?.companyNameVN ?? '';
   String get email {
-    // Ưu tiên email từ VIAGS nếu đã liên kết
+    // Ưu tiên email từ VOS nếu đã liên kết
     if (isViagsLinked.value && viagsEmail.value.isNotEmpty) {
       return viagsEmail.value;
     }
