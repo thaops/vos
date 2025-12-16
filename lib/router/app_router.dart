@@ -1,7 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
 import 'package:vos_flutter/feature/login/binding/login_binding.dart';
 import 'package:vos_flutter/feature/login/presentation/view/login_screen.dart';
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/about_screen.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/link_viags_screen.dart';
 import 'package:vos_flutter/feature/profile/presentation/view/personal_info_screen.dart';
@@ -57,9 +60,18 @@ class AppRouter {
   // Vacation routes
   static const vacation = '/vacation';
 
+  // Wrapper widget để check awaiting và hiển thị màn hình tương ứng
+  static Widget _loginWrapper() {
+    return _LoginWrapperScreen();
+  }
+
   static final List<GetPage> routes = [
     // Auth
-    GetPage(name: login, page: () => LoginScreen(), binding: LoginBinding()),
+    GetPage(
+      name: login,
+      page: _loginWrapper,
+      binding: LoginBinding(),
+    ),
 
     // Main
     GetPage(name: main, page: () => MainScreen()),
@@ -125,4 +137,62 @@ class AppRouter {
       binding: VacationBinding(),
     ),
   ];
+}
+
+// Wrapper widget để check awaiting và hiển thị màn hình tương ứng
+class _LoginWrapperScreen extends StatefulWidget {
+  @override
+  State<_LoginWrapperScreen> createState() => _LoginWrapperScreenState();
+}
+
+class _LoginWrapperScreenState extends State<_LoginWrapperScreen> {
+  bool _isLoading = true;
+  bool _shouldShowLinkScreen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAwaiting();
+  }
+
+  Future<void> _checkAwaiting() async {
+    try {
+      final checkAwaiting = await CheckAwaitingServices.createCheckAwaitingServices();
+      final isAwaiting = await checkAwaiting.getawaiting();
+      
+      if (isAwaiting) {
+        if (!Get.isRegistered<ProfileController>()) {
+          ProfileBinding().dependencies();
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+      }
+      
+      if (mounted) {
+        setState(() {
+          _shouldShowLinkScreen = isAwaiting;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _shouldShowLinkScreen = false;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return _shouldShowLinkScreen ? const LinkViagsScreen() : const LoginScreen();
+  }
 }

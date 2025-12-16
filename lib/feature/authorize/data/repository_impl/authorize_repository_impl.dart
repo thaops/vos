@@ -20,5 +20,25 @@ class AuthorizeRepositoryImpl implements AuthorizeRepository {
 
     return ApiResult.error(result.error ?? 'Failed to get authorizes');
   }
+
+  @override
+  Future<ApiResult<void>> cancelAuthorize({
+    required String token,
+    required int authorizeId,
+    required String fromDate,
+    required String lsAuthorize,
+  }) {
+    return remoteDataSource.cancelAuthorize(
+      token: token,
+      authorizeId: authorizeId,
+      fromDate: fromDate,
+      lsAuthorize: lsAuthorize,
+    );
+  }
+
+  @override
+  Future<ApiResult<List<Map<String, String>>>> getAuthorizeStatuses(String token) {
+    return remoteDataSource.getAuthorizeStatuses(token);
+  }
 }
 

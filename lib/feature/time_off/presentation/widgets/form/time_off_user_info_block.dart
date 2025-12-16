@@ -15,13 +15,7 @@ class TimeOffUserInfoBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<TimeOffFormController>(tag: controllerTag);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: TimeOffCreateColors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Obx(() {
+    return  Obx(() {
         final vacation = controller.personalVacation.value;
         final isLoading = controller.status == ControllerStatus.loading;
 
@@ -77,8 +71,8 @@ class TimeOffUserInfoBlock extends StatelessWidget {
             _buildInfoRow('Phép đã nghỉ', '$leaveUsed'),
           ],
         );
-      }),
-    );
+      });
+    
   }
 
   Widget _buildInfoRow(String label, String value) {

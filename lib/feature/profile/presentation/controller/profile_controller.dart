@@ -91,7 +91,6 @@ class ProfileController extends GetxController {
         overtimeTon.value = 0.0;
       }
     } catch (e) {
-      print('Error loading user profile: $e');
       userProfile.value = null;
       isEmployee.value = false;
       // Clear vacation data
@@ -115,7 +114,6 @@ class ProfileController extends GetxController {
         viagsEmail.value = status['email'] as String? ?? '';
       }
     } catch (e) {
-      print('Error loading VIAGS status: $e');
       isViagsLinked.value = false;
       viagsEmail.value = '';
     }
@@ -134,7 +132,6 @@ class ProfileController extends GetxController {
       // Nếu có profile thì là nhân viên, nếu không có thì là khách
       isEmployee.value = userProfile.value != null;
     } catch (e) {
-      print('Error loading employee status: $e');
       isEmployee.value = false;
     }
   }
@@ -154,14 +151,11 @@ class ProfileController extends GetxController {
         googleUser.value = GoogleUserDto.fromJson(
           Map<String, dynamic>.from(userData),
         );
-        print('✅ Loaded Google user: ${googleUser.value?.displayName}');
       } else {
         // Storage đã xóa (sau logout) → clear reactive value
         googleUser.value = null;
-        print('⚠️ No Google user found in Hive');
       }
     } catch (e) {
-      print('❌ Error loading Google user: $e');
       googleUser.value = null;
     }
   }
@@ -251,9 +245,7 @@ class ProfileController extends GetxController {
             // Cập nhật reactive value
             googleUser.value = GoogleUserDto.fromJson(googleUserData);
             googleUser.refresh();
-          } catch (e) {
-            print('⚠️ Error updating Google user email: $e');
-          }
+          } catch (e) {}
         }
 
         _resetBannerController();
@@ -292,11 +284,8 @@ class ProfileController extends GetxController {
         bannerController.banners.clear();
         bannerController.isLoading.value = true;
         bannerController.error.value = '';
-        print('✅ Reset BannerController state');
       }
-    } catch (e) {
-      print('⚠️ Error resetting BannerController: $e');
-    }
+    } catch (e) {}
   }
 
   /// Hủy liên kết tài khoản VIAGS - chỉ xóa profile VACS, giữ lại name và password
@@ -323,15 +312,11 @@ class ProfileController extends GetxController {
         await loadViagsStatus();
         // Employee status sẽ tự động update vì userProfile đã được xóa
         isEmployee.value = false;
-
-        print('✅ Unlinked VIAGS account successfully');
         return true;
       } else {
-        print('❌ Unlink VIAGS failed: ${result.error}');
         return false;
       }
     } catch (e) {
-      print('❌ Error unlinking VIAGS account: $e');
       return false;
     } finally {
       isLoading.value = false;
@@ -357,26 +342,17 @@ class ProfileController extends GetxController {
   /// Load vacation data (phép cá nhân) và cache
   Future<void> loadVacationData() async {
     if (getVacationListUsecase == null) {
-      print('⚠️ GetVacationListUsecase not injected, skipping vacation load');
       return;
     }
 
     // Đảm bảo userProfile đã có và có hrId
     final profile = userProfile.value;
     if (profile == null) {
-      print('⚠️ userProfile is null, cannot load vacation data');
       return;
     }
 
     // Nếu HR_ID = 0 hoặc null, dùng giá trị mặc định 1752
     final hrId = profile.hrId > 0 ? profile.hrId : 1752;
-    if (profile.hrId <= 0) {
-      print(
-        '⚠️ HR_ID from profile is ${profile.hrId}, using default HR_ID: 1752',
-      );
-    } else {
-      print('📤 [ProfileController] Loading vacation data for HR_ID: $hrId');
-    }
 
     try {
       final currentYear = DateTime.now().year;
@@ -399,19 +375,13 @@ class ProfileController extends GetxController {
         if (firstVacation.overtimeTon != null) {
           overtimeTon.value = firstVacation.overtimeTon!;
         }
-
-        print(
-          '✅ Loaded vacation data: PhepTon=${phepTon.value}, OvertimeTon=${overtimeTon.value}',
-        );
       } else {
-        print('⚠️ No vacation data found or API error: ${result.error}');
         // Reset values nếu không có data
         phepTon.value = 0.0;
         overtimeTon.value = 0.0;
         vacationList.clear();
       }
     } catch (e) {
-      print('❌ Error loading vacation data: $e');
       phepTon.value = 0.0;
       overtimeTon.value = 0.0;
       vacationList.clear();
@@ -421,26 +391,17 @@ class ProfileController extends GetxController {
   /// Load PersonalVacation data (thông tin phép chi tiết) và cache HR_No
   Future<void> loadPersonalVacation() async {
     if (getPersonalVacationUsecase == null) {
-      print('⚠️ GetPersonalVacationUsecase not injected, skipping personal vacation load');
       return;
     }
 
     // Đảm bảo userProfile đã có và có hrId
     final profile = userProfile.value;
     if (profile == null) {
-      print('⚠️ userProfile is null, cannot load personal vacation data');
       return;
     }
 
     // Nếu HR_ID = 0 hoặc null, dùng giá trị mặc định 1752
     final hrId = profile.hrId > 0 ? profile.hrId : 1752;
-    if (profile.hrId <= 0) {
-      print(
-        '⚠️ HR_ID from profile is ${profile.hrId}, using default HR_ID: 1752',
-      );
-    } else {
-      print('📤 [ProfileController] Loading personal vacation data for HR_ID: $hrId');
-    }
 
     try {
       final result = await getPersonalVacationUsecase!.call(hrId: hrId);
@@ -448,20 +409,10 @@ class ProfileController extends GetxController {
       if (result.isSuccess && result.data != null) {
         // Cache PersonalVacation
         personalVacation.value = result.data;
-        
-        print(
-          '✅ Loaded personal vacation data: HR_No=${result.data!.hrNo}, '
-          'PaidLeaveYear=${result.data!.paidLeaveYear}, '
-          'PaidLeaveUsedTotal=${result.data!.paidLeaveUsedTotal}, '
-          'PaidLeaveRemain=${result.data!.paidLeaveRemain}, '
-          'OverTimeRemain=${result.data!.overTimeRemain}',
-        );
       } else {
-        print('⚠️ No personal vacation data found or API error: ${result.error}');
         personalVacation.value = null;
       }
     } catch (e) {
-      print('❌ Error loading personal vacation data: $e');
       personalVacation.value = null;
     }
   }

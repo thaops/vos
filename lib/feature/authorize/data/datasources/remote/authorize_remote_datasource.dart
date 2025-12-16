@@ -6,6 +6,12 @@ abstract class AuthorizeRemoteDataSource {
   Future<ApiResult<List<AuthorizeDto>>> getAuthorizes(
       String token, int authorizeId, int hrId, int year);
   Future<ApiResult<List<Map<String, String>>>> getAuthorizeStatuses(String token);
+  Future<ApiResult<void>> cancelAuthorize({
+    required String token,
+    required int authorizeId,
+    required String fromDate,
+    required String lsAuthorize,
+  });
 }
 
 class AuthorizeRemoteDataSourceImpl implements AuthorizeRemoteDataSource {
@@ -69,6 +75,26 @@ class AuthorizeRemoteDataSourceImpl implements AuthorizeRemoteDataSource {
             )
             .toList();
       },
+    );
+  }
+
+  @override
+  Future<ApiResult<void>> cancelAuthorize({
+    required String token,
+    required int authorizeId,
+    required String fromDate,
+    required String lsAuthorize,
+  }) async {
+    return shareApiRepository.callShareUpdate<void>(
+      functionCode: 'HR_AUTHORIZE_UPDATE',
+      token: token,
+      data: {
+        'Authorize_ID': authorizeId,
+        'FromDate': fromDate,
+        'ls_Authorize': lsAuthorize,
+        'Status': 'XX',
+      },
+      parser: (_) => null,
     );
   }
 }
