@@ -12,7 +12,7 @@ class TimeOffUpdateScreen extends StatelessWidget {
       controllerTag: TimeOffFormController.tagUpdate,
       enableOpenUploaded: true,
       daysHeaderText: 'Số ngày nghỉ',
-      daysTotalWidth: 150,
+      daysTotalWidth: 153,
     );
   }
 }

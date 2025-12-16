@@ -108,25 +108,24 @@ class TimeOffCard extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      
       children: [
-        // Date range
-        Expanded(
-          flex: 2,
-          child: Text(
-            _formatDateRange(),
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+        Text(
+          _formatDateRange(),
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(width: 12.w),
+
+        SizedBox(height: 12.w),
         // Status chip
-        Expanded(flex: 1, child: _buildStatusChip()),
+        _buildStatusChip(),
       ],
     );
   }

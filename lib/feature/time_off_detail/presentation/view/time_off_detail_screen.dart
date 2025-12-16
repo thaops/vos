@@ -341,7 +341,9 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                           color: _colorTextGray,
                         ),
                       ),
-                      if (process.recdate != null) ...[
+                      if (process.recdate != null &&
+                          (process.status ?? '') != '--' &&
+                          (process.status ?? '') != 'OK') ...[
                         SizedBox(height: 4.h),
                         Text(
                           "Ngày duyệt: ${_formatDateTime(process.recdate)}",
@@ -373,7 +375,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Expanded(
-          flex: 1,
+          flex: 3,
           child: Text(
             '$label:',
             style: TextStyle(
@@ -385,7 +387,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         ),
         SizedBox(width: 8.h),
         Expanded(
-          flex: 2,
+          flex: 4,
           child: Text(
             value,
             style: TextStyle(

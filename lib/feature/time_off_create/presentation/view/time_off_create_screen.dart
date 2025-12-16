@@ -7,12 +7,12 @@ class TimeOffCreateScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  TimeOffFormScreen(
+    return TimeOffFormScreen(
       appBarTitle: 'Tạo mới',
       controllerTag: TimeOffFormController.tagCreate,
       enableOpenUploaded: false,
       daysHeaderText: 'Số ngày nghỉ',
-      daysTotalWidth: 150,
+      daysTotalWidth: 153,
     );
   }
 }

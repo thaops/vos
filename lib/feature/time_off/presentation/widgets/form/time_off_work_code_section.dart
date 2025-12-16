@@ -22,7 +22,7 @@ class TimeOffWorkCodeSection extends StatelessWidget {
     required this.onDecrement,
     required this.onChangeDays,
     this.daysHeaderText = 'Ngày nghỉ',
-    this.totalWidth = 150,
+    this.totalWidth = 157,
   });
 
   @override
