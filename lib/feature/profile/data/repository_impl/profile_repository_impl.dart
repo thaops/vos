@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:vos_flutter/common/Services/device_id_service.dart';
-import 'package:vos_flutter/common/Services/keychain_test_service.dart';
+import 'package:vos_flutter/common/services/keychain_test_service.dart';
 import 'package:vos_flutter/common/utils/api_response_handler.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/feature/profile/data/datasources/local/profile_local_datasource.dart';
@@ -41,7 +41,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<ApiResult<UserProfile>> linkViagsAccount(
-      String name, String password) async {
+    String name,
+    String password,
+  ) async {
     try {
       final userCode = name.trim();
 
@@ -110,7 +112,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
         return ApiResult.success(dto.toDomain());
       } else {
         return ApiResult.error(
-            remoteResult.error ?? 'Failed to link VIAGS account');
+          remoteResult.error ?? 'Failed to link VIAGS account',
+        );
       }
     } catch (e) {
       return ApiResult.error('linkViagsAccount failed: $e');

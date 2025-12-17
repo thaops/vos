@@ -2,7 +2,9 @@ import 'dart:io' show Platform;
 
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:vos_flutter/common/constants/storage_keys.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
+import 'package:vos_flutter/feature/time_off_detail/domain/models/time_off_detail_args.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,7 @@ import 'package:vos_flutter/feature/home/view/home_tab.dart';
 import 'package:vos_flutter/feature/news/presentation/view/news_screen.dart';
 import 'package:vos_flutter/feature/news/binding/news_binding.dart';
 import 'package:vos_flutter/feature/news/presentation/controller/news_controller.dart';
+import 'package:vos_flutter/router/app_router.dart';
 // import 'package:vos_flutter/common/services/navigation_service.dart'; // DISABLED: Module deleted
 
 class MainScreen extends StatefulWidget {
@@ -40,6 +43,32 @@ class _MainScreenState extends State<MainScreen> {
     // Mặc định _selectedIndex = 0
     // Sẽ được cập nhật lại trong build() khi ProfileController load xong
     _selectedIndex = 0;
+
+    // ✅ Consume pending navigation từ notification (nếu có)
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final pending = _storage.read(StorageKeys.pendingTimeOffDetailVRegId);
+      if (pending == null) return;
+
+      final vRegId = pending is int ? pending : int.tryParse(pending.toString());
+      if (vRegId == null) {
+        _storage.remove(StorageKeys.pendingTimeOffDetailVRegId);
+        return;
+      }
+
+      // Chỉ xử lý khi đang ở main để tránh xung đột navigation
+      if (Get.currentRoute != AppRouter.main) return;
+
+      _storage.remove(StorageKeys.pendingTimeOffDetailVRegId);
+      await Future.delayed(const Duration(milliseconds: 250));
+
+      if (Get.currentRoute == AppRouter.timeOffDetail) return;
+
+      await Get.toNamed(
+        AppRouter.timeOffDetail,
+        arguments: TimeOffDetailArgs(vRegId: vRegId),
+        preventDuplicates: true,
+      );
+    });
 
     // NavigationService.setTabChangeCallback(_onTabTapped); // DISABLED: Module deleted
   }

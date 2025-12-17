@@ -6,6 +6,20 @@ import 'package:vos_flutter/common/services/services.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
 class AuthUtils {
+  /// ✅ CHỈ check trạng thái login (không navigate)
+  static Future<bool> isLoggedIn() async {
+    try {
+      final service = await Services.create();
+      final token = await service.getAccessToken();
+      return token.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// ⚠️ Legacy API (trước đây vừa check vừa navigate)
+  /// Nên migrate dần sang: `isLoggedIn()` và tự điều hướng ở caller.
+  @Deprecated('Use isLoggedIn() and handle navigation in caller')
   static Future<void> checkLoginAndNavigate({VoidCallback? onLoggedIn}) async {
     try {
       final service = await Services.create();
@@ -14,12 +28,6 @@ class AuthUtils {
 
       if (isLoggedIn) {
         await Future.delayed(Duration.zero); // Đảm bảo ổn định frame
-
-        final currentRoute = Get.currentRoute;
-
-        if (currentRoute.isEmpty || currentRoute == '/') {
-          await Get.toNamed(AppRouter.main);
-        }
 
         onLoggedIn?.call();
       } else {
@@ -42,7 +50,7 @@ class AuthUtils {
 
       // Decode payload (phần thứ 2)
       final payload = parts[1];
-      
+
       // Thêm padding nếu cần
       String normalizedPayload = payload;
       switch (payload.length % 4) {
@@ -70,13 +78,14 @@ class AuthUtils {
     try {
       final payload = decodeJwtToken(token);
       if (payload == null) return null;
-      
+
       // Thử các key có thể có HR_ID
-      final hrId = payload['HR_ID'] as int? ?? 
-                   payload['HRID'] as int? ?? 
-                   payload['HrId'] as int? ?? 
-                   payload['hrId'] as int?;
-      
+      final hrId =
+          payload['HR_ID'] as int? ??
+          payload['HRID'] as int? ??
+          payload['HrId'] as int? ??
+          payload['hrId'] as int?;
+
       return hrId;
     } catch (e) {
       print('❌ Error getting HR_ID from token: $e');

@@ -22,8 +22,26 @@ class Services {
 
   // Lấy access token
   Future<String> getAccessToken() async {
-    String? token = _storage.read(_accessTokenKey);
-    return token ?? ''; // Trả về chuỗi rỗng nếu không có token
+    // 1) Ưu tiên key chuẩn: accessToken
+    final String? token = _storage.read<String>(_accessTokenKey);
+    if (token != null && token.isNotEmpty) return token;
+
+    // 2) Fallback: token nằm trong user_profile_data (VIAGS/VACS)
+    final cachedProfile = _storage.read('user_profile_data');
+    if (cachedProfile is Map) {
+      final profileToken =
+          (cachedProfile['Token'] as String?) ??
+          (cachedProfile['token'] as String?);
+      if (profileToken != null && profileToken.isNotEmpty) {
+        return profileToken;
+      }
+    }
+
+    // 3) Fallback legacy: user_token
+    final legacyToken = _storage.read<String>('user_token');
+    if (legacyToken != null && legacyToken.isNotEmpty) return legacyToken;
+
+    return ''; // Trả về chuỗi rỗng nếu không có token
   }
 
   

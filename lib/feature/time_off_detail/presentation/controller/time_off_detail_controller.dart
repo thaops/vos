@@ -50,25 +50,21 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     await loadTimeOffDetail();
   }
 
-  // Kiểm tra đơn có phải "Soạn thảo" không
   bool get isDraft {
     final timeOff = timeOffDetail.value;
     if (timeOff == null) return false;
     final approveStatus = timeOff.approveStatus ?? '-';
     final statusName = timeOff.statusName ?? '';
-    // Soạn thảo: approveStatus == '-' hoặc statusName chứa "Soạn thảo"
     return approveStatus == '-' ||
         statusName.toLowerCase().contains('soạn thảo');
   }
 
-  // Kiểm tra đơn có thể hủy không (Chờ phê duyệt, Đã phê duyệt)
   bool get canCancel {
     final timeOff = timeOffDetail.value;
     if (timeOff == null) return false;
     final approveStatus = timeOff.approveStatus ?? '-';
     final statusName = timeOff.statusName ?? '';
-    // Chờ phê duyệt: approveStatus == 'IN'
-    // Đã phê duyệt: approveStatus == 'FN' hoặc 'HF'
+
     return approveStatus == 'IN' ||
         approveStatus == 'FN' ||
         approveStatus == 'HF' ||
@@ -76,7 +72,6 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
         statusName.toLowerCase().contains('đã phê duyệt');
   }
 
-  // Gửi phê duyệt
   Future<void> sendApproveRequest() async {
     await handleApiCall<SendApproveResult>(
       apiCall: () => sendApproveRequestUsecase.call(vRegId),
@@ -94,7 +89,6 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     );
   }
 
-  // Chỉnh sửa - chuyển sang màn hình update
   void navigateToUpdate() {
     final timeOff = timeOffDetail.value;
     if (timeOff != null) {
@@ -147,7 +141,6 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     }
   }
 
-  // Thu hồi đơn
   Future<void> recallTimeOff() async {
     final timeOff = timeOffDetail.value;
     if (timeOff == null) return;
@@ -210,7 +203,6 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     }
   }
 
-  // Hủy đơn
   Future<void> cancelTimeOff() async {
     final timeOff = timeOffDetail.value;
     if (timeOff == null) return;
