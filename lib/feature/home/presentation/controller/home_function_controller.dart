@@ -17,10 +17,21 @@ class HomeFunctionController extends GetxController {
     super.onInit();
   }
 
-  Future<void> loadHomeFunctions(String token, String lsStatus) async {
+  /// Load home functions từ API.
+  ///
+  /// - `silent`: refresh ngầm (không bật loader nếu đã có cache trên UI).
+  /// - Khi đang có cache, nếu API fail sẽ **giữ nguyên cache** để UI mượt.
+  Future<void> loadHomeFunctions(
+    String token,
+    String lsStatus, {
+    bool silent = false,
+  }) async {
     try {
       print('🔄 Loading home functions with token: ${token.substring(0, token.length > 20 ? 20 : token.length)}..., lsStatus: $lsStatus');
-      isLoading.value = true;
+      final bool shouldShowLoading = !silent || sessions.isEmpty;
+      if (shouldShowLoading) {
+        isLoading.value = true;
+      }
       error.value = '';
 
       final result = await getHomeFunctionsUsecase.call(token, lsStatus);
@@ -38,11 +49,15 @@ class HomeFunctionController extends GetxController {
           print('🔒 Token expired detected in home functions, unlinking auth...');
           await SignOutClear().unlinkViagsOnly();
           error.value = 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại tài khoản.';
+          sessions.clear();
           return;
         }
         
         error.value = errorMsg;
-        sessions.clear();
+        // ✅ Ưu tiên cache: nếu đang có dữ liệu thì giữ nguyên, tránh UI nhấp nháy.
+        if (sessions.isEmpty) {
+          sessions.clear();
+        }
       }
     } catch (e) {
       final errorMsg = e.toString();
@@ -53,11 +68,15 @@ class HomeFunctionController extends GetxController {
         print('🔒 Token expired detected in home functions exception, unlinking auth...');
         await SignOutClear().unlinkViagsOnly();
         error.value = 'Phiên đăng nhập đã hết hạn, vui lòng liên kết lại tài khoản.';
+        sessions.clear();
         return;
       }
       
       error.value = 'Lỗi: $e';
-      sessions.clear();
+      // ✅ Ưu tiên cache: nếu đang có dữ liệu thì giữ nguyên.
+      if (sessions.isEmpty) {
+        sessions.clear();
+      }
     } finally {
       isLoading.value = false;
       print('🔄 Home functions loading completed. isLoading: ${isLoading.value}, sessions: ${sessions.length}');

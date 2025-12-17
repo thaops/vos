@@ -28,7 +28,8 @@ class BannerSectionWidget extends StatefulWidget {
 }
 
 class _BannerSectionWidgetState extends State<BannerSectionWidget> {
-  final CarouselSliderController _carouselController = CarouselSliderController();
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
   int _currentBannerIndex = 0;
   List<Banner> _cachedBanners = [];
   int _lastBannerCount = 0;
@@ -48,7 +49,7 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
   @override
   void didUpdateWidget(BannerSectionWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // ✅ Chỉ update khi banner count thay đổi hoặc lần đầu load
     if (_lastBannerCount != widget.banners.length || _cachedBanners.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,13 +75,9 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
     final screenHeight = MediaQuery.of(context).size.height;
     final bannerHeight = screenHeight * 0.28;
 
-    // Loading state
-    if (widget.isLoading) {
-      return Container(
-        height: bannerHeight,
-        color: Colors.grey[200],
-        child: const Center(child: CircularProgressIndicator()),
-      );
+    // Loading state: KHÔNG hiển thị spinner (tránh xấu UI khi hot restart/reload)
+    if (widget.isLoading && widget.banners.isEmpty) {
+      return const BannerPlaceholderWidget();
     }
 
     // Lọc banners hợp lệ
@@ -88,8 +85,8 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
         .where((banner) => banner.imageUrl.isNotEmpty)
         .toList();
 
-    // Error hoặc empty state
-    if ((widget.error != null && widget.error!.isNotEmpty) || validBanners.isEmpty) {
+    // Empty state (ưu tiên cache: nếu có banner thì vẫn hiển thị dù error)
+    if (validBanners.isEmpty) {
       return const BannerPlaceholderWidget();
     }
 
@@ -111,9 +108,8 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
     return Stack(
       children: [
         // Banner CarouselSlider
-        Container(
+        SizedBox(
           height: bannerHeight,
-          color: Colors.grey[200],
           child: CarouselSlider.builder(
             key: ValueKey('banner_carousel_$bannerCount'),
             carouselController: _carouselController,
@@ -136,58 +132,37 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
             ),
             itemBuilder: (context, index, realIndex) {
               if (index < 0 || index >= validBanners.length) {
-                return Container(
-                  color: Colors.grey[200],
-                  child: const Icon(
-                    Icons.error_outline,
-                    color: Colors.grey,
-                  ),
-                );
+                return BannerPlaceholderWidget.withHeight(height: bannerHeight);
               }
 
               final banner = validBanners[index];
 
               if (banner.imageUrl.isEmpty) {
-                return Container(
-                  color: Colors.grey[200],
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    color: Colors.grey,
-                  ),
-                );
+                return BannerPlaceholderWidget.withHeight(height: bannerHeight);
               }
 
-              return Container(
-                color: Colors.grey[200],
-                child: CachedNetworkImage(
-                  imageUrl: banner.imageUrl,
-                  fit: BoxFit.cover,
-                  fadeInDuration: const Duration(milliseconds: 300),
-                  fadeOutDuration: const Duration(milliseconds: 100),
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.grey[600]!,
-                        ),
-                      ),
-                    ),
+              // ✅ Không nền xám: luôn render placeholder gradient + icon, ảnh load lên trên
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  BannerPlaceholderWidget.withHeight(height: bannerHeight),
+                  CachedNetworkImage(
+                    imageUrl: banner.imageUrl,
+                    fit: BoxFit.cover,
+                    fadeInDuration: const Duration(milliseconds: 200),
+                    fadeOutDuration: const Duration(milliseconds: 100),
+                    placeholder: (context, url) => const SizedBox.shrink(),
+                    errorWidget: (context, url, error) {
+                      return BannerPlaceholderWidget.withHeight(
+                        height: bannerHeight,
+                      );
+                    },
+                    memCacheWidth:
+                        (MediaQuery.of(context).size.width *
+                                MediaQuery.of(context).devicePixelRatio)
+                            .round(),
                   ),
-                  errorWidget: (context, url, error) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: const Icon(
-                        Icons.error_outline,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
-                  memCacheWidth: (MediaQuery.of(context).size.width *
-                          MediaQuery.of(context).devicePixelRatio)
-                      .round(),
-                ),
+                ],
               );
             },
           ),
@@ -269,10 +244,7 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.white.withOpacity(0.2),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.5),
-              width: 2,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
           ),
           child: widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty
               ? ClipOval(

@@ -28,16 +28,16 @@ class _HomeFunctionsSectionWidgetState
     final controller = Get.find<HomeFunctionController>();
 
     return Obx(() {
-      // Loading state
-      if (controller.isLoading.value) {
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          child: Center(child: CircularProgressIndicator()),
-        );
+      final hasCache = controller.sessions.isNotEmpty;
+
+      // Loading state (chỉ show loader khi KHÔNG có cache)
+      if (controller.isLoading.value && !hasCache) {
+        // ✅ Không hiển thị spinner (tránh xấu UI khi hot restart/reload)
+        return const SizedBox.shrink();
       }
 
-      // Error state
-      if (controller.error.value.isNotEmpty) {
+      // Error state (ưu tiên cache: nếu có data thì vẫn hiển thị)
+      if (controller.error.value.isNotEmpty && !hasCache) {
         print('❌ Home function error: ${controller.error.value}');
         return Container(
           padding: EdgeInsets.all(12.w),
