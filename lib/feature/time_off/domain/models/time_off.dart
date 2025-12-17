@@ -223,13 +223,15 @@ class TimeOffDetail {
   }
 }
 
-// Model cho quy trình phê duyệt
 class TimeOffProcess {
   final int approveNo;
   final String fullName;
   final String email;
   final DateTime? recdate;
   final String status;
+  final String title;
+  final String dutyType;
+  final String nameJobTitle;
 
   TimeOffProcess({
     required this.approveNo,
@@ -237,6 +239,9 @@ class TimeOffProcess {
     required this.email,
     this.recdate,
     required this.status,
+    required this.title,
+    required this.dutyType,
+    required this.nameJobTitle,
   });
 
   factory TimeOffProcess.fromJson(Map<String, dynamic> json) {
@@ -274,6 +279,9 @@ class TimeOffProcess {
         'approveStatus',
         'approve_status',
       ], fallback: '--'),
+      title: readString(['Title', 'title']),
+      dutyType: readString(['DutyType', 'dutyType']),
+      nameJobTitle: readString(['Name_Job_Title', 'nameJobTitle']),
     );
   }
 }

@@ -66,7 +66,7 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     final statusName = timeOff.statusName ?? '';
 
     return approveStatus == 'IN' ||
-        approveStatus == 'FN' ||
+        approveStatus.toLowerCase() == 'yes' ||
         approveStatus == 'HF' ||
         statusName.toLowerCase().contains('chờ phê duyệt') ||
         statusName.toLowerCase().contains('đã phê duyệt');
@@ -107,16 +107,12 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     switch (status.toLowerCase()) {
       case '--':
         return 'Chưa chuyển phê duyệt';
-      case 'ok':
-        return 'Chưa phê duyệt';
-      case 'rj':
+      case 'yes':
+        return index == 0 ? 'Khởi tạo' : 'Đã phê duyệt';
+      case 'no':
         return 'Từ chối';
       case 'in':
-        return 'Đang trong quá trình phê duyệt';
-      case 'fn':
-        return index == 0 ? 'Khởi tạo' : 'Đã phê duyệt';
-      case 'bk':
-        return 'Thu hồi';
+        return 'Đang chờ duyệt';
       default:
         return '--';
     }
@@ -126,16 +122,12 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     switch (status.toLowerCase()) {
       case '--':
         return Colors.grey;
+      case 'yes':
+        return Colors.green;
+      case 'no':
+        return Colors.red;
       case 'in':
         return Colors.orange;
-      case 'fn':
-        return Colors.green;
-      case 'rj':
-        return Colors.red;
-      case 'bk':
-        return Colors.blueGrey;
-      case 'ok':
-        return Colors.grey;
       default:
         return Colors.grey;
     }

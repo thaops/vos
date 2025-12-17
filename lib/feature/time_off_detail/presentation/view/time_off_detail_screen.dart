@@ -140,12 +140,9 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
 
       final paidLeaveYear = personalVacation?.paidLeaveYear;
 
-      final paidLeaveUsedTotal = personalVacation != null
-          ? personalVacation.paidLeaveUsedTotal.toDouble()
-          : null;
-      final overTimeRemain = personalVacation != null
-          ? personalVacation.overTimeRemain.toDouble()
-          : null;
+      final paidLeaveUsedTotal =
+          personalVacation?.paidLeaveUsedTotal.toDouble() ?? 0;
+      final overTimeRemain = personalVacation?.overTimeRemain.toDouble() ?? 0;
 
       final allItems = List<Widget>.from(items);
       if (paidLeaveYear != null) {
@@ -258,10 +255,11 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
             final processes = entry.value;
             final isLast = index == groupedProcesses.length - 1;
             final totalSteps = totalStepsForDisplay;
+            final lengthGroup = processes.length;
 
             return _buildTimelineStep(
               processes: processes,
-              stepNumber: index + 1,
+              lengthGroup: lengthGroup,
               totalSteps: totalSteps,
               approvedCount: approvedCount,
               length: length,
@@ -276,7 +274,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
 
   Widget _buildTimelineStep({
     required List<TimeOffProcess> processes,
-    required int stepNumber,
+    required int lengthGroup,
     required int totalSteps,
     required int approvedCount,
     required int length,
@@ -284,14 +282,9 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     required int index,
   }) {
     // Header step: "3/5: Thủ trưởng CQ/ĐV"
-    final names = processes.map((p) => p.fullName).join(', ');
-    final stepHeader = '$stepNumber/$length';
+    final names = processes.isNotEmpty ? processes.first.title : '';
+    final stepHeader = '$lengthGroup/$length $names';
     final groupStatus = _resolveGroupStatus(processes);
-    final totalMembers = processes.length;
-    final approvedInGroup = processes
-        .where((p) => _isApprovedStatus(p.status))
-        .length;
-    final groupProgressText = '$approvedInGroup/$totalMembers';
     final baseStatusTag = controller.buildStatusTag(groupStatus, index);
 
     return Container(
@@ -404,8 +397,8 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                           ),
                         ),
                         if (process.recdate != null &&
-                            process.status != '--' &&
-                            process.status != 'OK') ...[
+                            (process.status.toLowerCase() == 'yes' ||
+                                process.status.toLowerCase() == 'no')) ...[
                           SizedBox(height: 4.h),
                           Text(
                             "Ngày duyệt: ${_formatDateTime(process.recdate)}",
@@ -430,36 +423,39 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   String _resolveGroupStatus(List<TimeOffProcess> processes) {
     if (processes.isEmpty) return '--';
 
-    // Chuẩn hóa status về uppercase để so sánh an toàn
-    final statuses = processes.map((p) => (p.status).toUpperCase()).toList();
+    // Chuẩn hóa status về lowercase để so sánh an toàn
+    final statuses = processes
+        .map((p) => (p.status).toLowerCase().trim())
+        .toList();
 
     final bool allDash = statuses.every((s) => s == '--');
-    final bool allFn = statuses.every((s) => s == 'FN');
-    final bool allOk = statuses.every((s) => s == 'OK');
-    final bool hasRj = statuses.contains('RJ');
+    final bool allYes = statuses.every((s) => s == 'yes');
+    final bool hasNo = statuses.contains('no');
+    final bool hasYes = statuses.contains('yes');
+    final bool hasDash = statuses.contains('--');
 
     // 1) Tất cả là '--' → chưa gửi phê duyệt
     if (allDash) {
       return '--';
     }
 
-    // 2) Có ít nhất 1 'RJ' → cả group bị từ chối
-    if (hasRj) {
-      return 'RJ';
+    // 2) Có ít nhất 1 'no' → cả group bị từ chối
+    if (hasNo) {
+      return 'no';
     }
 
-    // 3) Tất cả là 'FN' → cả group đã duyệt
-    if (allFn) {
-      return 'FN';
+    // 3) Tất cả là 'yes' → cả group đã duyệt
+    if (allYes) {
+      return 'yes';
     }
 
-    // 4) Tất cả là 'OK' → chưa phê duyệt
-    if (allOk) {
-      return 'OK';
+    // 4) Có cả 'yes' và '--' → đang chờ duyệt
+    if (hasYes && hasDash) {
+      return 'IN';
     }
 
-    // 5) Các trường hợp còn lại → đang trong quá trình phê duyệt
-    return 'IN';
+    // 5) Các trường hợp còn lại → mặc định là '--'
+    return '--';
   }
 
   // Helper: Info Row (Label-Value Layout)
@@ -529,6 +525,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   }
 
   bool _isApprovedStatus(String status) {
-    return status == 'OK' || status == 'FN';
+    return status.toLowerCase() == 'yes';
   }
 }
