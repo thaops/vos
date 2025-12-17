@@ -54,7 +54,6 @@ class _HomeTabState extends State<HomeTab> {
     super.dispose();
   }
 
-  // ✅ Flutter thuần: Setup listener cho BannerController
   void _setupBannerListener() {
     if (!Get.isRegistered<BannerController>()) {
       return;

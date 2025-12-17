@@ -6,6 +6,7 @@ class LinkViagsRequestDto {
   final String language;
   final String devices;
   final String loginType;
+  final String email;
 
   LinkViagsRequestDto({
     required this.userCode,
@@ -15,6 +16,7 @@ class LinkViagsRequestDto {
     required this.language,
     required this.devices,
     required this.loginType,
+    required this.email,
   });
 
   Map<String, dynamic> toJson() {
@@ -26,12 +28,13 @@ class LinkViagsRequestDto {
       'Language': language,
       'Devices': devices,
       'Login_Type': loginType,
+      'Email': email,
     };
   }
 
   // Convert to JSON string for Is_Data field
   String toJsonString() {
-    return '{"UserCode": "$userCode", "Password": "$password", "Company_ID": $companyId, "Token": "$token", "Language": "$language", "Devices": "$devices", "Login_Type": "$loginType"}';
+    return '{"UserCode": "$userCode", "Password": "$password", "Company_ID": $companyId, "Token": "$token", "Language": "$language", "Devices": "$devices", "Login_Type": "$loginType", "Email": "$email"}';
   }
 }
 

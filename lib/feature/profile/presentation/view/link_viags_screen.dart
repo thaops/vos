@@ -68,11 +68,9 @@ class _LinkViagsScreenState extends State<LinkViagsScreen> {
       );
 
       if (success) {
-        // ✅ Sửa: Dùng offNamed thay vì offAllNamed để không xóa tất cả controllers
-        // offNamed chỉ xóa route hiện tại và quay về main, giữ lại controllers đã đăng ký
+        
         Get.offNamed(AppRouter.main);
       } else {
-        // Hiển thị error message từ server
         final errorMsg = _controller.linkViagsError.value;
         if (errorMsg.isNotEmpty) {
           CustomSnackbar.show(errorMsg);

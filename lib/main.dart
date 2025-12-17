@@ -72,7 +72,6 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // ✅ Đợi critical services init TRƯỚC KHI render app
   await _initializeCriticalServices();
 
   runApp(
@@ -82,7 +81,6 @@ void main() async {
     ),
   );
 
-  // ✅ Non-critical services chạy background
   _initializeNonCriticalServices();
 }
 
@@ -381,7 +379,6 @@ class _DesktopBackSwipeWrapperState extends State<_DesktopBackSwipeWrapper> {
       _dragDeltaX = 0;
       return;
     }
-    // Threshold: swipe sang phải đủ lớn thì back
     const threshold = 120.0;
     if (_dragDeltaX > threshold && Navigator.of(context).canPop()) {
       Navigator.of(context).maybePop();
@@ -429,7 +426,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ Tạo controller trong initState, chỉ 1 lần
     if (!Get.isRegistered<SplashController>()) {
       Get.put(SplashController());
     }
