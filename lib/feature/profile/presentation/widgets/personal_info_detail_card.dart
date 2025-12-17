@@ -34,11 +34,11 @@ class PersonalInfoDetailCard extends StatelessWidget {
                 // _buildInfoRow('Tổ đội', user.depNameVN),
                 _buildInfoRow(
                   'Email',
-                  user.email.isNotEmpty ? user.email : 'N/A',
+                  user.email.isNotEmpty ? user.email : 'dev@namphuongso.com',
                 ),
                 _buildInfoRow(
                   'Số điện thoại',
-                  user.phone.isNotEmpty ? user.phone : 'N/A',
+                  user.phone.isNotEmpty ? user.phone : '0909090909',
                 ),
               ],
             ),

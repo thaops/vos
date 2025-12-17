@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vos_flutter/common/utils/responsive_helper.dart';
 import 'package:vos_flutter/feature/home/domain/models/home_function.dart';
 import 'package:vos_flutter/feature/home/presentation/widgets/function_item_widget.dart';
 
@@ -19,21 +20,30 @@ class FunctionSessionCardWidget extends StatelessWidget {
     required this.onActionTap,
   });
 
+  // Helper để detect iPad/tablet
+  bool _isTablet(BuildContext context) {
+    if (kIsWeb) return false;
+    if (Platform.isMacOS) return false;
+    return ResponsiveHelper.isTablet(context) || 
+           (Platform.isIOS && MediaQuery.of(context).size.shortestSide >= 600);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMacOS = !kIsWeb && Platform.isMacOS;
+    final isTablet = _isTablet(context);
 
     return Container(
-      margin: EdgeInsets.only(bottom: isMacOS ? 16.h : 10.h),
+      margin: EdgeInsets.only(bottom: (isMacOS || isTablet) ? 16.h : 10.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(isMacOS ? 12.r : 14.r),
+        borderRadius: BorderRadius.circular((isMacOS || isTablet) ? 12.r : 14.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isMacOS ? 0.08 : 0.05),
-            blurRadius: isMacOS ? 12 : 10,
-            offset: Offset(0, isMacOS ? 3 : 2),
-            spreadRadius: isMacOS ? 0 : 0,
+            color: Colors.black.withOpacity((isMacOS || isTablet) ? 0.08 : 0.05),
+            blurRadius: (isMacOS || isTablet) ? 12 : 10,
+            offset: Offset(0, (isMacOS || isTablet) ? 3 : 2),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -44,14 +54,14 @@ class FunctionSessionCardWidget extends StatelessWidget {
             onTap: onToggleExpand,
             child: Container(
               padding: EdgeInsets.symmetric(
-                horizontal: isMacOS ? 20.w : 16.w,
-                vertical: isMacOS ? 16.h : 12.h,
+                horizontal: (isMacOS || isTablet) ? 20.w : 16.w,
+                vertical: (isMacOS || isTablet) ? 16.h : 12.h,
               ),
               decoration: BoxDecoration(
-                color: isMacOS ? Colors.grey[50] : Colors.white,
+                color: (isMacOS || isTablet) ? Colors.grey[50] : Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(isMacOS ? 12.r : 14.r),
-                  topRight: Radius.circular(isMacOS ? 12.r : 14.r),
+                  topLeft: Radius.circular((isMacOS || isTablet) ? 12.r : 14.r),
+                  topRight: Radius.circular((isMacOS || isTablet) ? 12.r : 14.r),
                 ),
               ),
               child: Row(
@@ -62,10 +72,10 @@ class FunctionSessionCardWidget extends StatelessWidget {
                           ? session.sessionName
                           : 'Chức năng',
                       style: TextStyle(
-                        fontSize: isMacOS ? 17.sp : 16.sp,
+                        fontSize: (isMacOS || isTablet) ? 17.sp : 16.sp,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey[800],
-                        letterSpacing: isMacOS ? 0.2 : 0,
+                        letterSpacing: (isMacOS || isTablet) ? 0.2 : 0,
                       ),
                     ),
                   ),
@@ -74,7 +84,7 @@ class FunctionSessionCardWidget extends StatelessWidget {
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
                     color: Colors.grey[600],
-                    size: isMacOS ? 26.sp : 24.sp,
+                    size: (isMacOS || isTablet) ? 26.sp : 24.sp,
                   ),
                 ],
               ),
@@ -84,25 +94,25 @@ class FunctionSessionCardWidget extends StatelessWidget {
             height: 0.5,
             thickness: 0.5,
             color: Colors.grey[300],
-            indent: isMacOS ? 20.w : 16.w,
-            endIndent: isMacOS ? 20.w : 16.w,
+            indent: (isMacOS || isTablet) ? 20.w : 16.w,
+            endIndent: (isMacOS || isTablet) ? 20.w : 16.w,
           ),
           // Function Items (chỉ hiển thị khi expanded)
           if (isExpanded)
             Padding(
               padding: EdgeInsets.only(
-                left: isMacOS ? 20.w : 16.w,
-                right: isMacOS ? 20.w : 16.w,
-                top: isMacOS ? 16.h : 12.h,
-                bottom: isMacOS ? 20.h : 12.h,
+                left: (isMacOS || isTablet) ? 20.w : 16.w,
+                right: (isMacOS || isTablet) ? 20.w : 16.w,
+                top: (isMacOS || isTablet) ? 16.h : 12.h,
+                bottom: (isMacOS || isTablet) ? 20.h : 12.h,
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  // số cột
-                  final columns = isMacOS ? 4 : 3;
+                  // số cột: iPad dùng 4 cột như macOS, mobile dùng 3 cột
+                  final columns = (isMacOS || isTablet) ? 4 : 3;
 
                   // spacing giữa items
-                  final spacing = isMacOS ? 12.w : 8.w;
+                  final spacing = (isMacOS || isTablet) ? 12.w : 8.w;
 
                   // tính width cho mỗi item
                   final totalSpacing = spacing * (columns - 1);

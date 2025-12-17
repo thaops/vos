@@ -12,7 +12,7 @@
 	<true/>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)vn.viags.vos</string>
+		<string>$(AppIdentifierPrefix)vn.app.vos</string>
 	</array>
 </dict>
 </plist>

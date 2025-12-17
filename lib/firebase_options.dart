@@ -60,24 +60,24 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDx-RK2Xfs6ChbpmgIZylCiNmnCP-zpnuM',
-    appId: '1:119692400826:ios:69997882c9bcd259a24a83',
+    appId: '1:119692400826:ios:df7e2361ee8bdb73a24a83',
     messagingSenderId: '119692400826',
     projectId: 'viags-vos',
     storageBucket: 'viags-vos.firebasestorage.app',
     iosClientId:
-        '119692400826-usibe069lubg2rq3j0lsnn38mobtrso6.apps.googleusercontent.com',
-    iosBundleId: 'vn.viags.vos',
+        '119692400826-68t6gqi3ep9k9bc7f5hcn55m3l34i54v.apps.googleusercontent.com',
+    iosBundleId: 'vn.app.vos',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDx-RK2Xfs6ChbpmgIZylCiNmnCP-zpnuM',
-    appId: '1:119692400826:ios:2b98cef5df373e91a24a83',
+    appId: '1:119692400826:ios:df7e2361ee8bdb73a24a83',
     messagingSenderId: '119692400826',
     projectId: 'viags-vos',
     storageBucket: 'viags-vos.firebasestorage.app',
     iosClientId:
-        '119692400826-hben2igt6265ibk1f98ka9uamopcjb3t.apps.googleusercontent.com',
-    iosBundleId: 'vn.viags.vos',
+        '119692400826-68t6gqi3ep9k9bc7f5hcn55m3l34i54v.apps.googleusercontent.com',
+    iosBundleId: 'vn.app.vos',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
