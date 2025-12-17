@@ -283,7 +283,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   }) {
     // Header step: "3/5: Thủ trưởng CQ/ĐV"
     final names = processes.isNotEmpty ? processes.first.title : '';
-    final stepHeader = '$lengthGroup/$length $names';
+    final stepHeader = '$lengthGroup/$length: $names';
     final groupStatus = _resolveGroupStatus(processes);
     final baseStatusTag = controller.buildStatusTag(groupStatus, index);
 
@@ -423,7 +423,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
   String _resolveGroupStatus(List<TimeOffProcess> processes) {
     if (processes.isEmpty) return '--';
 
-    // Chuẩn hóa status về lowercase để so sánh an toàn
     final statuses = processes
         .map((p) => (p.status).toLowerCase().trim())
         .toList();
@@ -434,31 +433,25 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     final bool hasYes = statuses.contains('yes');
     final bool hasDash = statuses.contains('--');
 
-    // 1) Tất cả là '--' → chưa gửi phê duyệt
     if (allDash) {
       return '--';
     }
 
-    // 2) Có ít nhất 1 'no' → cả group bị từ chối
     if (hasNo) {
       return 'no';
     }
 
-    // 3) Tất cả là 'yes' → cả group đã duyệt
     if (allYes) {
       return 'yes';
     }
 
-    // 4) Có cả 'yes' và '--' → đang chờ duyệt
     if (hasYes && hasDash) {
       return 'IN';
     }
 
-    // 5) Các trường hợp còn lại → mặc định là '--'
     return '--';
   }
 
-  // Helper: Info Row (Label-Value Layout)
   Widget _buildInfoRow({
     required String label,
     required String value,

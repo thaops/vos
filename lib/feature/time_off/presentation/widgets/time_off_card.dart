@@ -68,15 +68,16 @@ class TimeOffCard extends StatelessWidget {
 
               // Body: Thông tin chi tiết
               _buildInfoItem(
-                icon: Icons.calendar_today,
-                label: 'Ngày đăng ký',
-                value: _formatDateTime(timeOff.dateReg),
-              ),
-              SizedBox(height: 12.h),
-              _buildInfoItem(
                 icon: Icons.description,
                 label: 'Phê duyệt',
                 value: timeOff.approvalProgressText,
+              ),
+
+              SizedBox(height: 12.h),
+              _buildInfoItem(
+                icon: Icons.calendar_today,
+                label: 'Ngày đăng ký',
+                value: _formatDateTime(timeOff.dateReg),
               ),
               SizedBox(height: 12.h),
 
@@ -145,7 +146,6 @@ class TimeOffCard extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(4.r),
         border: Border.all(color: textColor, width: 1),
-
       ),
       child: Text(
         statusText,
@@ -196,16 +196,17 @@ class TimeOffCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-            Expanded(
-              flex: 1,
-              child:   Text(
-                '$label:',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: const Color(0xFF666666),
-                  fontWeight: FontWeight.w400,
+              Expanded(
+                flex: 1,
+                child: Text(
+                  '$label:',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: const Color(0xFF666666),
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              )),
+              ),
               SizedBox(width: 8.w),
               Expanded(
                 flex: 2,

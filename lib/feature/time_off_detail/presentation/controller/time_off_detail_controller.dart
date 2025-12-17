@@ -106,7 +106,7 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
   String buildStatusTag(String status, int index) {
     switch (status.toLowerCase()) {
       case '--':
-        return 'Chưa chuyển phê duyệt';
+        return index == 0 ? 'Soạn thảo' : 'Chưa phê duyệt';
       case 'yes':
         return index == 0 ? 'Khởi tạo' : 'Đã phê duyệt';
       case 'no':
