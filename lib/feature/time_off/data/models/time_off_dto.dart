@@ -24,11 +24,11 @@ class TimeOffDto {
   final String? appoveProcess;
   final String? appoveProcessName;
   final String? approveStatus;
-  final String? lsDetail; // JSON string
-  final String? lsProcess; // JSON string
-  final String? jsonAttachFiles; // JSON string
+  final String? lsDetail; 
+  final String? lsProcess;
+  final String? jsonAttachFiles; 
 
-  // Thông tin bổ sung từ API
+ 
   final int? depId;
   final String? depCode;
   final String? level2Code;

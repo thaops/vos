@@ -51,10 +51,9 @@ class TimeOffCreateRequestDto {
       status: request.status,
       recUserID: request.recUserID,
       lsDetail: request.lsDetail
-          .map((detail) => {
-                'JobCode': detail.jobCode,
-                'SoLuong': detail.soLuong,
-              })
+          .map(
+            (detail) => {'JobCode': detail.jobCode, 'SoLuong': detail.soLuong},
+          )
           .toList(),
       jsonAttachFiles: attachFilesJson,
       approveStatus: request.approveStatus,
@@ -75,21 +74,22 @@ class TimeOffCreateRequestDto {
       'RecUserID': recUserID,
       'ls_Detail': lsDetail,
     };
-    
+
     if (approveStatus != null) {
       jsonData['ApproveStatus'] = approveStatus!;
     }
-    
+
     print('📤 [TimeOffCreateDTO] toJson() - Final JSON:');
-    print('   - JsonAttachFiles: ${jsonAttachFiles.isEmpty ? "RỖNG" : "${jsonAttachFiles.length} chars"}');
+    print(
+      '   - JsonAttachFiles: ${jsonAttachFiles.isEmpty ? "RỖNG" : "${jsonAttachFiles.length} chars"}',
+    );
     if (jsonAttachFiles.isNotEmpty) {
       print('   - JsonAttachFiles value: $jsonAttachFiles');
     }
     if (approveStatus != null) {
       print('   - ApproveStatus: $approveStatus');
     }
-    
+
     return jsonData;
   }
 }
-

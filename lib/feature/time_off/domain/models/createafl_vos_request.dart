@@ -27,7 +27,7 @@ class CreateAflVosRequest {
   Map<String, dynamic> toJson() {
     return {
       'LeaveDateRange': leaveDateRange,
-      'TotalLeaveDay': totalLeaveDay.toString(), // Đảm bảo luôn là string
+      'TotalLeaveDay': totalLeaveDay.toString(),
       'LeavePlace': leavePlace,
       'Reason': reason,
       'IsOverseas': isOverseas,
@@ -38,21 +38,15 @@ class CreateAflVosRequest {
     };
   }
 
-  /// Factory method để map từ TimeOff sang CreateAflVosRequest
   factory CreateAflVosRequest.fromTimeOff({
     required TimeOff timeOff,
     required List<TimeOffProcess> processes,
 
-    /// approvalsOverride: danh sách ApprovalItem lấy từ API phê duyệt
-    /// (SendApproveResult.approvals). Hàm sẽ tự wrap thành List<ApprovalStep>
-    /// đúng format JSON:
-    /// "Approvals": [{ "Step": 0, "Ls_Approval": [ { ...ApprovalItem } ] }, ...]
     List<ApprovalItem>? approvalsOverride,
     DateTime? overrideFromDate,
     DateTime? overrideToDate,
     int? hrId,
   }) {
-    // 1. LeaveDateRange: dùng fromDate + LeaveTimes để suy ra endDate, kèm giờ
     final leaveDateRange = <List<String>>[];
     final totalDays =
         timeOff.details?.fold<double>(
@@ -71,7 +65,6 @@ class CreateAflVosRequest {
       totalLeaveDayNum = 0;
     }
 
-    // Đảm bảo luôn trả về string (0.5 -> "0.5", 1.0 -> "1")
     final totalLeaveDay = totalLeaveDayNum.toString().replaceAll(
       RegExp(r'\.0$'),
       '',
@@ -85,7 +78,6 @@ class CreateAflVosRequest {
       final computedEndDate = startDate.add(Duration(days: daysToAdd));
       final endDate = overrideToDate ?? timeOff.toDate ?? computedEndDate;
 
-      // Format có kèm giây: yyyy-MM-dd HH:mm:ss
       final formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
       final startStr = formatter.format(startDate);
       final endStr = formatter.format(endDate);
@@ -108,29 +100,60 @@ class CreateAflVosRequest {
       );
     }).toList();
 
-    // Build danh sách Approvals theo priority:
-    // 1. Nếu có approvalsOverride từ API → dùng, mỗi item = 1 step.
-    // 2. Nếu không có → build từ processes.
     final List<ApprovalStep> approvals;
     if (approvalsOverride != null && approvalsOverride.isNotEmpty) {
-      approvals = approvalsOverride.asMap().entries.map((entry) {
-        final index = entry.key;
-        final item = entry.value;
-        return ApprovalStep(step: index, lsApproval: [item]);
-      }).toList();
+      // Trường hợp đã có danh sách approval từ API send-approve
+      // → vẫn phải group theo ApproveNo của processes
+      final Map<int, List<ApprovalItem>> groupedByApproveNo = {};
+
+      for (
+        var i = 0;
+        i < approvalsOverride.length && i < processes.length;
+        i++
+      ) {
+        final approveNo = processes[i].approveNo;
+        final item = approvalsOverride[i];
+
+        groupedByApproveNo
+            .putIfAbsent(approveNo, () => <ApprovalItem>[])
+            .add(item);
+      }
+
+      final sortedKeys = groupedByApproveNo.keys.toList()..sort();
+      approvals = sortedKeys
+          .map(
+            (approveNo) => ApprovalStep(
+              step: approveNo,
+              lsApproval: groupedByApproveNo[approveNo]!,
+            ),
+          )
+          .toList();
     } else {
-      approvals = processes.asMap().entries.map((entry) {
-        final index = entry.key;
-        final process = entry.value;
+      final Map<int, List<ApprovalItem>> groupedByApproveNo = {};
+
+      for (final process in processes) {
         final approvalItem = ApprovalItem(
-          dutyType: 'MAIN',
+          dutyType: process.dutyType,
           name: process.fullName,
           email: process.email,
-          position: '', // Có thể cập nhật nếu backend trả thêm
-          vAppId: 0, // Mặc định 0, backend sẽ cập nhật nếu cần
+          position: process.nameJobTitle,
+          vAppId: 0,
         );
-        return ApprovalStep(step: index, lsApproval: [approvalItem]);
-      }).toList();
+
+        groupedByApproveNo
+            .putIfAbsent(process.approveNo, () => <ApprovalItem>[])
+            .add(approvalItem);
+      }
+
+      final sortedKeys = groupedByApproveNo.keys.toList()..sort();
+      approvals = sortedKeys
+          .map(
+            (approveNo) => ApprovalStep(
+              step: approveNo,
+              lsApproval: groupedByApproveNo[approveNo]!,
+            ),
+          )
+          .toList();
     }
 
     return CreateAflVosRequest(
@@ -141,7 +164,7 @@ class CreateAflVosRequest {
       isOverseas: isOverseas,
       attachments: attachments,
       vRegId: timeOff.vRegId,
-      hrId: timeOff.hrId ?? 1752,
+      hrId: hrId ?? timeOff.hrId ?? 1752,
       approvals: approvals,
     );
   }
@@ -233,7 +256,7 @@ class ApprovalItem {
       'Name': name,
       'Email': email,
       'Position': position,
-      'VAppId': vAppId ?? 0, // Luôn include VAppId, mặc định là 0
+      'VAppId': vAppId ?? 0,
     };
   }
 }
