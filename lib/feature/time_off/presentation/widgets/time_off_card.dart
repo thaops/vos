@@ -70,7 +70,7 @@ class TimeOffCard extends StatelessWidget {
               _buildInfoItem(
                 icon: Icons.description,
                 label: 'Phê duyệt',
-                value: timeOff.approvalProgressText,
+                value: timeOff.appoveProcess ?? '',
               ),
 
               SizedBox(height: 12.h),
@@ -82,12 +82,6 @@ class TimeOffCard extends StatelessWidget {
               SizedBox(height: 12.h),
 
               _buildInfoItem(
-                icon: Icons.note,
-                label: 'Mô tả chi tiết',
-                value: timeOff.description ?? 'Không có',
-              ),
-              SizedBox(height: 12.h),
-              _buildInfoItem(
                 icon: Icons.label_outline,
                 label: 'Lý do nghỉ',
                 value: _formatVacationType(),
@@ -98,7 +92,12 @@ class TimeOffCard extends StatelessWidget {
                 label: 'Nơi nghỉ',
                 value: timeOff.domIntName ?? 'Không có',
               ),
-
+              SizedBox(height: 12.h),
+          if (timeOff.description != null && timeOff.description!.isNotEmpty) _buildInfoItem(
+                icon: Icons.note,
+                label: 'Mô tả chi tiết',
+                value: timeOff.description ?? '',
+              ),
               // Footer: Action buttons
               SizedBox(height: 16.h),
               _buildActionButtons(),

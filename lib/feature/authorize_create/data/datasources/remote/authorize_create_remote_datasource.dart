@@ -112,16 +112,12 @@ class AuthorizeCreateRemoteDataSourceImpl
     String token,
     Map<String, dynamic> payload,
   ) async {
+    print("payload: $payload");
     return shareApiRepository.callShareUpdate<String>(
       functionCode: 'HR_AUTHORIZE_UPDATE',
       token: token,
       data: payload,
       parser: (json) {
-        // Response từ Share_Update có thể trả về:
-        // - String: "Cập nhật thành công" hoặc message
-        // - null: nếu không có data
-        // - Object: nếu có data object
-
         if (json == null) {
           return 'Cập nhật thành công';
         }
@@ -130,7 +126,6 @@ class AuthorizeCreateRemoteDataSourceImpl
           return json.isEmpty ? 'Cập nhật thành công' : json;
         }
 
-        // Nếu là object, lấy message hoặc convert sang string
         if (json is Map) {
           final message = json['Message'] as String?;
           if (message != null && message.isNotEmpty) {
@@ -138,7 +133,6 @@ class AuthorizeCreateRemoteDataSourceImpl
           }
         }
 
-        // Fallback: convert sang string
         return json.toString();
       },
     );

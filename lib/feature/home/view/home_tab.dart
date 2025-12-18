@@ -10,6 +10,7 @@ import 'package:vos_flutter/feature/home/binding/home_function_binding.dart';
 import 'package:vos_flutter/feature/home/presentation/controller/home_function_controller.dart';
 import 'package:vos_flutter/feature/home/presentation/widgets/banner_section_widget.dart';
 import 'package:vos_flutter/feature/home/presentation/widgets/home_functions_section_widget.dart';
+import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
@@ -36,6 +37,11 @@ class _HomeTabState extends State<HomeTab> {
     super.initState();
     if (!Get.isRegistered<BannerController>()) {
       BannerBinding().dependencies();
+    }
+
+    // Ensure profile controller is available so we can show user name/avatar
+    if (!Get.isRegistered<ProfileController>()) {
+      ProfileBinding().dependencies();
     }
 
     if (!Get.isRegistered<HomeFunctionController>()) {

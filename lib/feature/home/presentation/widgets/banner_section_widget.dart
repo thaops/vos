@@ -74,10 +74,16 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
     // Tính chiều cao banner
     final screenHeight = MediaQuery.of(context).size.height;
     final bannerHeight = screenHeight * 0.28;
+    final shouldShowUserOverlay =
+        widget.userName != null && widget.userName!.isNotEmpty;
 
     // Loading state: KHÔNG hiển thị spinner (tránh xấu UI khi hot restart/reload)
     if (widget.isLoading && widget.banners.isEmpty) {
-      return const BannerPlaceholderWidget();
+      return _buildPlaceholderWithOverlay(
+        context: context,
+        bannerHeight: bannerHeight,
+        shouldShowUserOverlay: shouldShowUserOverlay,
+      );
     }
 
     // Lọc banners hợp lệ
@@ -87,7 +93,11 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
 
     // Empty state (ưu tiên cache: nếu có banner thì vẫn hiển thị dù error)
     if (validBanners.isEmpty) {
-      return const BannerPlaceholderWidget();
+      return _buildPlaceholderWithOverlay(
+        context: context,
+        bannerHeight: bannerHeight,
+        shouldShowUserOverlay: shouldShowUserOverlay,
+      );
     }
 
     // ✅ Flutter thuần: Render CarouselSlider với cached banners
@@ -95,6 +105,7 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
       context: context,
       bannerHeight: bannerHeight,
       validBanners: _cachedBanners.isEmpty ? validBanners : _cachedBanners,
+      shouldShowUserOverlay: shouldShowUserOverlay,
     );
   }
 
@@ -102,6 +113,7 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
     required BuildContext context,
     required double bannerHeight,
     required List<Banner> validBanners,
+    required bool shouldShowUserOverlay,
   }) {
     final bannerCount = validBanners.length;
 
@@ -168,54 +180,10 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
           ),
         ),
 
-        // Gradient overlay từ trên xuống để tạo đổ bóng mạnh hơn
-        Positioned.fill(
-          child: IgnorePointer(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.5),
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.1),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.2, 0.5, 0.8],
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        // Overlay: Avatar + Tên người dùng (góc trái trên) - Flutter thuần
-        if (widget.userName != null && widget.userName!.isNotEmpty)
-          Positioned(
-            left: 16.w,
-            top: MediaQuery.of(context).padding.top + 16.h,
-            child: _buildUserOverlay(),
-          ),
-
-        // Icon thông báo (góc phải trên)
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 8.h,
-          right: 16.w,
-          child: IconButton(
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: Colors.white,
-              size: 24.sp,
-            ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Tính năng thông báo đang được phát triển'),
-                ),
-              );
-            },
-          ),
-        ),
+        _buildGradientOverlay(),
+        if (shouldShowUserOverlay)
+          _buildUserOverlayPositioned(context: context),
+        _buildNotificationButton(context),
 
         // Banner indicator (dots) ở dưới cùng
         if (validBanners.length > 1)
@@ -229,6 +197,73 @@ class _BannerSectionWidgetState extends State<BannerSectionWidget> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildPlaceholderWithOverlay({
+    required BuildContext context,
+    required double bannerHeight,
+    required bool shouldShowUserOverlay,
+  }) {
+    return Stack(
+      children: [
+        BannerPlaceholderWidget.withHeight(height: bannerHeight),
+        _buildGradientOverlay(),
+        if (shouldShowUserOverlay)
+          _buildUserOverlayPositioned(context: context),
+        _buildNotificationButton(context),
+      ],
+    );
+  }
+
+  Widget _buildGradientOverlay() {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withOpacity(0.5),
+                Colors.black.withOpacity(0.3),
+                Colors.black.withOpacity(0.1),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.2, 0.5, 0.8],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationButton(BuildContext context) {
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 8.h,
+      right: 16.w,
+      child: IconButton(
+        icon: Icon(
+          Icons.notifications_outlined,
+          color: Colors.white,
+          size: 24.sp,
+        ),
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Tính năng thông báo đang được phát triển'),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Positioned _buildUserOverlayPositioned({required BuildContext context}) {
+    return Positioned(
+      left: 16.w,
+      top: MediaQuery.of(context).padding.top + 16.h,
+      child: _buildUserOverlay(),
     );
   }
 

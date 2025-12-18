@@ -183,8 +183,6 @@ class ProfileController extends GetxController {
 
       await logoutUsecase.call();
     } catch (e) {
-      print('❌ Logout error: $e');
-
       try {
         final box = Hive.box('google_user_box');
         await box.delete('current_user');

@@ -36,6 +36,7 @@ class TimeOff {
   final int? idJobTitle;
   final String? codeJobTitle;
   final int? idLevelTitle;
+  final String? nameJobTitle;
   final String? nameLevelTitle;
   final double? phepTon; // Tồn phép
   final double? overtimeTon; // Tồn OT
@@ -76,9 +77,9 @@ class TimeOff {
     this.nameLevelTitle,
     this.phepTon,
     this.overtimeTon,
+    this.nameJobTitle
   });
 
-  // Tổng số ngày/giờ nghỉ từ chi tiết, fallback về vacationNo nếu không có chi tiết
   double get totalTimeOff {
     final detailList = details;
     if (detailList == null || detailList.isEmpty) {
@@ -87,14 +88,12 @@ class TimeOff {
     return detailList.fold<double>(0, (sum, item) => sum + item.soLuong);
   }
 
-  // Helper để check có thể hủy không
   bool get canCancel {
     return approveStatus != 'OK' &&
         appoveProcessName != null &&
         !appoveProcessName!.contains('Đã phê duyệt');
   }
 
-  // Helper để lấy status color
   Color get statusColor {
     if (approveStatus == 'OK' || statusName?.contains('Đã phê duyệt') == true) {
       return Colors.green.shade300; // Xanh nhạt - Đã phê duyệt
@@ -109,18 +108,15 @@ class TimeOff {
     return Colors.grey.shade300; // Mặc định
   }
 
-  // Helper để format approval progress
   String get approvalProgressText {
     if (processes == null || processes!.isEmpty) {
       return appoveProcessName ?? 'Chưa có thông tin';
     }
 
-    // Tránh case status có ký tự trắng lạ (newline, tab, NBSP...) làm sai match -> luôn 0/x
     String _normalize(String value) =>
         value.replaceAll(RegExp(r'\s+'), '').trim().toLowerCase();
 
-    /// Canonicalize status về bộ mã chuẩn: -- / ok / in / fn / rj / bk
-    /// Thực tế API đang trả "YES/NO" ở ls_process cho một số môi trường.
+
     String canonicalStatus(String raw) {
       final s = _normalize(raw);
       switch (s) {
@@ -145,12 +141,10 @@ class TimeOff {
         .toList();
     final totalCount = sortedProcesses.length;
 
-    // Theo status mapping: fn = đã phê duyệt, in/ok = đang/chưa phê duyệt, -- = chưa chuyển
     final approvedCount = sortedProcesses
         .where((p) => canonicalStatus(p.status) == 'fn')
         .length;
 
-    // Debug log (chỉ chạy debug mode, và chỉ log 1 lần / vRegId để tránh spam)
     assert(() {
       if (_approvalProgressLoggedVRegIds.add(vRegId)) {
         final raw = sortedProcesses

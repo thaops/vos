@@ -106,7 +106,7 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
   String buildStatusTag(String status, int index) {
     switch (status.toLowerCase()) {
       case '--':
-        return index == 0 ? 'Soạn thảo' : 'Chưa phê duyệt';
+        return index == 0 ? 'Soạn thảo' : 'Chờ phê duyệt';
       case 'yes':
         return index == 0 ? 'Khởi tạo' : 'Đã phê duyệt';
       case 'no':
@@ -118,10 +118,10 @@ class TimeOffDetailController extends BaseController with ApiResultMixin {
     }
   }
 
-  Color buildStatusColor(String status) {
+  Color buildStatusColor(String status, [int index = 0]) {
     switch (status.toLowerCase()) {
       case '--':
-        return Colors.grey;
+        return index == 0 ? Colors.grey : Colors.orange;
       case 'yes':
         return Colors.green;
       case 'no':
