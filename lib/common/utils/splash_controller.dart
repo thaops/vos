@@ -14,6 +14,7 @@ import 'package:vos_flutter/common/utils/check_awaiting_services.dart';
 import 'package:vos_flutter/feature/login/data/models/google_user_dto.dart';
 import 'package:vos_flutter/router/app_router.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
+import 'package:vos_flutter/common/services/notification_handler.dart';
 
 class SplashController extends GetxController {
   final OTAUpdateService _otaService = OTAUpdateService();
@@ -261,9 +262,12 @@ class SplashController extends GetxController {
   // ✅ REMOVED: _checkAuthenticationAndNavigate() và _checkGoogleAuth()
   // Đã thay thế bằng _checkAuthQuick() - chỉ check local storage, không refresh token
 
-  /// Navigate to main app
   Future<void> _navigateToMain() async {
     await Get.offAllNamed(AppRouter.main);
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      NotificationHandler().handlePendingAfterLogin();
+    });
   }
 
   /// Navigate to login

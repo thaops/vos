@@ -110,6 +110,11 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     final timeOffQuantityText = _formatTimeOffQuantity(timeOff);
 
     return Obx(() {
+      // ✅ Safe check ProfileController trước khi sử dụng
+      if (!Get.isRegistered<ProfileController>()) {
+        return const SizedBox.shrink();
+      }
+
       final profileController = Get.find<ProfileController>();
       final personalVacation = profileController.personalVacation.value;
       final userProfile = profileController.userProfile.value;
@@ -153,7 +158,10 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
           _buildInfoRow(label: "Email", value: creatorProcess?.email ?? ''),
         ),
         wrapItem(
-          _buildInfoRow(label: 'Chức danh', value: creatorProcess?.nameJobTitle ?? ''),
+          _buildInfoRow(
+            label: 'Chức danh',
+            value: creatorProcess?.nameJobTitle ?? '',
+          ),
         ),
         wrapItem(
           _buildInfoRow(
@@ -161,10 +169,11 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
             value: timeOff.level2Name ?? '',
           ),
         ),
-                wrapItem(
+        wrapItem(
           _buildInfoRow(
             label: 'Thời gian nghỉ',
-            value: "${(timeOffQuantityText)} ngày (${_formatDateRange(timeOff)})",
+            value:
+                "${(timeOffQuantityText)} ngày (${_formatDateRange(timeOff)})",
           ),
         ),
         wrapItem(
@@ -176,13 +185,14 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         wrapItem(
           _buildInfoRow(label: 'Nơi nghỉ', value: timeOff.domIntName ?? 'N/A'),
         ),
-      if (timeOff.description != null && timeOff.description!.isNotEmpty) wrapItem(
-          _buildInfoRow(
-            label: 'Mô tả chi tiết',
-            value: timeOff.description ?? '',
-            isMultiline: true,
+        if (timeOff.description != null && timeOff.description!.isNotEmpty)
+          wrapItem(
+            _buildInfoRow(
+              label: 'Mô tả chi tiết',
+              value: timeOff.description ?? '',
+              isMultiline: true,
+            ),
           ),
-        ),
       ];
 
       final paidLeaveRemain = personalVacation?.paidLeaveRemain;
@@ -218,12 +228,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
         allItems.add(wrapItem(buildSummaryRow(summaryStats), width: fullWidth));
       }
 
-
-      return Wrap(
-        spacing: 12.w,
-        runSpacing: 16.h,
-        children: allItems,
-      );
+      return Wrap(spacing: 12.w, runSpacing: 16.h, children: allItems);
     });
   }
 
@@ -271,7 +276,6 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
               totalStepsFromProcess = int.tryParse(match.group(0)!);
             }
           }
-
 
           final groupedProcesses = grouped.values.toList();
           final totalSteps = max(
@@ -453,19 +457,21 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                     ),
                   ),
                   process.dutyType == 'SUB'
-                      ?  Container(
-                        padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4.r),
-                              border: Border.all(
-                                color: Colors.grey,
-                                width: 1.w,
-                              ),
+                      ? Container(
+                          padding: EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4.r),
+                            border: Border.all(color: Colors.grey, width: 1.w),
+                          ),
+                          child: Text(
+                            'Uỷ quyền',
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: Colors.grey,
                             ),
-                            child: Text('Uỷ quyền', style: TextStyle(fontSize: 10.sp, color: Colors.grey),),
-                          )
-                        
+                          ),
+                        )
                       : SizedBox.shrink(),
                 ],
               ),
@@ -518,19 +524,24 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(width: 110.w, child: TextWidget(
-          text: '$label:',
-          fontSize: 13,
-          color: TimeOffCreateColors.textSecondary,
-          fontWeight: FontWeight.w400,
-        )),
+        SizedBox(
+          width: 110.w,
+          child: TextWidget(
+            text: '$label:',
+            fontSize: 13,
+            color: TimeOffCreateColors.textSecondary,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
         SizedBox(width: 8.w),
-       Flexible(child: TextWidget(
-          text: value,
-          fontSize: 13,
-          color: TimeOffCreateColors.textPrimary,
-          fontWeight: FontWeight.w600,
-        )),
+        Flexible(
+          child: TextWidget(
+            text: value,
+            fontSize: 13,
+            color: TimeOffCreateColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -567,6 +578,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       ],
     );
   }
+
   String _formatDateRange(TimeOff timeOff) {
     final fromDate = timeOff.fromDate;
     final toDate = timeOff.toDate;

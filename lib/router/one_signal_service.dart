@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:vos_flutter/common/services/notification_handler.dart';
 import 'package:vos_flutter/common/services/push_token_manager.dart';
@@ -9,57 +8,51 @@ class OneSignalService {
   factory OneSignalService() => _instance;
   OneSignalService._internal();
 
-  static OSNotificationClickEvent? _cachedClickEvent;
-  static bool _notificationHandled = false;
   bool _initialized = false;
   bool _listenerRegistered = false;
 
   final PushTokenManager _tokenManager = PushTokenManager();
   final NotificationHandler _notificationHandler = NotificationHandler();
 
-  /// Khởi tạo OneSignal service
   Future<void> init() async {
     if (_initialized) return;
-    _initialized = true;
 
     OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
     OneSignal.initialize(_appId);
 
-    await _setupUserTags();
-    await _requestPermission();
-    await OneSignal.User.pushSubscription.optIn();
-
-    OneSignal.Notifications.lifecycleInit();
-
-    // Chỉ đăng ký listener một lần để tránh duplicate
     if (!_listenerRegistered) {
       OneSignal.Notifications.addClickListener(
         _notificationHandler.handleNotificationClick,
       );
       _listenerRegistered = true;
     }
+
+    OneSignal.Notifications.lifecycleInit();
+
+    _initialized = true;
+
+    _setupUserTags();
+    _requestPermission();
+    OneSignal.User.pushSubscription.optIn();
   }
 
-  Future<void> _setupUserTags() async {
-    await OneSignal.User.addTagWithKey("test_user", "true");
-    await OneSignal.User.addTags({"test_user": "true"});
+  void _setupUserTags() {
+    Future.microtask(() async {
+      try {
+        await OneSignal.User.addTagWithKey("test_user", "true");
+        await OneSignal.User.addTags({"test_user": "true"});
+      } catch (_) {}
+    });
   }
 
-  Future<void> _requestPermission() async {
-    if (!OneSignal.Notifications.permission) {
-      await OneSignal.Notifications.requestPermission(true);
-    }
-  }
-
-  Future<void> handlePendingNavigation() async {
-    if (!_notificationHandled && _cachedClickEvent != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await Future.delayed(Duration(milliseconds: 500));
-        await _notificationHandler.handleNotificationClick(_cachedClickEvent!);
-        _cachedClickEvent = null;
-        _notificationHandled = true;
-      });
-    }
+  void _requestPermission() {
+    Future.microtask(() async {
+      try {
+        if (!OneSignal.Notifications.permission) {
+          await OneSignal.Notifications.requestPermission(true);
+        }
+      } catch (_) {}
+    });
   }
 
   Future<void> checkPermissionStatus() async {

@@ -13,6 +13,8 @@ import 'package:vos_flutter/feature/time_off/data/repository_impl/time_off_form_
 import 'package:vos_flutter/feature/time_off/domain/repositories/time_off_form_repository.dart';
 import 'package:vos_flutter/feature/time_off/domain/usecases/send_approve_request_usecase.dart';
 import 'package:vos_flutter/feature/time_off/domain/usecases/update_time_off_usecase.dart';
+import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
+import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 
 class TimeOffDetailBinding extends Bindings {
   @override
@@ -82,6 +84,11 @@ class TimeOffDetailBinding extends Bindings {
         repository: Get.find<TimeOffFormRepository>(),
       ),
     );
+
+    // ✅ Đảm bảo ProfileController được register (cần cho time_off_detail_screen)
+    if (!Get.isRegistered<ProfileController>()) {
+      ProfileBinding().dependencies();
+    }
 
     // Controller với args
     Get.lazyPut<TimeOffDetailController>(

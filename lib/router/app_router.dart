@@ -29,6 +29,7 @@ import 'package:vos_flutter/feature/time_off_update/presentation/view/time_off_u
 import 'package:vos_flutter/feature/vacation/binding/vacation_binding.dart';
 import 'package:vos_flutter/feature/vacation/presentation/view/vacation_screen.dart';
 import 'package:vos_flutter/router/bottom_navigation_main.dart';
+import 'package:vos_flutter/router/main_binding.dart';
 
 class AppRouter {
   // Route cha
@@ -67,14 +68,10 @@ class AppRouter {
 
   static final List<GetPage> routes = [
     // Auth
-    GetPage(
-      name: login,
-      page: _loginWrapper,
-      binding: LoginBinding(),
-    ),
+    GetPage(name: login, page: _loginWrapper, binding: LoginBinding()),
 
     // Main
-    GetPage(name: main, page: () => MainScreen()),
+    GetPage(name: main, page: () => MainScreen(), binding: MainBinding()),
 
     // Độc lập
     GetPage(
@@ -157,16 +154,17 @@ class _LoginWrapperScreenState extends State<_LoginWrapperScreen> {
 
   Future<void> _checkAwaiting() async {
     try {
-      final checkAwaiting = await CheckAwaitingServices.createCheckAwaitingServices();
+      final checkAwaiting =
+          await CheckAwaitingServices.createCheckAwaitingServices();
       final isAwaiting = await checkAwaiting.getawaiting();
-      
+
       if (isAwaiting) {
         if (!Get.isRegistered<ProfileController>()) {
           ProfileBinding().dependencies();
           await Future.delayed(const Duration(milliseconds: 100));
         }
       }
-      
+
       if (mounted) {
         setState(() {
           _shouldShowLinkScreen = isAwaiting;
@@ -186,13 +184,11 @@ class _LoginWrapperScreenState extends State<_LoginWrapperScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return _shouldShowLinkScreen ? const LinkViagsScreen() : const LoginScreen();
+    return _shouldShowLinkScreen
+        ? const LinkViagsScreen()
+        : const LoginScreen();
   }
 }

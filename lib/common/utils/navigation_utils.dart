@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:vos_flutter/common/constants/storage_keys.dart';
+import 'package:vos_flutter/common/services/notification/notification_intent.dart';
+import 'package:vos_flutter/common/services/notification/pending_intent_storage.dart';
 import 'package:vos_flutter/common/utils/auth_utils.dart';
 import 'package:vos_flutter/common/utils/notification_utils.dart';
 import 'package:vos_flutter/router/app_router.dart';
@@ -21,34 +21,25 @@ class NavigationUtils {
     while (retryCount < maxRetries) {
       final context = navigatorKey.currentContext;
       if (context == null) {
-        print(
-          "❌ Navigator context is null! Retrying ($retryCount/$maxRetries)",
-        );
         retryCount++;
         await Future.delayed(Duration(milliseconds: 500));
         continue;
       }
 
       final routeInfo = _getRouteInfo(type, id);
-      print("🚀 Navigating to: ${routeInfo.route} with id: $id");
 
       try {
         final loggedIn = await AuthUtils.isLoggedIn();
         if (!loggedIn) {
-          // Lưu pending nếu là timeOffDetail
           if (routeInfo.route == AppRouter.timeOffDetail &&
               routeInfo.arguments is TimeOffDetailArgs) {
             final args = routeInfo.arguments as TimeOffDetailArgs;
-            GetStorage().write(
-              StorageKeys.pendingTimeOffDetailVRegId,
-              args.vRegId,
-            );
+            await PendingIntentStorage().save(TimeOffDetailIntent(args.vRegId));
           }
           await Get.offAllNamed(AppRouter.login);
           return;
         }
 
-        // Ensure main trước khi đi sâu
         if (Get.currentRoute != AppRouter.main) {
           await Get.offAllNamed(AppRouter.main);
           await Future.delayed(const Duration(milliseconds: 300));
@@ -60,12 +51,10 @@ class NavigationUtils {
           preventDuplicates: true,
         );
         return;
-      } catch (e) {
-        print("❌ Navigation error: $e");
+      } catch (_) {
         return;
       }
     }
-    print("❌ Failed to navigate after $maxRetries retries");
   }
 
   static ({String route, dynamic arguments}) _getRouteInfo(
@@ -74,7 +63,6 @@ class NavigationUtils {
   ) {
     switch (type) {
       case NotificationType.leaveRequest:
-        // Parse id từ string sang int và điều hướng trực tiếp đến detail
         final vRegId = int.tryParse(id);
         if (vRegId != null) {
           return (
@@ -82,12 +70,11 @@ class NavigationUtils {
             arguments: TimeOffDetailArgs(vRegId: vRegId),
           );
         } else {
-          print("❌ Không thể parse id thành int: $id");
           return (route: AppRouter.main, arguments: null);
         }
-      case NotificationType.task: // Xử lý trường hợp thông báo nhiệm vụ
+      case NotificationType.task:
         return (route: AppRouter.profile, arguments: {'taskId': id});
-      default: // Xử lý các loại thông báo khác hoặc không xác định
+      default:
         return (route: AppRouter.main, arguments: null);
     }
   }

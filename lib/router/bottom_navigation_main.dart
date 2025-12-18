@@ -2,20 +2,14 @@ import 'dart:io' show Platform;
 
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:vos_flutter/common/constants/storage_keys.dart';
 import 'package:vos_flutter/core/configs/theme/app_colors.dart';
-import 'package:vos_flutter/feature/time_off_detail/domain/models/time_off_detail_args.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
-import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:vos_flutter/feature/profile/presentation/view/profile_screen.dart';
 import 'package:vos_flutter/feature/home/view/home_tab.dart';
 import 'package:vos_flutter/feature/news/presentation/view/news_screen.dart';
-import 'package:vos_flutter/feature/news/binding/news_binding.dart';
-import 'package:vos_flutter/feature/news/presentation/controller/news_controller.dart';
-import 'package:vos_flutter/router/app_router.dart';
-// import 'package:vos_flutter/common/services/navigation_service.dart'; // DISABLED: Module deleted
+import 'package:vos_flutter/common/services/notification_handler.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -29,48 +23,17 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // Chỉ tạo controller nếu chưa tồn tại
-    // Tránh tạo nhiều instance gây crash Syncfusion Chart
-    if (!Get.isRegistered<ProfileController>()) {
-      ProfileBinding().dependencies();
-    }
-
-    // Khởi tạo NewsBinding để đăng ký NewsController
-    if (!Get.isRegistered<NewsController>()) {
-      NewsBinding().dependencies();
-    }
+    // ✅ Controllers đã được đăng ký bởi MainBinding (gắn vào route /main)
+    // Không cần gọi binding ở đây nữa để tránh SmartManagement dọn nhầm controller
 
     // Mặc định _selectedIndex = 0
     // Sẽ được cập nhật lại trong build() khi ProfileController load xong
     _selectedIndex = 0;
 
-    // ✅ Consume pending navigation từ notification (nếu có)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final pending = _storage.read(StorageKeys.pendingTimeOffDetailVRegId);
-      if (pending == null) return;
-
-      final vRegId = pending is int ? pending : int.tryParse(pending.toString());
-      if (vRegId == null) {
-        _storage.remove(StorageKeys.pendingTimeOffDetailVRegId);
-        return;
-      }
-
-      // Chỉ xử lý khi đang ở main để tránh xung đột navigation
-      if (Get.currentRoute != AppRouter.main) return;
-
-      _storage.remove(StorageKeys.pendingTimeOffDetailVRegId);
-      await Future.delayed(const Duration(milliseconds: 250));
-
-      if (Get.currentRoute == AppRouter.timeOffDetail) return;
-
-      await Get.toNamed(
-        AppRouter.timeOffDetail,
-        arguments: TimeOffDetailArgs(vRegId: vRegId),
-        preventDuplicates: true,
-      );
+      await Future.delayed(const Duration(milliseconds: 300));
+      NotificationHandler().handlePendingAfterLogin();
     });
-
-    // NavigationService.setTabChangeCallback(_onTabTapped); // DISABLED: Module deleted
   }
 
   // Lấy danh sách screens dựa trên isEmployee

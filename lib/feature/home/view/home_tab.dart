@@ -3,14 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Banner;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:vos_flutter/feature/banner/binding/banner_binding.dart';
 import 'package:vos_flutter/feature/banner/domain/models/banner.dart';
 import 'package:vos_flutter/feature/banner/presentation/controller/banner_controller.dart';
-import 'package:vos_flutter/feature/home/binding/home_function_binding.dart';
 import 'package:vos_flutter/feature/home/presentation/controller/home_function_controller.dart';
 import 'package:vos_flutter/feature/home/presentation/widgets/banner_section_widget.dart';
 import 'package:vos_flutter/feature/home/presentation/widgets/home_functions_section_widget.dart';
-import 'package:vos_flutter/feature/profile/binding/profile_binding.dart';
 import 'package:vos_flutter/feature/profile/presentation/controller/profile_controller.dart';
 import 'package:vos_flutter/router/app_router.dart';
 
@@ -35,18 +32,8 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void initState() {
     super.initState();
-    if (!Get.isRegistered<BannerController>()) {
-      BannerBinding().dependencies();
-    }
-
-    // Ensure profile controller is available so we can show user name/avatar
-    if (!Get.isRegistered<ProfileController>()) {
-      ProfileBinding().dependencies();
-    }
-
-    if (!Get.isRegistered<HomeFunctionController>()) {
-      HomeFunctionBinding().dependencies();
-    }
+    // ✅ Controllers đã được đăng ký bởi MainBinding (gắn vào route /main)
+    // Không cần gọi binding ở đây nữa để tránh SmartManagement dọn nhầm controller
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();

@@ -19,10 +19,68 @@ class _HomeFunctionsSectionWidgetState
   // Map để quản lý trạng thái expand/collapse của các section
   final Map<String, bool> _expandedSections = {};
 
+  /// ✅ Loading placeholder - hiển thị skeleton thay vì trắng hoàn toàn
+  Widget _buildLoadingPlaceholder() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 24.h),
+      child: Column(
+        children: [
+          // Skeleton cho section header
+          _buildSkeletonCard(),
+          SizedBox(height: 12.h),
+          _buildSkeletonCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title skeleton
+          Container(
+            width: 120.w,
+            height: 16.h,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          // Items row skeleton
+          Row(
+            children: List.generate(
+              3,
+              (index) => Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: index < 2 ? 8.w : 0),
+                  height: 60.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // ✅ Controller chưa sẵn sàng (hiếm khi xảy ra vì MainBinding đã đăng ký)
     if (!Get.isRegistered<HomeFunctionController>()) {
-      return const SizedBox.shrink();
+      return _buildLoadingPlaceholder();
     }
 
     final controller = Get.find<HomeFunctionController>();
@@ -32,8 +90,7 @@ class _HomeFunctionsSectionWidgetState
 
       // Loading state (chỉ show loader khi KHÔNG có cache)
       if (controller.isLoading.value && !hasCache) {
-        // ✅ Không hiển thị spinner (tránh xấu UI khi hot restart/reload)
-        return const SizedBox.shrink();
+        return _buildLoadingPlaceholder();
       }
 
       // Error state (ưu tiên cache: nếu có data thì vẫn hiển thị)
@@ -44,16 +101,16 @@ class _HomeFunctionsSectionWidgetState
           child: Center(
             child: Text(
               controller.error.value,
-              style: TextStyle(color: Colors.red),
+              style: const TextStyle(color: Colors.red),
             ),
           ),
         );
       }
 
-      // Empty state
+      // Empty state (đợi data load xong)
       if (controller.sessions.isEmpty) {
         print('⚠️ Home function sessions list is empty');
-        return const SizedBox.shrink();
+        return _buildLoadingPlaceholder();
       }
 
       print(

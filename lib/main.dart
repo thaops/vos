@@ -64,15 +64,15 @@ void main() async {
 
   try {
     await dotenv.load(fileName: ".env");
-  } catch (e) {
-    // Silent fail
-  }
+  } catch (e) {}
 
   await FileLogger.initialize();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await _initializeCriticalServices();
+
+  OneSignalService().init();
 
   runApp(
     CalendarControllerProvider(
@@ -142,7 +142,6 @@ Future<void> _initializeNonCriticalServices() async {
         DeviceOrientation.portraitDown,
       ]),
       generateUUID(),
-      OneSignalService().init(),
     ]);
 
     _lazyLoadCheckAwaitingApproval();
@@ -163,7 +162,11 @@ void _lazyLoadCheckAwaitingApproval() {
 
       final result = await checkAwaitingApproval
           .checkAwaitingApproval(
-            platform: Platform.isIOS ? "iOS" : Platform.isAndroid ? "Android" : "MacOS",
+            platform: Platform.isIOS
+                ? "iOS"
+                : Platform.isAndroid
+                ? "Android"
+                : "MacOS",
             appId: packageInfo.packageName,
             appBuild: packageInfo.buildNumber,
             appVersion: packageInfo.version,
@@ -302,8 +305,7 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
-    final isDesktop =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
+    final isDesktop = !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 
     return GetMaterialApp(
       builder: (context, child) {
