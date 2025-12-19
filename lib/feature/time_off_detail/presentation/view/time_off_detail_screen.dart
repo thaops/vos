@@ -482,37 +482,31 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
     );
   }
 
-  String _resolveGroupStatus(List<TimeOffProcess> processes) {
-    if (processes.isEmpty) return '--';
+String _resolveGroupStatus(List<TimeOffProcess> processes) {
+  if (processes.isEmpty) return '--';
 
-    final statuses = processes
-        .map((p) => (p.status).toLowerCase().trim())
-        .toList();
+  final statuses = processes
+      .map((p) => (p.status).toLowerCase().trim())
+      .toList();
 
-    final bool allDash = statuses.every((s) => s == '--');
-    final bool allYes = statuses.every((s) => s == 'yes');
-    final bool hasNo = statuses.contains('no');
-    final bool hasYes = statuses.contains('yes');
-    final bool hasDash = statuses.contains('--');
+  final bool allDash = statuses.every((s) => s == '--');
+  final bool hasNo = statuses.contains('no');
+  final bool hasYes = statuses.contains('yes');
 
-    if (allDash) {
-      return '--';
-    }
-
-    if (hasNo) {
-      return 'no';
-    }
-
-    if (allYes) {
-      return 'yes';
-    }
-
-    if (hasYes && hasDash) {
-      return 'IN';
-    }
-
+  if (allDash) {
     return '--';
   }
+
+  if (hasNo) {
+    return 'no';
+  }
+
+  if (hasYes) {
+    return 'yes';
+  }
+
+  return '--';
+}
 
   Widget _buildInfoRow({
     required String label,
