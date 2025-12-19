@@ -100,10 +100,11 @@ class CreateAflVosRequest {
       );
     }).toList();
 
+    final sortedProcesses = [...processes]
+      ..sort((a, b) => a.approveNo.compareTo(b.approveNo));
+
     final List<ApprovalStep> approvals;
     if (approvalsOverride != null && approvalsOverride.isNotEmpty) {
-      // Trường hợp đã có danh sách approval từ API send-approve
-      // → vẫn phải group theo ApproveNo của processes
       final Map<int, List<ApprovalItem>> groupedByApproveNo = {};
 
       for (
@@ -131,7 +132,7 @@ class CreateAflVosRequest {
     } else {
       final Map<int, List<ApprovalItem>> groupedByApproveNo = {};
 
-      for (final process in processes) {
+      for (final process in sortedProcesses) {
         final approvalItem = ApprovalItem(
           dutyType: process.dutyType,
           name: process.fullName,
