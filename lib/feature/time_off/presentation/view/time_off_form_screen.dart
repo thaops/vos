@@ -20,7 +20,6 @@ class TimeOffFormScreen extends GetView<TimeOffFormController> {
   final bool enableOpenUploaded;
 
   final String daysHeaderText;
-  final double daysTotalWidth;
 
   final GlobalKey _leaveTypeKey = GlobalKey();
   final GlobalKey _reasonKey = GlobalKey();
@@ -31,7 +30,6 @@ class TimeOffFormScreen extends GetView<TimeOffFormController> {
     required this.controllerTag,
     required this.enableOpenUploaded,
     required this.daysHeaderText,
-    required this.daysTotalWidth,
   });
 
   @override
@@ -169,7 +167,6 @@ class TimeOffFormScreen extends GetView<TimeOffFormController> {
                               onDecrement: controller.decrementDays,
                               onChangeDays: controller.updateDays,
                               daysHeaderText: daysHeaderText,
-                              totalWidth: daysTotalWidth,
                             ),
                           ),
                           SizedBox(

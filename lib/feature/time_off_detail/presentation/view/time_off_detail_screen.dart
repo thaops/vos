@@ -332,14 +332,17 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
       padding: EdgeInsets.all(12.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           // Step header
           Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(
                   stepHeader,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15.sp,
@@ -351,7 +354,7 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
               SizedBox(width: 8.w),
               // Status tag
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
                 decoration: BoxDecoration(
                   color: controller
                       .buildStatusColor(groupStatus, index)
@@ -398,16 +401,16 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                     height: 40.w,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.grey.withOpacity(0.1),
+                      color: AppColors.black.withOpacity(0.1),
                       border: Border.all(
-                        color: AppColors.grey.withOpacity(0.2),
+                        color: AppColors.black.withOpacity(0.2),
                         width: 1.w,
                       ),
                     ),
                     child: Icon(
                       Icons.person,
                       size: 22.sp,
-                      color: AppColors.grey,
+                      color: AppColors.black.withOpacity(0.5),
                     ),
                   ),
                   SizedBox(width: 12.w),
@@ -462,13 +465,13 @@ class TimeOffDetailScreen extends GetView<TimeOffDetailController> {
                           decoration: BoxDecoration(
                             color: Colors.grey.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4.r),
-                            border: Border.all(color: Colors.grey, width: 1.w),
+                            border: Border.all(color: Colors.black.withOpacity(0.7), width: 1.w),
                           ),
                           child: Text(
                             'Uỷ quyền',
                             style: TextStyle(
                               fontSize: 10.sp,
-                              color: Colors.grey,
+                              color: Colors.black.withOpacity(0.7),
                             ),
                           ),
                         )

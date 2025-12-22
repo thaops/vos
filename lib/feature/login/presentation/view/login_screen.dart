@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vos_flutter/common/img/img.dart';
@@ -60,7 +62,8 @@ class LoginScreen extends StatelessWidget {
                     SizedBox(height: isTablet ? 60.h : 48.h),
                     _buildWelcomeSection(controller, isTablet),
                     SizedBox(height: 32.h),
-                    _buildGoogleSignInButton(controller, isTablet),
+                    if (!Platform.isMacOS) _buildGoogleSignInButton(controller, isTablet),
+                    if (Platform.isMacOS) _buildMacOSNotSupportedMessage(isTablet),
                   ],
                 ),
               ),
@@ -189,5 +192,44 @@ class LoginScreen extends StatelessWidget {
         ),
       );
     });
+  }
+
+  Widget _buildMacOSNotSupportedMessage(bool isTablet) {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.orange[200]!, width: 1),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.info_outline,
+            color: Colors.orange[700],
+            size: isTablet ? 32.sp : 28.sp,
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            'Google Sign In không khả dụng trên macOS',
+            style: TextStyle(
+              fontSize: isTablet ? 16.sp : 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.orange[900],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Vui lòng sử dụng phiên bản iOS hoặc Android để đăng nhập',
+            style: TextStyle(
+              fontSize: isTablet ? 14.sp : 12.sp,
+              color: Colors.orange[800],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -160,19 +160,18 @@ class TimeOffCard extends StatelessWidget {
     );
   }
 
-  /// Map màu theo code trạng thái (ưu tiên các code từ API)
   (Color, Color) _statusColors(String code) {
     switch (code) {
       case '--': // Chưa chuyển cho cán bộ phê duyệt
         return (const Color(0xFFF5F5F5), const Color(0xFF666666));
       case 'IN': // Đang trong quá trình phê duyệt
-        return (const Color(0xFFFFF3E0), const Color(0xFFF57C00));
+        return (const Color(0xFFFFF3E0), const Color.fromARGB(255, 250, 158, 65));
       case 'FN': // Được phê duyệt
         return (const Color(0xFFE0FFF3), const Color(0xFF00B894));
       case 'RJ': // Từ chối
-        return (const Color(0xFFFFEBEE), const Color(0xFFD32F2F));
+        return (const Color(0xFFFFEBEE), const Color.fromARGB(255, 189, 2, 2));
       case 'BK': // Thu hồi
-        return (const Color(0xFFFFF3E0), const Color(0xFFE65100));
+        return (const Color.fromARGB(255, 255, 238, 224), const Color.fromARGB(255, 238, 91, 6));
       default: // Fallback
         return (AppColors.primary.withOpacity(0.08), AppColors.primary);
     }
@@ -418,7 +417,7 @@ class TimeOffCard extends StatelessWidget {
   String _formatDateTime(DateTime? date) {
     if (date == null) return 'N/A';
     // Format: dd/MM/yyyy HH:mm (ví dụ: 29/07/2025 15:23)
-    return DateFormat('dd/MM/yyyy HH:mm').format(date);
+    return DateFormat('dd/MM/yyyy').format(date);
   }
 
   String _formatVacationType() {

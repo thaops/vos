@@ -13,7 +13,6 @@ class TimeOffWorkCodeSection extends StatelessWidget {
   final void Function(int index) onDecrement;
   final void Function(int index, String value) onChangeDays;
   final String daysHeaderText;
-  final double totalWidth;
 
   const TimeOffWorkCodeSection({
     super.key,
@@ -22,7 +21,6 @@ class TimeOffWorkCodeSection extends StatelessWidget {
     required this.onDecrement,
     required this.onChangeDays,
     this.daysHeaderText = 'Ngày nghỉ',
-    this.totalWidth = 157,
   });
 
   @override
@@ -74,7 +72,7 @@ class TimeOffWorkCodeSection extends StatelessWidget {
                 children: [
                   const Spacer(),
                   SizedBox(
-                    width: totalWidth.w,
+                    width: 145.w,
                     child: TextWidget(
                       text: computedTotalDays == computedTotalDays.toInt()
                           ? '${computedTotalDays.toInt()}'
