@@ -62,7 +62,8 @@ class SendApproveResultDto {
             position: item['Name_Job_Title']?.toString() ?? '',
             vAppId:
                 _tryParseInt(item['VApp_ID']) ??
-                0, // Mặc định là 0 nếu không có
+                0, 
+            title: item['Title']?.toString() ?? '',
           );
         })
         .whereType<ApprovalItem>()

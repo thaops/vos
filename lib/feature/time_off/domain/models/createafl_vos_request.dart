@@ -139,6 +139,7 @@ class CreateAflVosRequest {
           email: process.email,
           position: process.nameJobTitle,
           vAppId: 0,
+          title: process.title,
         );
 
         groupedByApproveNo
@@ -242,6 +243,7 @@ class ApprovalItem {
   final String email;
   final String position;
   final int? vAppId;
+  final String? title;
 
   ApprovalItem({
     required this.dutyType,
@@ -249,6 +251,7 @@ class ApprovalItem {
     required this.email,
     required this.position,
     this.vAppId,
+    this.title,
   });
 
   Map<String, dynamic> toJson() {
@@ -258,6 +261,7 @@ class ApprovalItem {
       'Email': email,
       'Position': position,
       'VAppId': vAppId ?? 0,
+      'Title': title ?? '',
     };
   }
 }

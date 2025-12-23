@@ -525,7 +525,7 @@ String _resolveGroupStatus(List<TimeOffProcess> processes) {
           width: 110.w,
           child: TextWidget(
             text: '$label:',
-            fontSize: 13,
+            fontSize: 12,
             color: TimeOffCreateColors.textSecondary,
             fontWeight: FontWeight.w400,
           ),
@@ -534,7 +534,7 @@ String _resolveGroupStatus(List<TimeOffProcess> processes) {
         Flexible(
           child: TextWidget(
             text: value,
-            fontSize: 13,
+            fontSize: 12,
             color: TimeOffCreateColors.textPrimary,
             fontWeight: FontWeight.w600,
           ),
